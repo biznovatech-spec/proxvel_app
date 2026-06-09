@@ -154,24 +154,6 @@ class DestinationRecommendationCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          // Score circle
-                          Container(
-                            width: 38,
-                            height: 38,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${recommendation.compatibilityPercentage.round()}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),

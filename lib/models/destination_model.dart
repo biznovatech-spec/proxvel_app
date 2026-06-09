@@ -15,6 +15,14 @@ class DestinationModel {
   final String? estimatedDays;
   final bool isTrending;
 
+  // ── Extended fields for "Sobre el destino" ──
+  final String? type;           // e.g. 'Sitios Arqueológicos', 'Parque Nacional'
+  final String? hierarchy;      // e.g. 'Jerarquía 4', 'Jerarquía 3'
+  final double? altitudeM;      // Altitude in meters
+  final String? bestSeason;     // e.g. 'Abril - Octubre'
+  final List<String> activities;  // e.g. ['Caminata', 'Fotografía', ...]
+  final List<String> galleryImages; // Additional image asset paths
+
   DestinationModel({
     required this.id,
     required this.name,
@@ -31,6 +39,12 @@ class DestinationModel {
     this.distanceKm,
     this.estimatedDays,
     this.isTrending = false,
+    this.type,
+    this.hierarchy,
+    this.altitudeM,
+    this.bestSeason,
+    this.activities = const [],
+    this.galleryImages = const [],
   });
 
   factory DestinationModel.fromJson(Map<String, dynamic> json) => DestinationModel(
@@ -49,6 +63,12 @@ class DestinationModel {
         distanceKm: json['distanceKm']?.toDouble(),
         estimatedDays: json['estimatedDays'],
         isTrending: json['isTrending'] ?? false,
+        type: json['type'],
+        hierarchy: json['hierarchy'],
+        altitudeM: json['altitudeM']?.toDouble(),
+        bestSeason: json['bestSeason'],
+        activities: List<String>.from(json['activities'] ?? []),
+        galleryImages: List<String>.from(json['galleryImages'] ?? []),
       );
 
   Map<String, dynamic> toJson() => {
@@ -67,5 +87,11 @@ class DestinationModel {
         'distanceKm': distanceKm,
         'estimatedDays': estimatedDays,
         'isTrending': isTrending,
+        'type': type,
+        'hierarchy': hierarchy,
+        'altitudeM': altitudeM,
+        'bestSeason': bestSeason,
+        'activities': activities,
+        'galleryImages': galleryImages,
       };
 }

@@ -26,10 +26,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final controller = context.watch<FavoritesController>();
 
@@ -42,17 +44,17 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             child: controller.isLoading
                 ? const LoadingView()
                 : controller.favorites.isEmpty
-                    ? ProxvelEmptyState(
-                        icon: Icons.favorite_border_rounded,
-                        title: 'Aún no tienes favoritos',
-                        subtitle:
-                            'Explora destinos y guarda los que más\nte gusten tocando el corazón.',
-                        actionLabel: 'Explorar destinos',
-                        onAction: () {
-                          context.go('/home');
-                        },
-                      )
-                    : _buildFavoritesList(controller),
+                ? ProxvelEmptyState(
+                    icon: Icons.favorite_border_rounded,
+                    title: 'Aún no tienes favoritos',
+                    subtitle:
+                        'Explora destinos y guarda los que más\nte gusten tocando el corazón.',
+                    actionLabel: 'Explorar destinos',
+                    onAction: () {
+                      context.go('/home');
+                    },
+                  )
+                : _buildFavoritesList(controller),
           ),
         ],
       ),
@@ -109,8 +111,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.favorite_rounded,
-                    color: AppColors.accent, size: 24),
+                child: const Icon(
+                  Icons.favorite_rounded,
+                  color: AppColors.accent,
+                  size: 24,
+                ),
               ),
             ],
           ),
@@ -134,9 +139,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         final dest = controller.favorites[i];
         return Stack(
           children: [
-            DestinationCard(
-              destination: dest,
-              onTap: () => context.push('/destination/${dest.id}'),
+            Positioned.fill(
+              child: DestinationCard(
+                destination: dest,
+                onTap: () => context.push('/destination/${dest.id}'),
+              ),
             ),
             // ── Remove button ──
             Positioned(
@@ -151,8 +158,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     color: Colors.black.withValues(alpha: 0.4),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.favorite_rounded,
-                      color: AppColors.error, size: 18),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -162,8 +172,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  void _confirmRemove(
-      FavoritesController controller, String id, String name) {
+  void _confirmRemove(FavoritesController controller, String id, String name) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppColors.surface,
@@ -184,8 +193,11 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Icon(Icons.favorite_rounded,
-                color: AppColors.error, size: 40),
+            const Icon(
+              Icons.favorite_rounded,
+              color: AppColors.error,
+              size: 40,
+            ),
             const SizedBox(height: 16),
             Text(
               '¿Quitar "$name" de favoritos?',
@@ -200,10 +212,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             const Text(
               'Podrás volver a agregarlo cuando quieras.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
             Row(
@@ -215,8 +224,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       height: 50,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: AppColors.border, width: 1.5),
+                        border: Border.all(color: AppColors.border, width: 1.5),
                       ),
                       alignment: Alignment.center,
                       child: const Text(

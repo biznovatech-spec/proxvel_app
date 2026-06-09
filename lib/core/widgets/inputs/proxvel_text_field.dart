@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ProxvelTextField extends StatefulWidget {
   final String label;
@@ -6,6 +7,8 @@ class ProxvelTextField extends StatefulWidget {
   final bool isPassword;
   final Function(String)? onChanged;
   final String? errorText;
+  final TextCapitalization textCapitalization;
+  final List<TextInputFormatter>? inputFormatters;
 
   const ProxvelTextField({
     super.key,
@@ -14,6 +17,8 @@ class ProxvelTextField extends StatefulWidget {
     this.isPassword = false,
     this.onChanged,
     this.errorText,
+    this.textCapitalization = TextCapitalization.none,
+    this.inputFormatters,
   });
 
   @override
@@ -37,6 +42,8 @@ class _ProxvelTextFieldState extends State<ProxvelTextField> {
         controller: widget.controller,
         obscureText: widget.isPassword ? _obscureText : false,
         onChanged: widget.onChanged,
+        textCapitalization: widget.textCapitalization,
+        inputFormatters: widget.inputFormatters,
         decoration: InputDecoration(
           labelText: widget.label,
           labelStyle: TextStyle(color: widget.errorText != null ? Colors.red : const Color(0xFF9CA3AF)), // Gray-400 or Red

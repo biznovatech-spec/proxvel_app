@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/destination_controller.dart';
 import '../../controllers/favorites_controller.dart';
+import '../../controllers/profile_controller.dart';
+import '../../models/traveler_profile_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states/loading_view.dart';
-import 'widgets/aspect_score_bar.dart';
-import 'widgets/explanation_card.dart';
 import 'widgets/compatibility_badge.dart';
+import 'widgets/why_for_me_tab_content.dart';
+import 'widgets/about_destination_tab_content.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
   final String destinationId;
@@ -20,22 +22,26 @@ class DestinationDetailScreen extends StatefulWidget {
 }
 
 class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
+  int _selectedTabIndex = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<DestinationController>()
-          .loadDestination(widget.destinationId);
+      context.read<DestinationController>().loadDestination(
+        widget.destinationId,
+      );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final controller = context.watch<DestinationController>();
     final dest = controller.destination;
@@ -69,7 +75,9 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                 ),
                 actions: [
                   _circleButton(
-                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    isFav
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
                     () => favCtrl.toggleFavorite(dest.id),
                     iconColor: isFav ? AppColors.error : Colors.white,
                   ),
@@ -128,8 +136,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.location_on,
-                              color: AppColors.accent, size: 18),
+                          const Icon(
+                            Icons.location_on,
+                            color: AppColors.accent,
+                            size: 18,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${dest.city}, ${dest.region}',
@@ -149,83 +160,37 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         runSpacing: 10,
                         children: [
                           _infoBadge(Icons.category_outlined, dest.category),
-                          _infoBadge(Icons.star_rounded,
-                              '${dest.rating.toStringAsFixed(1)} rating'),
-                          _infoBadge(Icons.attach_money_rounded,
-                              'S/ ${dest.averageCost.toStringAsFixed(0)}'),
-                          _infoBadge(Icons.wb_sunny_outlined, dest.climate),
                           _infoBadge(
-                              Icons.groups_outlined, dest.crowdLevel),
+                            Icons.star_rounded,
+                            '${dest.rating.toStringAsFixed(1)} rating',
+                          ),
                           if (dest.estimatedDays != null)
                             _infoBadge(
-                                Icons.schedule_rounded, dest.estimatedDays!),
+                              Icons.schedule_rounded,
+                              dest.estimatedDays!,
+                            ),
                         ],
                       ),
 
                       const SizedBox(height: 24),
 
-                      // ── Description ──
-                      _sectionTitle('Descripción'),
-                      const SizedBox(height: 10),
-                      Text(
-                        dest.description,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                        ),
+                      // ── Tab selector ──
+                      _buildTabSelector(),
+
+                      const SizedBox(height: 20),
+
+                      // ── Divider ──
+                      Container(height: 1, color: AppColors.border),
+
+                      const SizedBox(height: 24),
+
+                      // ── Tab content ──
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: _selectedTabIndex == 0
+                            ? _buildWhyForMeContent(controller)
+                            : _buildAboutDestinationContent(controller),
                       ),
-
-                      const SizedBox(height: 28),
-
-                      // ── Explanation ──
-                      if (controller.explanation.isNotEmpty)
-                        ExplanationCard(explanation: controller.explanation),
-
-                      const SizedBox(height: 28),
-
-                      // ── Aspect scores ──
-                      if (controller.aspectScores.isNotEmpty) ...[
-                        _sectionTitle('Aspectos turísticos evaluados'),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Evaluación basada en análisis de sentimiento (ABSA)',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: AppColors.surface,
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                                color: AppColors.border, width: 1),
-                          ),
-                          child: Column(
-                            children: controller.aspectScores
-                                .map((a) => AspectScoreBar(aspect: a))
-                                .toList(),
-                          ),
-                        ),
-                      ],
-
-                      const SizedBox(height: 28),
-
-                      // ── Aspect chips (from destination model) ──
-                      if (dest.aspects.isNotEmpty) ...[
-                        _sectionTitle('Categorías destacadas'),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: dest.aspects
-                              .map((a) => _aspectChip(a))
-                              .toList(),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -245,9 +210,110 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     );
   }
 
+  Widget _buildTabSelector() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _tabItem('¿Por qué para mí?', 0)),
+          Expanded(child: _tabItem('Sobre el destino', 1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _tabItem(String title, int index) {
+    final isActive = _selectedTabIndex == index;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedTabIndex = index),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
+              color: isActive ? AppColors.accent : AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 10),
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            height: 3,
+            width: double.infinity,
+            margin: EdgeInsets.symmetric(horizontal: isActive ? 0 : 30),
+            decoration: BoxDecoration(
+              color: isActive ? AppColors.accent : Colors.transparent,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Tab 0: ¿Por qué para mí? ──
+  Widget _buildWhyForMeContent(DestinationController controller) {
+    final dest = controller.destination!;
+
+    // Try to get traveler profile if ProfileController is available
+    TravelerProfileModel? travelerProfile;
+    try {
+      travelerProfile = context.read<ProfileController>().profile;
+    } catch (_) {
+      // ProfileController might not be in the tree
+    }
+
+    // Determine rank position from recommendations context
+    // Default to 1 since we don't have the list index here
+    final rankPosition = 1;
+
+    return WhyForMeTabContent(
+      key: const ValueKey('why_for_me'),
+      rankPosition: rankPosition,
+      compatibilityPercentage: controller.compatibility,
+      label: controller.compatibility >= 85
+          ? 'Recomendado'
+          : controller.compatibility >= 70
+          ? 'Parcialmente rec.'
+          : 'Por explorar',
+      explanation: controller.explanation,
+      aspectScores: controller.aspectScores,
+      travelerProfile: travelerProfile,
+      destinationClimate: dest.climate,
+      destinationCrowdLevel: dest.crowdLevel,
+    );
+  }
+
+  // ── Tab 1: Sobre el destino ──
+  Widget _buildAboutDestinationContent(DestinationController controller) {
+    final dest = controller.destination!;
+    return AboutDestinationTabContent(
+      key: const ValueKey('about_destination'),
+      destination: dest,
+    );
+  }
+
   // ── Circle icon button (back, fav) ──
-  Widget _circleButton(IconData icon, VoidCallback onTap,
-      {Color iconColor = Colors.white}) {
+  Widget _circleButton(
+    IconData icon,
+    VoidCallback onTap, {
+    Color iconColor = Colors.white,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(8),
       child: GestureDetector(
@@ -288,37 +354,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  // ── Section title ──
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.w800,
-        color: AppColors.textPrimary,
-      ),
-    );
-  }
-
-  // ── Aspect chip ──
-  Widget _aspectChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppColors.primary,
-        ),
       ),
     );
   }
@@ -388,8 +423,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                 child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.rate_review_rounded,
-                        color: AppColors.accent, size: 20),
+                    Icon(
+                      Icons.rate_review_rounded,
+                      color: AppColors.accent,
+                      size: 20,
+                    ),
                     SizedBox(width: 10),
                     Text(
                       'Enviar feedback',

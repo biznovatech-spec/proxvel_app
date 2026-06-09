@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../core/widgets/inputs/proxvel_text_field.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
+import '../../core/utils/formatters.dart';
 import 'widgets/auth_layout_wrapper.dart';
 import 'widgets/social_auth_button.dart';
 
@@ -32,7 +33,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   // Password Requirements State
   bool _hasMinLength = false;
   bool _hasComplexChars = false;
-  bool _repeats23Times = false;
+  bool _passwordsMatch = false;
 
   @override
   void initState() {
@@ -44,16 +45,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _validatePassword() {
     final pass = _passwordController.text;
     final confirm = _confirmPasswordController.text;
-    
+
     setState(() {
       _hasMinLength = pass.length >= 8;
-      
+
       final hasUpper = pass.contains(RegExp(r'[A-Z]'));
       final hasNumber = pass.contains(RegExp(r'[0-9]'));
-      final hasSymbol = pass.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
+      final hasSymbol = pass.contains(
+        RegExp('[!@#\$%^&*()_+=\\[\\]{}|;:\\\'"<>,?/~\\-\\\\]'),
+      );
       _hasComplexChars = hasUpper && hasNumber && hasSymbol;
 
-      _repeats23Times = pass.isNotEmpty && confirm == pass;
+      _passwordsMatch = pass.isNotEmpty && confirm == pass;
     });
   }
 
@@ -108,29 +111,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       showBackButton: true,
       expandContent: true,
       cropImageToTop: true,
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Formularios: se expanden para llenar el espacio disponible
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildFormStep1(),
-                _buildFormStep2(),
-              ],
-            ),
-          ),
-          // Botones: anclados al fondo, sin altura fija
-          AnimatedCrossFade(
-            firstChild: _buildButtonsStep1(),
-            secondChild: _buildButtonsStep2(),
-            crossFadeState: _currentStep == 0 ? CrossFadeState.showFirst : CrossFadeState.showSecond,
-            duration: const Duration(milliseconds: 300),
-            alignment: Alignment.topCenter,
-          ),
-        ],
+      content: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: [_buildFormStep1(), _buildFormStep2()],
       ),
     );
   }
@@ -143,11 +127,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           _buildStepHeader(1, 'Datos Personales'),
           const SizedBox(height: 12),
-          _buildInfoBox('Usaremos este correo para crear tu cuenta de forma segura.', Icons.lock_outline),
+          _buildInfoBox(
+            'Usaremos este correo para crear tu cuenta de forma segura.',
+            Icons.lock_outline,
+          ),
           const SizedBox(height: 16),
-          ProxvelTextField(label: 'Nombre', controller: _nameController),
-          ProxvelTextField(label: 'Apellidos', controller: _lastnameController),
+          ProxvelTextField(
+            label: 'Nombre',
+            controller: _nameController,
+            textCapitalization: TextCapitalization.words,
+            inputFormatters: [TitleCaseTextInputFormatter()],
+          ),
+          ProxvelTextField(
+            label: 'Apellidos',
+            controller: _lastnameController,
+            textCapitalization: TextCapitalization.words,
+            inputFormatters: [TitleCaseTextInputFormatter()],
+          ),
           ProxvelTextField(label: 'Email', controller: _emailController),
+          const SizedBox(height: 32),
+          _buildButtonsStep1(),
         ],
       ),
     );
@@ -161,7 +160,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           _buildStepHeader(2, 'Crear Contraseña'),
           const SizedBox(height: 12),
-          _buildInfoBox('Crea una contraseña fuerte para tu cuenta.', Icons.security),
+          _buildInfoBox(
+            'Crea una contraseña fuerte para tu cuenta.',
+            Icons.security,
+          ),
           const SizedBox(height: 16),
           ProxvelTextField(
             label: 'Contraseña',
@@ -175,12 +177,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           const Text(
             'Requisitos de contraseña',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF374151)),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Color(0xFF374151),
+            ),
           ),
           const SizedBox(height: 8),
           _buildRequirementItem('Mínimo 8 caracteres', _hasMinLength),
-          _buildRequirementItem('1 mayúscula, 1 número y 1 símbolo', _hasComplexChars),
-          _buildRequirementItem('La contraseña se debe repetir 23 veces', _repeats23Times),
+          _buildRequirementItem(
+            '1 mayúscula, 1 número y 1 símbolo',
+            _hasComplexChars,
+          ),
+          _buildRequirementItem(
+            'Las contraseñas deben coincidir',
+            _passwordsMatch,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -189,9 +201,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 height: 20,
                 child: Checkbox(
                   value: _acceptTerms,
-                  onChanged: (val) => setState(() => _acceptTerms = val ?? false),
+                  onChanged: (val) =>
+                      setState(() => _acceptTerms = val ?? false),
                   activeColor: const Color(0xFF2B323B),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                   side: const BorderSide(color: Color(0xFF9CA3AF)),
                 ),
               ),
@@ -204,6 +219,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 32),
+          _buildButtonsStep2(),
         ],
       ),
     );
@@ -213,29 +230,38 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        ProxvelButton(
-          text: 'Siguiente →',
-          onPressed: _nextStep,
-        ),
+        ProxvelButton(text: 'Siguiente →', onPressed: _nextStep),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SocialAuthButton(iconPath: 'assets/icons/ic_google.svg', onTap: () {}),
+            SocialAuthButton(
+              iconPath: 'assets/icons/ic_google.svg',
+              onTap: () {},
+            ),
             const SizedBox(width: 24),
-            SocialAuthButton(iconPath: 'assets/icons/ic_github.svg', onTap: () {}),
+            SocialAuthButton(
+              iconPath: 'assets/icons/ic_github.svg',
+              onTap: () {},
+            ),
           ],
         ),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('¿Ya tienes una cuenta? ', style: TextStyle(color: Color(0xFF6B7280))),
+            const Text(
+              '¿Ya tienes una cuenta? ',
+              style: TextStyle(color: Color(0xFF6B7280)),
+            ),
             GestureDetector(
               onTap: () => context.go('/login'),
               child: const Text(
                 'Iniciar sesión',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1F2937)),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1F2937),
+                ),
               ),
             ),
           ],
@@ -251,16 +277,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ProxvelButton(
           text: 'Registrarme',
           isLoading: _isLoading,
-          onPressed: _acceptTerms && _hasMinLength && _hasComplexChars && _repeats23Times
+          onPressed:
+              _acceptTerms &&
+                  _hasMinLength &&
+                  _hasComplexChars &&
+                  _passwordsMatch
               ? _handleRegister
               : null,
         ),
         const SizedBox(height: 16),
-        ProxvelButton(
-          text: 'Volver',
-          isSecondary: true,
-          onPressed: _prevStep,
-        ),
+        ProxvelButton(text: 'Volver', isSecondary: true, onPressed: _prevStep),
       ],
     );
   }
@@ -330,7 +356,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Text(
               text,
               style: TextStyle(
-                color: isMet ? const Color(0xFF10B981) : const Color(0xFF6B7280),
+                color: isMet
+                    ? const Color(0xFF10B981)
+                    : const Color(0xFF6B7280),
                 fontSize: 12,
                 fontWeight: isMet ? FontWeight.bold : FontWeight.normal,
               ),

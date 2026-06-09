@@ -6,7 +6,7 @@ import '../integration/local/local_storage_service.dart';
 class HomeController extends ChangeNotifier {
   final DestinationService _service = DestinationService();
   final LocalStorageService _storageService = LocalStorageService();
-  
+
   bool isLoading = false;
   String currentLocation = 'Lima';
   List<DestinationModel> destinations = [];
@@ -19,7 +19,9 @@ class HomeController extends ChangeNotifier {
   /// Destinations with a known distance, sorted nearest first.
   List<DestinationModel> get nearbyDestinations {
     var list = destinations.where((d) => d.distanceKm != null).toList();
-    final cityMatches = list.where((d) => d.city == currentLocation || d.region == currentLocation).toList();
+    final cityMatches = list
+        .where((d) => d.city == currentLocation || d.region == currentLocation)
+        .toList();
     if (cityMatches.isNotEmpty) {
       list = cityMatches;
     }
@@ -35,11 +37,11 @@ class HomeController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
     destinations = await _service.getDestinations();
-    
+
     // Load recent searches from LocalStorageService
     await _storageService.init(); // Ensure initialized
     final recentNames = _storageService.getRecentSearches();
-    
+
     final loadedRecents = <DestinationModel>[];
     for (final name in recentNames) {
       try {
@@ -51,6 +53,7 @@ class HomeController extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
   void changeLocation(String newCity) {
     if (currentLocation != newCity) {
       currentLocation = newCity;

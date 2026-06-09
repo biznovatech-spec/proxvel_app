@@ -79,7 +79,7 @@ class AuthLayoutWrapper extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
               ),
             ),
-          
+
           // Gradient Overlay
           Positioned.fill(
             child: Container(
@@ -102,55 +102,65 @@ class AuthLayoutWrapper extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top Section (Badge/Back and Title)
-              Expanded(
-                child: SafeArea(
-                  bottom: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (showBackButton)
-                          InkWell(
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: showBackButton
+                        ? InkWell(
                             onTap: () => context.pop(),
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                ),
                               ),
-                              child: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                              child: const Icon(
+                                Icons.arrow_back,
+                                color: Colors.white,
+                                size: 24,
+                              ),
                             ),
                           )
-                        else
-                          ?topBadge,
-                        
-                        const Spacer(),
-                        
-                        titleWidget,
-                        
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            subtitle!,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                      ],
-                    ),
+                        : topBadge,
                   ),
                 ),
               ),
-              
+
+              const Spacer(),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    titleWidget,
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+
               // Bottom White Sheet
               if (expandContent)
-                Expanded(flex: 3, child: whiteCard)
+                Expanded(flex: 5, child: whiteCard)
               else
                 whiteCard,
             ],

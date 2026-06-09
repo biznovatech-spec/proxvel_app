@@ -16,8 +16,8 @@ class CompatibilityBadge extends StatelessWidget {
       height: 72,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 3),
+        color: Colors.black.withValues(alpha: 0.6),
+        border: Border.all(color: color, width: 2),
       ),
       child: Center(
         child: Column(
@@ -31,12 +31,12 @@ class CompatibilityBadge extends StatelessWidget {
                 color: color,
               ),
             ),
-            Text(
+            const Text(
               'match',
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
-                color: color.withValues(alpha: 0.7),
+                color: Colors.white70,
               ),
             ),
           ],
