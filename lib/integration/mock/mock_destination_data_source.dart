@@ -3,7 +3,7 @@ import '../../models/destination_model.dart';
 class MockDestinationDataSource {
   static final List<DestinationModel> destinations = [
     DestinationModel(
-      id: '1',
+      id: 'machu-picchu',
       name: 'Machu Picchu',
       city: 'Cusco',
       region: 'Cusco',
@@ -239,7 +239,7 @@ class MockDestinationDataSource {
       ],
     ),
     DestinationModel(
-      id: '10',
+      id: 'circuito-magico-del-agua',
       name: 'Circuito Mágico del Agua',
       city: 'Lima',
       region: 'Lima',
@@ -252,6 +252,8 @@ class MockDestinationDataSource {
       rating: 4.4,
       aspects: ['entretenimiento', 'seguridad', 'accesibilidad'],
       distanceKm: 8,
+      estimatedDays: '1 día',
+      isTrending: true,
       type: 'Manifestaciones Culturales',
       hierarchy: 'Jerarquía 3',
       altitudeM: 150,
@@ -263,9 +265,44 @@ class MockDestinationDataSource {
         'assets/images/rio-amazonas.png',
       ],
     ),
+    DestinationModel(
+      id: 'lago-titicaca',
+      name: 'Lago Titicaca',
+      city: 'Puno',
+      region: 'Puno',
+      category: 'Naturaleza',
+      description: 'El lago navegable más alto del mundo a 3.812 msnm, compartido entre Perú y Bolivia. Hogar de las islas flotantes de los Uros, construidas íntegramente de totora, y de las islas Taquile y Amantaní, donde las comunidades quechuas mantienen vivas sus tradiciones textiles reconocidas por la UNESCO.',
+      imageUrl: 'https://commons.wikimedia.org/wiki/Special:FilePath/Lago_Titicaca,_Puno,_Perú,_2015-08-01,_DD_13.JPG',
+      averageCost: 220.0,
+      climate: 'Frío',
+      crowdLevel: 'Bajo',
+      rating: 4.7,
+      aspects: ['naturaleza', 'cultura', 'atractivos turísticos'],
+      estimatedDays: '2 - 3 días',
+      isTrending: true,
+      type: 'Sitios Naturales',
+      hierarchy: 'Jerarquía 4',
+      altitudeM: 3812,
+      bestSeason: 'Abril - Octubre',
+      activities: ['Paseo en bote', 'Cultura e historia', 'Fotografía', 'Turismo vivencial', 'Compras artesanales'],
+      galleryImages: [
+        'https://commons.wikimedia.org/wiki/Special:FilePath/Lago_Titicaca,_Puno,_Perú,_2015-08-01,_DD_13.JPG',
+      ],
+    ),
   ];
 
+  /// IDs de los destinos cubiertos por la tesis (Fases 2-4).
+  /// Solo estos se muestran en la app; el resto queda oculto.
+  static const Set<String> activeIds = {
+    'machu-picchu',
+    'lago-titicaca',
+    'circuito-magico-del-agua',
+  };
+
+  /// Destinos visibles en la app (solo los de la tesis).
+  static List<DestinationModel> get activeDestinations =>
+      destinations.where((d) => activeIds.contains(d.id)).toList();
+
   /// Subset used as mock "recent searches" data.
-  static List<DestinationModel> get recentSearches =>
-      [destinations[0], destinations[3], destinations[7], destinations[2]];
+  static List<DestinationModel> get recentSearches => activeDestinations;
 }

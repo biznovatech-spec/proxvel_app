@@ -19,8 +19,10 @@ class DestinationController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      final all = await _destinationService.getDestinations();
-      destination = all.firstWhere((d) => d.id == id);
+      destination = await _destinationService.getDestinationById(id);
+      if (destination == null) {
+        throw Exception('Destino no encontrado: $id');
+      }
       // Load supplementary detail data in parallel
       final results = await Future.wait([
         _destinationService.getAspectScores(id),

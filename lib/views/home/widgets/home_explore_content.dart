@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/cards/trending_destination_card.dart';
 import '../../../core/widgets/cards/destination_card.dart';
 import '../../../core/widgets/cards/recent_search_chip.dart';
+import '../../../core/widgets/images/adaptive_destination_image.dart';
 import '../../../core/widgets/states/loading_view.dart';
 
 /// Scrollable content for the "Explorar" tab.
@@ -459,11 +460,12 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                dest.imageUrl,
+              child: SizedBox(
                 width: 80,
                 height: 80,
-                fit: BoxFit.cover,
+                child: AdaptiveDestinationImage(
+                  imagePath: dest.imageUrl,
+                ),
               ),
             ),
             const SizedBox(width: 14),

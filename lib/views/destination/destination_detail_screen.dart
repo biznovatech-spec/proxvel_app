@@ -8,6 +8,7 @@ import '../../controllers/profile_controller.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states/loading_view.dart';
+import '../../core/widgets/images/adaptive_destination_image.dart';
 import 'widgets/compatibility_badge.dart';
 import 'widgets/why_for_me_tab_content.dart';
 import 'widgets/about_destination_tab_content.dart';
@@ -87,7 +88,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.asset(dest.imageUrl, fit: BoxFit.cover),
+                      AdaptiveDestinationImage(imagePath: dest.imageUrl),
                       // Gradient overlay
                       const DecoratedBox(
                         decoration: BoxDecoration(

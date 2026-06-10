@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../controllers/search_controller.dart' show SearchResultItem;
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/images/adaptive_destination_image.dart';
 
 /// Card for search results showing image, info, compatibility, and label.
 class SearchResultCard extends StatelessWidget {
@@ -48,7 +49,7 @@ class SearchResultCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(dest.imageUrl, fit: BoxFit.cover),
+                    AdaptiveDestinationImage(imagePath: dest.imageUrl),
                     // Compatibility badge
                     Positioned(
                       top: 8,

@@ -20,6 +20,12 @@ class FavoritesController extends ChangeNotifier {
       final allIds = _storage.getFavorites();
       final allDests = await _destinationService.getDestinations();
       favorites = allDests.where((d) => allIds.contains(d.id)).toList();
+      // Resolver favoritos del backend (slugs) que no están en el catálogo local
+      final foundIds = favorites.map((d) => d.id).toSet();
+      for (final id in allIds.where((id) => !foundIds.contains(id))) {
+        final dest = await _destinationService.getDestinationById(id);
+        if (dest != null) favorites.add(dest);
+      }
     } catch (e) {
       error = e.toString();
     }

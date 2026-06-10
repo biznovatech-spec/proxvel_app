@@ -1,57 +1,44 @@
 import '../../models/recommendation_result_model.dart';
 import 'mock_destination_data_source.dart';
 
+/// Fallback local de recomendaciones cuando el backend no responde.
+/// Usa solo los 3 destinos de la tesis con valores aproximados
+/// al ranking contextual real (Fase 4).
 class MockRecommendationDataSource {
   static List<RecommendationResultModel> getRecommendations() {
-    final dests = MockDestinationDataSource.destinations;
+    final dests = MockDestinationDataSource.activeDestinations;
+    final machuPicchu = dests.firstWhere((d) => d.id == 'machu-picchu');
+    final titicaca = dests.firstWhere((d) => d.id == 'lago-titicaca');
+    final circuito = dests.firstWhere((d) => d.id == 'circuito-magico-del-agua');
+
     return [
       RecommendationResultModel(
-        id: 'rec1',
-        destination: dests[0], // Machu Picchu
-        compatibilityPercentage: 95.0,
-        finalScore: 4.8,
+        id: 'machu-picchu',
+        destination: machuPicchu,
+        compatibilityPercentage: 52.5,
+        finalScore: 0.52,
         label: 'Recomendado',
-        reasons: ['Ideal para tu presupuesto', 'Clima perfecto para ti'],
+        reasons: ['Alta afinidad con tu perfil', 'Clima favorable'],
         aspectScores: [],
         contextSignals: [],
       ),
       RecommendationResultModel(
-        id: 'rec2',
-        destination: dests[3], // Laguna 69
-        compatibilityPercentage: 88.0,
-        finalScore: 4.5,
+        id: 'lago-titicaca',
+        destination: titicaca,
+        compatibilityPercentage: 51.5,
+        finalScore: 0.51,
         label: 'Recomendado',
-        reasons: ['Aventura en naturaleza', 'Paisajes únicos'],
+        reasons: ['Naturaleza y cultura viva', 'Aforo bajo'],
         aspectScores: [],
         contextSignals: [],
       ),
       RecommendationResultModel(
-        id: 'rec3',
-        destination: dests[6], // Valle Sagrado
-        compatibilityPercentage: 82.0,
-        finalScore: 4.3,
+        id: 'circuito-magico-del-agua',
+        destination: circuito,
+        compatibilityPercentage: 49.6,
+        finalScore: 0.50,
         label: 'Parcialmente recomendado',
-        reasons: ['Riqueza cultural', 'Gastronomía local excelente'],
-        aspectScores: [],
-        contextSignals: [],
-      ),
-      RecommendationResultModel(
-        id: 'rec4',
-        destination: dests[1], // Huacachina
-        compatibilityPercentage: 78.0,
-        finalScore: 4.1,
-        label: 'Parcialmente recomendado',
-        reasons: ['Experiencia única en dunas', 'Clima cálido favorable'],
-        aspectScores: [],
-        contextSignals: [],
-      ),
-      RecommendationResultModel(
-        id: 'rec5',
-        destination: dests[4], // Río Amazonas
-        compatibilityPercentage: 72.0,
-        finalScore: 3.9,
-        label: 'Parcialmente recomendado',
-        reasons: ['Biodiversidad excepcional', 'Aventura en selva'],
+        reasons: ['Entretenimiento accesible', 'Clima favorable'],
         aspectScores: [],
         contextSignals: [],
       ),
