@@ -30,6 +30,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _acceptTerms = false;
   bool _isLoading = false;
 
+  // Validation State
+  bool _isStep1Valid = false;
+
   // Password Requirements State
   bool _hasMinLength = false;
   bool _hasComplexChars = false;
@@ -38,8 +41,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    _nameController.addListener(_validateStep1);
+    _lastnameController.addListener(_validateStep1);
+    _emailController.addListener(_validateStep1);
     _passwordController.addListener(_validatePassword);
     _confirmPasswordController.addListener(_validatePassword);
+  }
+
+  void _validateStep1() {
+    final isValid = _nameController.text.trim().isNotEmpty &&
+        _lastnameController.text.trim().isNotEmpty &&
+        _emailController.text.trim().isNotEmpty;
+    if (_isStep1Valid != isValid) {
+      setState(() => _isStep1Valid = isValid);
+    }
   }
 
   void _validatePassword() {
@@ -230,7 +245,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        ProxvelButton(text: 'Siguiente →', onPressed: _nextStep),
+        ProxvelButton(
+          text: 'Siguiente →',
+          onPressed: _isStep1Valid ? _nextStep : null,
+        ),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,

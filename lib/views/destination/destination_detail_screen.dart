@@ -8,8 +8,6 @@ import '../../controllers/profile_controller.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states/loading_view.dart';
-import '../../core/widgets/images/adaptive_destination_image.dart';
-import 'widgets/compatibility_badge.dart';
 import 'widgets/why_for_me_tab_content.dart';
 import 'widgets/about_destination_tab_content.dart';
 
@@ -80,7 +78,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         ? Icons.favorite_rounded
                         : Icons.favorite_border_rounded,
                     () => favCtrl.toggleFavorite(dest.id),
-                    iconColor: isFav ? AppColors.error : Colors.white,
+                    iconColor: isFav ? AppColors.error : Colors.black,
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -97,22 +95,57 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                             end: Alignment.bottomCenter,
                             colors: [
                               Colors.transparent,
-                              Colors.transparent,
-                              Color(0x80000000),
+                              Color(0x20000000),
+                              Color(0xCC000000),
                             ],
                             stops: [0.0, 0.5, 1.0],
                           ),
                         ),
                       ),
-                      // Compatibility badge
-                      if (controller.compatibility > 0)
-                        Positioned(
-                          right: 20,
-                          bottom: 20,
-                          child: CompatibilityBadge(
-                            percentage: controller.compatibility,
-                          ),
+                      // Title & Location
+                      Positioned(
+                        left: 20,
+                        bottom: 20,
+                        right: 20,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              dest.name,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: AppColors.accent,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    '${dest.city}, ${dest.region}',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ),
@@ -125,36 +158,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ── Title & location ──
-                      Text(
-                        dest.name,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.location_on,
-                            color: AppColors.accent,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${dest.city}, ${dest.region}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
                       // ── Info badges ──
                       Wrap(
                         spacing: 10,
@@ -313,7 +316,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   Widget _circleButton(
     IconData icon,
     VoidCallback onTap, {
-    Color iconColor = Colors.white,
+    Color iconColor = Colors.black,
   }) {
     return Padding(
       padding: const EdgeInsets.all(8),
@@ -322,8 +325,8 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         child: Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.3),
+          decoration: const BoxDecoration(
+            color: Colors.white,
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: iconColor, size: 22),
