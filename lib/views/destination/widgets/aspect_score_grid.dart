@@ -90,33 +90,48 @@ class _AspectScoreRow extends StatelessWidget {
     final color = _colorForScore(aspect.score);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-      child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            _iconForAspect(aspect.aspect),
-            size: 16,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              aspect.aspect,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+          Row(
+            children: [
+              Icon(
+                _iconForAspect(aspect.aspect),
+                size: 16,
+                color: AppColors.textSecondary,
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  aspect.aspect,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textPrimary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$pct%',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 4),
-          Text(
-            '$pct%',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w800,
-              color: color,
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: aspect.score,
+              backgroundColor: color.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 4,
             ),
           ),
         ],
