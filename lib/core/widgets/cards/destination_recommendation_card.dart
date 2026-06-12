@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/recommendation_result_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../images/adaptive_destination_image.dart';
 
 /// Card showing a personalized recommendation with compatibility score.
 class DestinationRecommendationCard extends StatelessWidget {
@@ -51,7 +52,7 @@ class DestinationRecommendationCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.asset(dest.imageUrl, fit: BoxFit.cover),
+                    AdaptiveDestinationImage(imagePath: dest.imageUrl),
                     // Dark gradient from bottom
                     Container(
                       decoration: BoxDecoration(

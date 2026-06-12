@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/destination_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../images/adaptive_destination_image.dart';
 
 /// Versatile destination card with image overlay.
 /// Used in "Cerca de ti" and general listing contexts.
@@ -37,10 +38,7 @@ class DestinationCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               // ── Image ──
-              Image.asset(
-                destination.imageUrl,
-                fit: BoxFit.cover,
-              ),
+              AdaptiveDestinationImage(imagePath: destination.imageUrl),
 
               // ── Gradient ──
               DecoratedBox(

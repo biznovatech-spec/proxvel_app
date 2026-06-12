@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/destination_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../images/adaptive_destination_image.dart';
 
 /// Large hero card used in the "Lugares turísticos del momento" carousel.
 class TrendingDestinationCard extends StatelessWidget {
@@ -35,9 +36,8 @@ class TrendingDestinationCard extends StatelessWidget {
             children: [
               // ── Background image ──
               Positioned.fill(
-                child: Image.asset(
-                  destination.imageUrl,
-                  fit: BoxFit.cover,
+                child: AdaptiveDestinationImage(
+                  imagePath: destination.imageUrl,
                 ),
               ),
 

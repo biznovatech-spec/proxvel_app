@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/destination_model.dart';
 import '../../../core/theme/app_colors.dart';
+import '../images/adaptive_destination_image.dart';
 
 /// Compact horizontal chip showing a recent search with circular image.
 class RecentSearchChip extends StatelessWidget {
@@ -37,11 +38,12 @@ class RecentSearchChip extends StatelessWidget {
             // ── Circular image ──
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                destination.imageUrl,
+              child: SizedBox(
                 width: 48,
                 height: 48,
-                fit: BoxFit.cover,
+                child: AdaptiveDestinationImage(
+                  imagePath: destination.imageUrl,
+                ),
               ),
             ),
             const SizedBox(width: 10),

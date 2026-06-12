@@ -47,6 +47,85 @@ class DestinationModel {
     this.galleryImages = const [],
   });
 
+  /// True si la imagen proviene del backend (URL http) y no de assets.
+  bool get isNetworkImage => imageUrl.startsWith('http');
+
+  /// Copia el destino reemplazando imagen principal y galería
+  /// (usado para conservar assets locales cuando la API no trae imagen).
+  DestinationModel copyWithImage(String newImageUrl, List<String> newGallery) =>
+      DestinationModel(
+        id: id,
+        name: name,
+        city: city,
+        region: region,
+        category: category,
+        description: description,
+        imageUrl: newImageUrl,
+        averageCost: averageCost,
+        climate: climate,
+        crowdLevel: crowdLevel,
+        rating: rating,
+        aspects: aspects,
+        distanceKm: distanceKm,
+        estimatedDays: estimatedDays,
+        isTrending: isTrending,
+        type: type,
+        hierarchy: hierarchy,
+        altitudeM: altitudeM,
+        bestSeason: bestSeason,
+        activities: activities,
+        galleryImages: newGallery.isNotEmpty ? newGallery : galleryImages,
+      );
+
+  /// Construye un destino desde un item del ranking contextual del backend
+  /// (GET /recommendations/contextual). Respuesta plana con snake_case.
+  factory DestinationModel.fromApiRecommendation(Map<String, dynamic> json) {
+    final context = json['context'] as Map<String, dynamic>? ?? {};
+    final tourism = json['tourism_summary'] as Map<String, dynamic>? ?? {};
+    return DestinationModel(
+      id: json['destination_id'] ?? '',
+      name: json['destination'] ?? '',
+      city: json['city'] ?? '',
+      region: json['region'] ?? '',
+      category: json['category'] ?? '',
+      description: tourism['description'] ?? '',
+      imageUrl: json['cover_image_url'] ?? '',
+      averageCost: 0.0,
+      climate: context['weather_category'] ?? '',
+      crowdLevel: context['crowd_level'] ?? '',
+      rating: 0.0,
+      aspects: const [],
+      type: tourism['experience_type'],
+    );
+  }
+
+  /// Construye un destino desde el detalle del backend
+  /// (GET /destinations/{id}). Incluye clima/aforo del contexto.
+  factory DestinationModel.fromApiDetail(Map<String, dynamic> json) {
+    final context = json['context'] as Map<String, dynamic>? ?? {};
+    final tourism = json['tourism_info'] as Map<String, dynamic>? ?? {};
+    final gallery = (tourism['gallery_images'] as List?)
+            ?.whereType<String>()
+            .toList() ??
+        const <String>[];
+    return DestinationModel(
+      id: json['destination_id'] ?? '',
+      name: json['destination'] ?? '',
+      city: json['city'] ?? '',
+      region: json['region'] ?? '',
+      category: json['category'] ?? '',
+      description: tourism['description'] ?? '',
+      imageUrl: gallery.isNotEmpty ? gallery.first : '',
+      averageCost: 0.0,
+      climate: context['weather_category'] ?? '',
+      crowdLevel: context['crowd_level'] ?? '',
+      rating: 0.0,
+      aspects: const [],
+      type: tourism['experience_type'],
+      galleryImages: gallery,
+    );
+  }
+
   factory DestinationModel.fromJson(Map<String, dynamic> json) => DestinationModel(
         id: json['id'],
         name: json['name'],

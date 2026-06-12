@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide SearchController;
 import 'package:provider/provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'integration/api/api_client.dart';
 import 'integration/local/local_storage_service.dart';
 import 'integration/services/profile_service.dart';
 import 'integration/services/destination_service.dart';
@@ -30,14 +31,20 @@ class ProxvelApp extends StatelessWidget {
       providers: [
         // Services
         Provider<LocalStorageService>.value(value: storageService),
-        ProxyProvider<LocalStorageService, ProfileService>(
-          update: (_, storage, previous) => ProfileService(storage),
+        Provider<ApiClient>(create: (_) => ApiClient()),
+        ProxyProvider2<LocalStorageService, ApiClient, ProfileService>(
+          update: (_, storage, api, previous) =>
+              ProfileService(storage, apiClient: api),
         ),
         ProxyProvider<LocalStorageService, FeedbackService>(
           update: (_, storage, previous) => FeedbackService(storage),
         ),
-        Provider<DestinationService>(create: (_) => DestinationService()),
-        Provider<RecommendationService>(create: (_) => RecommendationService()),
+        ProxyProvider<ApiClient, DestinationService>(
+          update: (_, api, previous) => DestinationService(apiClient: api),
+        ),
+        ProxyProvider<ApiClient, RecommendationService>(
+          update: (_, api, previous) => RecommendationService(apiClient: api),
+        ),
         Provider<RouteService>(create: (_) => RouteService()),
 
         // Controllers

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/widgets/images/adaptive_destination_image.dart';
 
 class DestinationGalleryPreview extends StatelessWidget {
   final List<String> imageUrls;
@@ -52,11 +53,8 @@ class DestinationGalleryPreview extends StatelessWidget {
                 child: SizedBox(
                   width: 100,
                   height: 120,
-                  child: Image.asset(
-                    imageUrls[index],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(color: AppColors.divider),
+                  child: AdaptiveDestinationImage(
+                    imagePath: imageUrls[index],
                   ),
                 ),
               );
