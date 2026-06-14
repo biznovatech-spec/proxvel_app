@@ -8,18 +8,6 @@ class LocalStorageService {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    
-    // Inject default user for easy testing
-    if (getAllRegisteredUsers().isEmpty) {
-      final defaultUser = UserModel(
-        id: 'default_1',
-        name: 'Viajero',
-        lastName: 'Frecuente',
-        email: 'test@proxvel.com',
-        password: 'password123',
-      );
-      await registerUser(defaultUser);
-    }
   }
 
   // ── Session ──
@@ -47,31 +35,7 @@ class LocalStorageService {
     return null;
   }
 
-  // ── Registered Users (local user store) ──
-  Future<void> registerUser(UserModel user) async {
-    final users = getAllRegisteredUsers();
-    // Prevent duplicates by email
-    users.removeWhere((u) => u.email == user.email);
-    users.add(user);
-    final encoded = users.map((u) => jsonEncode(u.toJson())).toList();
-    await _prefs?.setStringList('registered_users', encoded);
-  }
 
-  List<UserModel> getAllRegisteredUsers() {
-    final strList = _prefs?.getStringList('registered_users') ?? [];
-    return strList
-        .map((str) => UserModel.fromJson(jsonDecode(str)))
-        .toList();
-  }
-
-  UserModel? findUserByEmail(String email) {
-    final users = getAllRegisteredUsers();
-    try {
-      return users.firstWhere((u) => u.email.toLowerCase() == email.toLowerCase());
-    } catch (_) {
-      return null;
-    }
-  }
 
   // ── Profile ──
   Future<void> saveProfile(TravelerProfileModel profile) async {

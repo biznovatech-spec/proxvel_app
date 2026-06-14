@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../models/user_model.dart';
 import '../../models/traveler_profile_model.dart';
 import '../api/api_client.dart';
-import '../api/api_config.dart';
 import '../local/local_storage_service.dart';
 
 /// Servicio de perfil: almacenamiento local primero; si no hay usuario
@@ -14,19 +13,7 @@ class ProfileService {
 
   Future<UserModel?> getUser() async {
     await Future.delayed(const Duration(milliseconds: 300));
-    final local = _storage.getUser();
-    if (local != null) return local;
-
-    if (_api != null) {
-      try {
-        final json = await _api.get('/users/${ApiConfig.demoUserId}');
-        final data = json['data'] as Map<String, dynamic>?;
-        if (data != null) return UserModel.fromApiJson(data);
-      } catch (e) {
-        debugPrint('[ProfileService] usuario API falló, usando local: $e');
-      }
-    }
-    return null;
+    return _storage.getUser();
   }
 
   /// Lista de usuarios demo del backend para selección de perfil.

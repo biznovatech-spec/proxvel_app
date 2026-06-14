@@ -18,11 +18,15 @@ class MyReviewsController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Regla: Usar el usuario actual si es válido y proviene del backend (ej. U00001).
-      // Los usuarios creados localmente tienen un ID puramente numérico (timestamp).
-      // Si el usuario es local o nulo, forzamos U00001 como fallback MVP.
-      bool isBackendUser = currentUser?.id != null && currentUser!.id.startsWith('U');
-      String userId = isBackendUser ? currentUser.id : 'U00001';
+      if (currentUser == null || !currentUser.id.startsWith('U000')) {
+        error = 'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.';
+        reviews = [];
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
+      
+      String userId = currentUser.id;
 
       reviews = await _reviewService.getReviewsByUser(userId);
     } catch (e) {

@@ -189,13 +189,22 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       _commentController.text.trim().isNotEmpty;
 
   Future<void> _submit() async {
-    String userId =
-        context.read<AuthController>().currentUser?.id ?? 'U00001';
+    final currentUser = context.read<AuthController>().currentUser;
     
-    // Fallback MVP: Si el usuario es local y no existe en PostgreSQL, usamos un demo
-    if (!userId.startsWith('U000')) {
-      userId = 'U00001';
+    if (currentUser == null || !currentUser.id.startsWith('U000')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró un usuario activo. Regístrate o inicia sesión para continuar.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
     }
+
+    final userId = currentUser.id;
 
     final feedback = FeedbackModel(
       userId: userId,

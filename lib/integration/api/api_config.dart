@@ -8,6 +8,8 @@ class ApiConfig {
 
   /// Usuario demo de la tesis usado para el ranking contextual
   /// (los 3000 perfiles simulados de Fase 3 usan IDs U00001..U03000).
+  /// ATENCIÓN: Este ID es exclusivamente un fallback demo.
+  /// Ya NO se usa como fuente principal en Feedback, Mis Reseñas, Perfil ni Preferencias en el flujo real.
   static const String demoUserId = 'U00001';
 
   static String get apiBaseUrl => baseUrl;

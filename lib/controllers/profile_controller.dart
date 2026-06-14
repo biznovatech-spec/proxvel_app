@@ -48,9 +48,10 @@ class ProfileController extends ChangeNotifier {
           profile = _storageService.getProfile();
         }
       } else {
-        // Fallback a lógica antigua / demo si no hay usuario real
-        user = localUser ?? await _profileService.getUser();
-        profile = _storageService.getProfile() ?? await _profileService.getProfile();
+        // No hay usuario activo
+        user = null;
+        profile = null;
+        error = 'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.';
       }
     } catch (e) {
       error = e.toString();

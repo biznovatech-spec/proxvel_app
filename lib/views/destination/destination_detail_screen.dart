@@ -426,7 +426,12 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
           // Feedback button
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push('/feedback/$destId'),
+              onTap: () async {
+                await context.push('/feedback/$destId');
+                if (mounted) {
+                  context.read<DestinationController>().loadDestination(destId);
+                }
+              },
               child: Container(
                 height: 52,
                 decoration: BoxDecoration(

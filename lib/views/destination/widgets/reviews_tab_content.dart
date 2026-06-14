@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../controllers/destination_controller.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -128,7 +129,12 @@ class ReviewsTabContent extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: () => context.push('/feedback/${controller.destination!.id}'),
+            onPressed: () async {
+              await context.push('/feedback/${controller.destination!.id}');
+              if (context.mounted) {
+                context.read<DestinationController>().loadDestination(controller.destination!.id);
+              }
+            },
             icon: const Icon(Icons.edit_rounded, size: 18),
             label: const Text('Escribir reseña'),
             style: OutlinedButton.styleFrom(

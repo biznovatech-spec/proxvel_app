@@ -39,24 +39,10 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Login by validating email/password against locally registered users.
-  /// Returns null on success, or an error message on failure.
+  /// Login functionality is temporarily disabled until real JWT is implemented.
   Future<String?> login(String email, String password) async {
     await Future.delayed(const Duration(milliseconds: 500)); // Simulate delay
-
-    final user = _storage.findUserByEmail(email);
-    if (user == null) {
-      return 'No se encontró una cuenta con ese correo.';
-    }
-    if (user.password != password) {
-      return 'La contraseña es incorrecta.';
-    }
-
-    // Credentials valid — set session
-    await _storage.saveUser(user);
-    await _storage.setSessionActive(true);
-    notifyListeners();
-    return null; // success
+    return 'El inicio de sesión real estará disponible próximamente.';
   }
 
   Future<void> logout() async {
