@@ -2,7 +2,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../models/user_model.dart';
 import '../../models/traveler_profile_model.dart';
-import '../../models/feedback_model.dart';
 
 class LocalStorageService {
   SharedPreferences? _prefs;
@@ -125,19 +124,6 @@ class LocalStorageService {
 
   List<String> getCompletedRoutes() {
     return _prefs?.getStringList('completed_routes') ?? [];
-  }
-
-  // ── Feedback ──
-  Future<void> saveFeedback(FeedbackModel feedback) async {
-    final list = getFeedbackList();
-    list.add(feedback);
-    final strList = list.map((f) => jsonEncode(f.toJson())).toList();
-    await _prefs?.setStringList('feedback', strList);
-  }
-
-  List<FeedbackModel> getFeedbackList() {
-    final strList = _prefs?.getStringList('feedback') ?? [];
-    return strList.map((str) => FeedbackModel.fromJson(jsonDecode(str))).toList();
   }
 
   // ── Recent Searches ──

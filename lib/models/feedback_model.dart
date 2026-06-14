@@ -28,4 +28,12 @@ class FeedbackModel {
         'comment': comment,
         'interactionType': interactionType,
       };
+
+  Map<String, dynamic> toApiJson() => {
+        'user_id': userId,
+        'destination_id': destinationId,
+        'rating_general': rating,
+        'review_text': comment,
+        'aspect_ratings': [],
+      };
 }

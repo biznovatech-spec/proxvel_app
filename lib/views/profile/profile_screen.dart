@@ -50,14 +50,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            // ── Header ──
-            ProfileHeader(name: userName, email: userEmail),
+      body: profileCtrl.isLoading
+          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          : SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  // ── Header ──
+                  ProfileHeader(name: userName, email: userEmail),
 
-            // ── Stats ──
+                  if (profileCtrl.error != null)
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.error.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              profileCtrl.error!,
+                              style: const TextStyle(color: AppColors.error, fontSize: 13),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // ── Stats ──
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Row(
@@ -153,10 +178,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _prefChip('💰', profile.budget),
-                _prefChip('🌤️', profile.preferredClimate),
-                _prefChip('👥', 'Multitud: ${profile.crowdTolerance}'),
-                ...profile.interests
+                _prefChip('💰', profile.presupuesto),
+                _prefChip('📅', profile.diasViaje >= 7 ? '7+ días' : '${profile.diasViaje} días'),
+                _prefChip('🌤️', profile.climaPreferido),
+                _prefChip('👥', 'Multitud: ${profile.toleranciaMultitudes}'),
+                ...profile.intereses
                     .take(4)
                     .map<Widget>((i) => _prefChip('🏷️', i)),
               ],
@@ -221,6 +247,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 if (mounted) {
                   context.read<ProfileController>().loadProfileData();
                 }
+              },
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            ProfileMenuItem(
+              icon: Icons.rate_review_rounded,
+              label: 'Mis reseñas',
+              onTap: () {
+                context.push('/profile/my-reviews');
               },
             ),
             const Divider(height: 1, color: AppColors.divider),

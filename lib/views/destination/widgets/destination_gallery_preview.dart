@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/images/adaptive_destination_image.dart';
+import '../../../models/destination_model.dart';
 
 class DestinationGalleryPreview extends StatelessWidget {
   final List<String> imageUrls;
@@ -9,8 +10,45 @@ class DestinationGalleryPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (imageUrls.isEmpty) return const SizedBox();
+    // 1. Filtrado estricto de URLs reusando la lógica centralizada
+    final validImages = imageUrls.where((url) => DestinationModel.isValidImageUrl(url)).toList();
 
+    debugPrint('[Gallery] validImages.length = ${validImages.length}');
+
+    // Caso A: 0 imágenes válidas
+    if (validImages.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Caso B: 1 imagen válida
+    if (validImages.length == 1) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Galería',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: AdaptiveDestinationImage(
+              imagePath: validImages.first,
+              width: double.infinity,
+              height: 160,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Caso C: 2 o más imágenes válidas
+    final displayImages = validImages.take(3).toList();
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -45,33 +83,30 @@ class DestinationGalleryPreview extends StatelessWidget {
           height: 120,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: imageUrls.length > 3 ? 3 : imageUrls.length,
+            itemCount: displayImages.length,
             separatorBuilder: (context, index) => const SizedBox(width: 12),
             itemBuilder: (context, index) {
               return ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
+                child: AdaptiveDestinationImage(
+                  imagePath: displayImages[index],
                   width: 100,
                   height: 120,
-                  child: AdaptiveDestinationImage(
-                    imagePath: imageUrls[index],
-                  ),
                 ),
               );
             },
           ),
         ),
         const SizedBox(height: 16),
-        // Simple dot indicator mockup
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildDot(true),
-            const SizedBox(width: 6),
-            _buildDot(false),
-            const SizedBox(width: 6),
-            _buildDot(false),
-          ],
+          children: List.generate(
+            displayImages.length,
+            (index) => Padding(
+              padding: EdgeInsets.only(right: index < displayImages.length - 1 ? 6.0 : 0),
+              child: _buildDot(index == 0),
+            ),
+          ),
         ),
       ],
     );

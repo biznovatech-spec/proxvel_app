@@ -55,4 +55,84 @@ class ProfileService {
     await Future.delayed(const Duration(milliseconds: 300));
     await _storage.saveProfile(profile);
   }
+
+  // --- Métodos Fase 3B.1 (Backend) ---
+
+  Future<TravelerProfileModel> getTravelerProfile(String userId) async {
+    final api = _api;
+    if (api == null) throw Exception('API no inicializada');
+    try {
+      if (kDebugMode) {
+        debugPrint('GET PROFILE URL: /users/$userId/traveler-profile');
+      }
+      final response = await api.get('/users/$userId/traveler-profile');
+      if (kDebugMode) {
+        debugPrint('PROFILE RESPONSE: $response');
+      }
+      final data = response['data'] as Map<String, dynamic>;
+      return TravelerProfileModel.fromApiJson(data);
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        throw Exception('Perfil o usuario no encontrado.');
+      }
+      throw Exception('Error al obtener perfil: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al obtener perfil: $e');
+    }
+  }
+
+  Future<TravelerProfileModel> putTravelerProfile({
+    required String userId,
+    required TravelerProfileModel profile,
+  }) async {
+    final api = _api;
+    if (api == null) throw Exception('API no inicializada');
+    try {
+      final body = profile.toApiJson();
+      if (kDebugMode) {
+        debugPrint('PREFERENCES SAVE BODY: $body');
+        debugPrint('PUT PROFILE URL: /users/$userId/traveler-profile');
+      }
+      
+      final response = await api.put('/users/$userId/traveler-profile', body);
+      
+      if (kDebugMode) {
+        debugPrint('PUT PROFILE RESPONSE: $response');
+      }
+      
+      final data = response['data'] as Map<String, dynamic>;
+      return TravelerProfileModel.fromApiJson(data);
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        throw Exception('Usuario no encontrado.');
+      } else if (e.statusCode == 422) {
+        throw Exception('Error de validación en los datos del perfil.');
+      }
+      throw Exception('Error al guardar perfil: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al guardar perfil: $e');
+    }
+  }
+
+  Future<TravelerProfileModel> patchTravelerProfile({
+    required String userId,
+    required Map<String, dynamic> updates,
+  }) async {
+    final api = _api;
+    if (api == null) throw Exception('API no inicializada');
+    try {
+      final response = await api.patch('/users/$userId/traveler-profile', updates);
+      final data = response['data'] as Map<String, dynamic>;
+      return TravelerProfileModel.fromApiJson(data);
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) {
+        throw Exception('Perfil o usuario no encontrado.');
+      } else if (e.statusCode == 422) {
+        throw Exception('Error de validación en la actualización del perfil.');
+      }
+      throw Exception('Error al actualizar perfil: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al actualizar perfil: $e');
+    }
+  }
 }

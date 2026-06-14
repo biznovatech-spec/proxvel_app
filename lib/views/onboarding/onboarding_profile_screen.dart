@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import '../../controllers/auth_controller.dart';
+import '../../controllers/onboarding_controller.dart';
+import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
 import '../../core/widgets/images/proxvel_enhanced_image.dart';
 
@@ -58,13 +62,63 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     if (_page < 4) {
       _pc.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
       setState(() => _page++);
-    } else { _complete(); }
+    } else { _saveAndComplete(); }
   }
 
   void _prev() {
     if (_page > 0) {
       _pc.previousPage(duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
       setState(() => _page--);
+    }
+  }
+
+  Future<void> _saveAndComplete() async {
+    final user = context.read<AuthController>().currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Error: No hay usuario activo.'),
+        backgroundColor: Colors.red,
+      ));
+      return;
+    }
+
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final selectedInterests = _interests.toList();
+    final tipoInteres = selectedInterests.isEmpty
+        ? 'mixto'
+        : (selectedInterests.length == 1 ? selectedInterests.first.toLowerCase() : 'mixto');
+
+    final profile = TravelerProfileModel(
+      presupuesto: _budget?.toLowerCase() ?? 'medio',
+      diasViaje: _days,
+      climaPreferido: _climate?.toLowerCase() ?? 'templado',
+      tipoInteres: tipoInteres,
+      intereses: selectedInterests.map((i) => i.toLowerCase()).toList(),
+      toleranciaMultitudes: _comfort?.toLowerCase() ?? 'moderado',
+      // The weights will just use defaults for now, as UI doesn't set them yet
+    );
+
+    final success = await context.read<OnboardingController>().saveProfile(profile, user.id);
+    
+    // Close loading dialog
+    if (mounted) Navigator.pop(context);
+
+    if (success) {
+      _complete();
+    } else {
+      if (mounted) {
+        final err = context.read<OnboardingController>().error;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(err ?? 'Error desconocido'),
+          backgroundColor: Colors.red.shade600,
+        ));
+      }
     }
   }
 

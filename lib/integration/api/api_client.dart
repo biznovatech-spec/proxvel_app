@@ -51,6 +51,38 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<dynamic> put(String endpoint, Map<String, dynamic> body) async {
+    final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
+    debugPrint('[API] PUT $uri');
+    final response = await _http
+        .put(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+    return _decode(response);
+  }
+
+  Future<dynamic> patch(String endpoint, Map<String, dynamic> body) async {
+    final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
+    debugPrint('[API] PATCH $uri');
+    final response = await _http
+        .patch(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+    return _decode(response);
+  }
+
   dynamic _decode(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(utf8.decode(response.bodyBytes));

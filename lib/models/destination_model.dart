@@ -82,6 +82,9 @@ class DestinationModel {
   factory DestinationModel.fromApiRecommendation(Map<String, dynamic> json) {
     final context = json['context'] as Map<String, dynamic>? ?? {};
     final tourism = json['tourism_summary'] as Map<String, dynamic>? ?? {};
+    final rawImageUrl = json['cover_image_url'] as String? ?? '';
+    final imageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : '';
+
     return DestinationModel(
       id: json['destination_id'] ?? '',
       name: json['destination'] ?? '',
@@ -89,7 +92,7 @@ class DestinationModel {
       region: json['region'] ?? '',
       category: json['category'] ?? '',
       description: tourism['description'] ?? '',
-      imageUrl: json['cover_image_url'] ?? '',
+      imageUrl: imageUrl,
       averageCost: 0.0,
       climate: context['weather_category'] ?? '',
       crowdLevel: context['crowd_level'] ?? '',
@@ -99,15 +102,41 @@ class DestinationModel {
     );
   }
 
+  /// Construye un destino desde el catálogo general del backend (GET /api/v1/destinations).
+  factory DestinationModel.fromApiCatalog(Map<String, dynamic> json) {
+    final rawImageUrl = json['cover_image_url'] as String? ?? '';
+    final imageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : '';
+
+    return DestinationModel(
+      id: json['destination_id'] ?? '',
+      name: json['destination'] ?? '',
+      city: json['city'] ?? '',
+      region: json['region'] ?? '',
+      category: json['category'] ?? '',
+      description: '', // El listado no trae descripción larga
+      imageUrl: imageUrl,
+      averageCost: 0.0,
+      climate: '', // No disponible en el catálogo base
+      crowdLevel: '', // No disponible en el catálogo base
+      rating: 0.0, // Pendiente a integrarse si el backend lo añade
+      aspects: const [],
+      type: json['category'],
+    );
+  }
+
   /// Construye un destino desde el detalle del backend
   /// (GET /destinations/{id}). Incluye clima/aforo del contexto.
   factory DestinationModel.fromApiDetail(Map<String, dynamic> json) {
     final context = json['context'] as Map<String, dynamic>? ?? {};
     final tourism = json['tourism_info'] as Map<String, dynamic>? ?? {};
-    final gallery = (tourism['gallery_images'] as List?)
+    
+    final rawGallery = (tourism['gallery_images'] as List?)
             ?.whereType<String>()
             .toList() ??
         const <String>[];
+        
+    final gallery = rawGallery.where((url) => isValidImageUrl(url)).toList();
+
     return DestinationModel(
       id: json['destination_id'] ?? '',
       name: json['destination'] ?? '',
@@ -173,4 +202,30 @@ class DestinationModel {
         'activities': activities,
         'galleryImages': galleryImages,
       };
+
+  /// Verifica rígidamente si un string es una URL o asset de imagen válido.
+  /// Rechaza páginas HTML (ej. Wikimedia/Wikipedia) y strings mal formados ("null").
+  static bool isValidImageUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty || trimmed.toLowerCase() == 'null') return false;
+    
+    if (!trimmed.startsWith('http')) {
+      return trimmed.startsWith('assets/');
+    }
+    
+    final lowerUrl = trimmed.toLowerCase();
+    
+    // Rechazar explícitamente páginas HTML de Wikipedia/Wikimedia
+    if (lowerUrl.contains('/wiki/')) return false;
+    if (lowerUrl.contains('wikimedia.org/wiki/file:')) return false;
+    
+    return lowerUrl.endsWith('.jpg') || 
+           lowerUrl.endsWith('.jpeg') || 
+           lowerUrl.endsWith('.png') || 
+           lowerUrl.endsWith('.webp') || 
+           lowerUrl.contains('.jpg?') ||
+           lowerUrl.contains('.png?') ||
+           lowerUrl.contains('.webp?') ||
+           lowerUrl.contains('.jpeg?');
+  }
 }

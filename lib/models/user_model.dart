@@ -39,4 +39,11 @@ class UserModel {
         'email': email,
         'password': password,
       };
+
+  /// Serializa el usuario para enviarlo al backend (POST /users).
+  Map<String, dynamic> toApiJson() => {
+        'name': lastName.isNotEmpty ? '$name $lastName'.trim() : name,
+        'email': email,
+        'password': password,
+      };
 }

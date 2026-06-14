@@ -25,8 +25,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final user = context.read<AuthController>().currentUser;
       if (user != null) {
-        _nameController.text = user.name;
-        _lastNameController.text = user.lastName;
+        final fullName = user.fullName.trim();
+        final parts = fullName.split(RegExp(r'\s+'));
+        
+        if (parts.length == 1) {
+          _nameController.text = parts[0];
+          _lastNameController.text = '';
+        } else if (parts.length == 2) {
+          _nameController.text = parts[0];
+          _lastNameController.text = parts[1];
+        } else if (parts.length > 2) {
+          // Rule: First word is Name, the rest is Last Name
+          _nameController.text = parts[0];
+          _lastNameController.text = parts.skip(1).join(' ');
+        }
+        
         _emailController.text = user.email;
       }
     });
@@ -126,8 +139,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             ProxvelTextField(
-              label: 'Email',
+              label: 'Email (Solo lectura)',
               controller: _emailController,
+              readOnly: true,
             ),
             const SizedBox(height: 48),
             ProxvelButton(

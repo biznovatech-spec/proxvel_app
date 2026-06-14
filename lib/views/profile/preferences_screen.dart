@@ -20,12 +20,16 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
   String _climate = '';
   String _crowdTolerance = '';
   List<String> _interests = [];
+  String _days = '';
 
   final List<String> _budgetOptions = ['Bajo', 'Medio', 'Alto', 'Lujo'];
-  final List<String> _climateOptions = ['Soleado', 'Frío', 'Templado', 'Tropical'];
+  final List<String> _climateOptions = ['Frío', 'Templado', 'Cálido'];
   final List<String> _crowdOptions = ['Baja', 'Media', 'Alta'];
+  final List<String> _daysOptions = ['1', '2', '3', '5', '7+'];
   final List<String> _allInterests = [
-    'Playa', 'Montaña', 'Ciudad', 'Aventura', 'Cultura', 'Gastronomía', 'Historia', 'Relajación'
+    'Naturaleza', 'Cultura', 'Gastronomía', 'Compras',
+    'Aventura', 'Playa', 'Urbano', 'Rural',
+    'Negocios', 'Académico', 'Relax', 'Familiar'
   ];
 
   @override
@@ -40,34 +44,114 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     final profile = context.read<ProfileController>().profile;
     if (profile != null) {
       setState(() {
-        _budget = profile.budget;
-        _climate = profile.preferredClimate;
-        _crowdTolerance = profile.crowdTolerance;
-        _interests = List.from(profile.interests);
+        _budget = _matchOption(_budgetOptions, profile.presupuesto) ?? '';
+        _climate = _matchOption(_climateOptions, profile.climaPreferido) ?? '';
+        _crowdTolerance = _matchOption(_crowdOptions, profile.toleranciaMultitudes) ?? '';
+        
+        final days = profile.diasViaje;
+        _days = days >= 7 ? '7+' : days.toString();
+        if (!_daysOptions.contains(_days)) _days = '3'; // Default fallback
+        
+        // Intereses
+        _interests = profile.intereses
+            .map((i) => _matchOption(_allInterests, i))
+            .where((i) => i != null)
+            .cast<String>()
+            .toList();
       });
     }
   }
 
+  String _normalize(String text) {
+    return text.toLowerCase().trim()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u')
+        .replaceAll('ñ', 'n');
+  }
+
+  String? _matchOption(List<String> options, String backendValue) {
+    final normalized = _normalize(backendValue);
+    for (final opt in options) {
+      final optNorm = _normalize(opt);
+      if (optNorm == normalized) {
+        return opt;
+      }
+      // Especial caso: alto/alta, bajo/baja, medio/media
+      if ((optNorm == 'alta' && normalized == 'alto') ||
+          (optNorm == 'baja' && normalized == 'bajo') ||
+          (optNorm == 'media' && normalized == 'medio')) {
+        return opt;
+      }
+    }
+    return null;
+  }
+
+  bool _isSaving = false;
+
   Future<void> _handleSave() async {
-    final profile = context.read<ProfileController>().profile;
-    final updated = TravelerProfileModel(
-      budget: _budget.isEmpty ? 'Medio' : _budget,
-      preferredClimate: _climate.isEmpty ? 'Templado' : _climate,
-      crowdTolerance: _crowdTolerance.isEmpty ? 'Media' : _crowdTolerance,
-      interests: _interests.isEmpty ? ['Playa'] : _interests,
-      accessibility: profile?.accessibility ?? 'No requiere',
-      experienceType: profile?.experienceType ?? 'Equilibrado',
-    );
-    await context.read<ProfileController>().updatePreferences(updated);
+    if (_isSaving) return;
+
+    setState(() => _isSaving = true);
     
-    if (mounted) {
-      setState(() => _isEditing = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preferencias actualizadas'),
-          backgroundColor: AppColors.success,
-        ),
+    try {
+      final tipoInteres = _interests.isEmpty
+          ? 'mixto'
+          : (_interests.length == 1 ? _normalize(_interests.first) : 'mixto');
+          
+      String mapCrowd(String val) {
+        final lower = _normalize(val);
+        if (lower == 'alta') return 'alto';
+        if (lower == 'media') return 'medio';
+        if (lower == 'baja') return 'bajo';
+        return lower;
+      }
+
+      int parseDays(String val) {
+        if (val == '7+') return 7;
+        return int.tryParse(val) ?? 3;
+      }
+
+      final validInterests = _interests
+          .where((i) => _allInterests.contains(i))
+          .map((e) => _normalize(e))
+          .toList();
+
+      final updated = TravelerProfileModel(
+        presupuesto: _budget.isEmpty ? 'medio' : _normalize(_budget),
+        diasViaje: parseDays(_days),
+        climaPreferido: _climate.isEmpty ? 'templado' : _normalize(_climate),
+        tipoInteres: tipoInteres,
+        intereses: validInterests.isEmpty ? ['playa'] : validInterests,
+        toleranciaMultitudes: _crowdTolerance.isEmpty ? 'medio' : mapCrowd(_crowdTolerance),
       );
+      
+      await context.read<ProfileController>().updatePreferences(updated);
+      
+      if (mounted) {
+        setState(() {
+          _isEditing = false;
+          _isSaving = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Preferencias actualizadas correctamente'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar: ${e.toString().replaceAll("Exception: ", "")}'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -129,6 +213,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             _buildSelectionGrid(_budgetOptions, _budget, (val) => setState(() => _budget = val)),
             
             const SizedBox(height: 24),
+            _buildSectionTitle('Días de viaje', Icons.calendar_month_rounded),
+            const SizedBox(height: 12),
+            _buildSelectionGrid(_daysOptions, _days, (val) => setState(() => _days = val)),
+
+            const SizedBox(height: 24),
             _buildSectionTitle('Clima preferido', Icons.thermostat_rounded),
             const SizedBox(height: 12),
             _buildSelectionGrid(_climateOptions, _climate, (val) => setState(() => _climate = val)),
@@ -150,14 +239,15 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             const SizedBox(height: 48),
             if (_isEditing) ...[
               ProxvelButton(
-                text: 'Guardar Preferencias',
+                text: _isSaving ? 'Guardando...' : 'Guardar Preferencias',
+                isLoading: _isSaving,
                 onPressed: _handleSave,
               ),
               const SizedBox(height: 16),
               ProxvelButton(
                 text: 'Cancelar',
                 isSecondary: true,
-                onPressed: () {
+                onPressed: _isSaving ? null : () {
                   _loadCurrentPreferences();
                   setState(() => _isEditing = false);
                 },

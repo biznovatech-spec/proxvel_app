@@ -11,6 +11,7 @@ import '../../core/widgets/images/adaptive_destination_image.dart';
 import '../../core/widgets/states/loading_view.dart';
 import 'widgets/why_for_me_tab_content.dart';
 import 'widgets/about_destination_tab_content.dart';
+import 'widgets/reviews_tab_content.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
   final String destinationId;
@@ -165,10 +166,21 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         runSpacing: 10,
                         children: [
                           _infoBadge(Icons.category_outlined, dest.category),
-                          _infoBadge(
-                            Icons.star_rounded,
-                            '${dest.rating.toStringAsFixed(1)} rating',
-                          ),
+                          if (controller.averageRating > 0)
+                            _infoBadge(
+                              Icons.star_rounded,
+                              '${controller.averageRating.toStringAsFixed(1)} según opiniones',
+                            )
+                          else if (dest.rating > 0)
+                            _infoBadge(
+                              Icons.star_rounded,
+                              '${dest.rating.toStringAsFixed(1)} según opiniones',
+                            )
+                          else
+                            _infoBadge(
+                              Icons.star_border_rounded,
+                              'Nuevo',
+                            ),
                           if (dest.estimatedDays != null)
                             _infoBadge(
                               Icons.schedule_rounded,
@@ -194,7 +206,9 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                         duration: const Duration(milliseconds: 250),
                         child: _selectedTabIndex == 0
                             ? _buildWhyForMeContent(controller)
-                            : _buildAboutDestinationContent(controller),
+                            : _selectedTabIndex == 1
+                                ? _buildAboutDestinationContent(controller)
+                                : ReviewsTabContent(key: const ValueKey('reviews'), controller: controller),
                       ),
                     ],
                   ),
@@ -235,6 +249,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         children: [
           Expanded(child: _tabItem('¿Por qué para mí?', 0)),
           Expanded(child: _tabItem('Sobre el destino', 1)),
+          Expanded(child: _tabItem('Opiniones', 2)),
         ],
       ),
     );
@@ -310,6 +325,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     return AboutDestinationTabContent(
       key: const ValueKey('about_destination'),
       destination: dest,
+      tourismInfo: controller.tourismInfo,
     );
   }
 

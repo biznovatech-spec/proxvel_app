@@ -135,9 +135,9 @@ class TravelerProfileSummaryCard extends StatelessWidget {
       ];
     }
     return [
-      {'icon': Icons.wb_sunny_outlined, 'label': 'Prefiere clima', 'value': profile.preferredClimate},
-      {'icon': Icons.groups_outlined, 'label': 'Tolerancia a multitudes', 'value': profile.crowdTolerance},
-      {'icon': Icons.explore_outlined, 'label': 'Estilo de viaje', 'value': profile.experienceType},
+      {'icon': Icons.wb_sunny_outlined, 'label': 'Prefiere clima', 'value': profile.climaPreferido},
+      {'icon': Icons.groups_outlined, 'label': 'Tolerancia a multitudes', 'value': profile.toleranciaMultitudes},
+      {'icon': Icons.explore_outlined, 'label': 'Tipo de interés', 'value': profile.tipoInteres},
     ];
   }
 }

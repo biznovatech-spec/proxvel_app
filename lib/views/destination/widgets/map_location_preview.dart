@@ -2,10 +2,57 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
 class MapLocationPreview extends StatelessWidget {
-  const MapLocationPreview({super.key});
+  final double? latitude;
+  final double? longitude;
+
+  const MapLocationPreview({
+    super.key,
+    this.latitude,
+    this.longitude,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (latitude == null || longitude == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Ubicación',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE8ECEF)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.location_off_outlined, color: AppColors.textSecondary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Ubicación geográfica no disponible en la fuente oficial.',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

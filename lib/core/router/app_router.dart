@@ -12,6 +12,7 @@ import '../../views/routes/routes_screen.dart';
 import '../../views/profile/profile_screen.dart';
 import '../../views/profile/edit_profile_screen.dart';
 import '../../views/profile/preferences_screen.dart';
+import '../../views/profile/my_reviews_screen.dart';
 import '../../views/feedback/feedback_screen.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -36,6 +37,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
     GoRoute(path: '/profile/edit', builder: (context, state) => const EditProfileScreen()),
     GoRoute(path: '/profile/preferences', builder: (context, state) => const PreferencesScreen()),
+    GoRoute(path: '/profile/my-reviews', builder: (context, state) => const MyReviewsScreen()),
     GoRoute(path: '/feedback/:destinationId', builder: (context, state) {
       final destId = state.pathParameters['destinationId']!;
       return FeedbackScreen(destinationId: destId);

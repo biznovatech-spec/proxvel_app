@@ -9,6 +9,7 @@ class ProxvelTextField extends StatefulWidget {
   final String? errorText;
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
+  final bool readOnly;
 
   const ProxvelTextField({
     super.key,
@@ -19,6 +20,7 @@ class ProxvelTextField extends StatefulWidget {
     this.errorText,
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
+    this.readOnly = false,
   });
 
   @override
@@ -40,6 +42,7 @@ class _ProxvelTextFieldState extends State<ProxvelTextField> {
       margin: EdgeInsets.only(bottom: widget.errorText != null ? 8 : 16),
       child: TextField(
         controller: widget.controller,
+        readOnly: widget.readOnly,
         obscureText: widget.isPassword ? _obscureText : false,
         onChanged: widget.onChanged,
         textCapitalization: widget.textCapitalization,

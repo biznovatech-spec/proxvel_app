@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/destination_model.dart';
+import '../../../models/tourism_catalog_model.dart';
 
 class KeyInfoGrid extends StatelessWidget {
   final DestinationModel destination;
+  final TourismCatalogModel? tourismInfo;
 
-  const KeyInfoGrid({super.key, required this.destination});
+  const KeyInfoGrid({
+    super.key,
+    required this.destination,
+    this.tourismInfo,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -36,8 +42,8 @@ class KeyInfoGrid extends StatelessWidget {
                   _KeyInfoItem(
                     icon: Icons.landscape_outlined,
                     label: 'Altitud',
-                    value: destination.altitudeM != null
-                        ? '${destination.altitudeM!.toStringAsFixed(0)} m\ns. n. m.'
+                    value: (tourismInfo?.altitudeM ?? destination.altitudeM) != null
+                        ? '${(tourismInfo?.altitudeM ?? destination.altitudeM)!.toStringAsFixed(0)} m\ns. n. m.'
                         : 'N/A',
                   ),
                 ],
@@ -50,13 +56,13 @@ class KeyInfoGrid extends StatelessWidget {
                   _KeyInfoItem(
                     icon: Icons.account_balance_outlined,
                     label: 'Tipo',
-                    value: destination.type ?? 'N/A',
+                    value: tourismInfo?.type ?? destination.type ?? 'N/A',
                   ),
                   const SizedBox(height: 16),
                   _KeyInfoItem(
                     icon: Icons.location_on_outlined,
                     label: 'Región',
-                    value: destination.region,
+                    value: tourismInfo?.region ?? destination.region,
                   ),
                 ],
               ),
@@ -68,13 +74,13 @@ class KeyInfoGrid extends StatelessWidget {
                   _KeyInfoItem(
                     icon: Icons.star_border_rounded,
                     label: 'Jerarquía',
-                    value: destination.hierarchy ?? 'N/A',
+                    value: tourismInfo?.hierarchy ?? destination.hierarchy ?? 'N/A',
                   ),
                   const SizedBox(height: 16),
                   _KeyInfoItem(
                     icon: Icons.map_outlined,
                     label: 'Ciudad / Zona',
-                    value: destination.city,
+                    value: tourismInfo?.city ?? tourismInfo?.district ?? destination.city,
                   ),
                 ],
               ),

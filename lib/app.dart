@@ -9,6 +9,9 @@ import 'integration/services/destination_service.dart';
 import 'integration/services/recommendation_service.dart';
 import 'integration/services/route_service.dart';
 import 'integration/services/feedback_service.dart';
+import 'integration/services/tourism_service.dart';
+import 'integration/services/review_service.dart';
+import 'integration/services/user_service.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/onboarding_controller.dart';
@@ -19,6 +22,7 @@ import 'controllers/favorites_controller.dart';
 import 'controllers/routes_controller.dart';
 import 'controllers/profile_controller.dart';
 import 'controllers/feedback_controller.dart';
+import 'controllers/my_reviews_controller.dart';
 
 class ProxvelApp extends StatelessWidget {
   final LocalStorageService storageService;
@@ -36,21 +40,30 @@ class ProxvelApp extends StatelessWidget {
           update: (_, storage, api, previous) =>
               ProfileService(storage, apiClient: api),
         ),
-        ProxyProvider<LocalStorageService, FeedbackService>(
-          update: (_, storage, previous) => FeedbackService(storage),
+        ProxyProvider2<LocalStorageService, ApiClient, FeedbackService>(
+          update: (_, storage, api, previous) => FeedbackService(storage, apiClient: api),
         ),
         ProxyProvider<ApiClient, DestinationService>(
           update: (_, api, previous) => DestinationService(apiClient: api),
         ),
+        ProxyProvider<ApiClient, TourismService>(
+          update: (_, api, previous) => TourismService(apiClient: api),
+        ),
+        ProxyProvider<ApiClient, ReviewService>(
+          update: (_, api, previous) => ReviewService(apiClient: api),
+        ),
         ProxyProvider<ApiClient, RecommendationService>(
           update: (_, api, previous) => RecommendationService(apiClient: api),
+        ),
+        ProxyProvider<ApiClient, UserService>(
+          update: (_, api, previous) => UserService(apiClient: api),
         ),
         Provider<RouteService>(create: (_) => RouteService()),
 
         // Controllers
-        ChangeNotifierProxyProvider<LocalStorageService, AuthController>(
-          create: (context) => AuthController(context.read<LocalStorageService>()),
-          update: (context, local, auth) => auth ?? AuthController(local),
+        ChangeNotifierProxyProvider2<LocalStorageService, UserService, AuthController>(
+          create: (context) => AuthController(context.read<LocalStorageService>(), context.read<UserService>()),
+          update: (context, local, userSvc, auth) => auth ?? AuthController(local, userSvc),
         ),
         ChangeNotifierProvider<HomeController>(create: (_) => HomeController()),
         ChangeNotifierProxyProvider<ProfileService, OnboardingController>(
@@ -68,9 +81,14 @@ class ProxvelApp extends StatelessWidget {
           create: (context) => RecommendationController(context.read<RecommendationService>()),
           update: (context, recSvc, ctl) => ctl ?? RecommendationController(recSvc),
         ),
-        ChangeNotifierProxyProvider<DestinationService, DestinationController>(
-          create: (context) => DestinationController(context.read<DestinationService>()),
-          update: (context, destSvc, ctl) => ctl ?? DestinationController(destSvc),
+        ChangeNotifierProxyProvider3<DestinationService, TourismService, ReviewService, DestinationController>(
+          create: (context) => DestinationController(
+            context.read<DestinationService>(),
+            context.read<TourismService>(),
+            context.read<ReviewService>(),
+          ),
+          update: (context, destSvc, tourismSvc, reviewSvc, ctl) => 
+            ctl ?? DestinationController(destSvc, tourismSvc, reviewSvc),
         ),
         ChangeNotifierProxyProvider2<LocalStorageService, DestinationService, FavoritesController>(
           create: (context) => FavoritesController(context.read<LocalStorageService>(), context.read<DestinationService>()),
@@ -83,16 +101,22 @@ class ProxvelApp extends StatelessWidget {
           ),
           update: (context, routeSvc, localSvc, ctl) => ctl ?? RoutesController(routeSvc, localSvc),
         ),
-        ChangeNotifierProxyProvider2<ProfileService, LocalStorageService, ProfileController>(
+        ChangeNotifierProxyProvider3<ProfileService, LocalStorageService, UserService, ProfileController>(
           create: (context) => ProfileController(
             context.read<ProfileService>(),
             context.read<LocalStorageService>(),
+            userService: context.read<UserService>(),
           ),
-          update: (context, profileSvc, localSvc, ctl) => ctl ?? ProfileController(profileSvc, localSvc),
+          update: (context, profileSvc, localSvc, userSvc, ctl) => 
+            ctl ?? ProfileController(profileSvc, localSvc, userService: userSvc),
         ),
         ChangeNotifierProxyProvider<FeedbackService, FeedbackController>(
           create: (context) => FeedbackController(context.read<FeedbackService>()),
           update: (context, feedbackSvc, ctl) => ctl ?? FeedbackController(feedbackSvc),
+        ),
+        ChangeNotifierProxyProvider<ReviewService, MyReviewsController>(
+          create: (context) => MyReviewsController(context.read<ReviewService>()),
+          update: (context, reviewSvc, ctl) => ctl ?? MyReviewsController(reviewSvc),
         ),
       ],
       child: MaterialApp.router(

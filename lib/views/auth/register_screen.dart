@@ -99,15 +99,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _handleRegister() async {
     setState(() => _isLoading = true);
-    await context.read<AuthController>().register(
-      name: _nameController.text.trim(),
-      lastName: _lastnameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
-    if (mounted) {
-      setState(() => _isLoading = false);
-      context.go('/onboarding');
+    try {
+      await context.read<AuthController>().register(
+        name: _nameController.text.trim(),
+        lastName: _lastnameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+        context.go('/onboarding');
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: Colors.red.shade600,
+          ),
+        );
+      }
     }
   }
 

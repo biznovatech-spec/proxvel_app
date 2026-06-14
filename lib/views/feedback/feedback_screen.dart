@@ -93,7 +93,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         const SizedBox(height: 32),
 
                         // ═══ COMMENT ═══
-                        _sectionTitle('Comentario (opcional)'),
+                        _sectionTitle('Comentario breve'),
                         const SizedBox(height: 12),
                         Container(
                           decoration: BoxDecoration(
@@ -104,10 +104,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                           ),
                           child: TextField(
                             controller: _commentController,
+                            onChanged: (_) => setState(() {}),
                             maxLines: 4,
                             decoration: const InputDecoration(
                               hintText:
-                                  'Cuéntanos qué te pareció este destino...',
+                                  'Escribe un comentario breve para enviar tu reseña...',
                               hintStyle: TextStyle(
                                 color: AppColors.textMuted,
                                 fontSize: 14,
@@ -182,11 +183,20 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     );
   }
 
-  bool get _canSubmit => _rating > 0 && _selectedType.isNotEmpty;
+  bool get _canSubmit =>
+      _rating > 0 &&
+      _selectedType.isNotEmpty &&
+      _commentController.text.trim().isNotEmpty;
 
   Future<void> _submit() async {
-    final userId =
-        context.read<AuthController>().currentUser?.id ?? 'anonymous';
+    String userId =
+        context.read<AuthController>().currentUser?.id ?? 'U00001';
+    
+    // Fallback MVP: Si el usuario es local y no existe en PostgreSQL, usamos un demo
+    if (!userId.startsWith('U000')) {
+      userId = 'U00001';
+    }
+
     final feedback = FeedbackModel(
       userId: userId,
       destinationId: widget.destinationId,
@@ -197,8 +207,28 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
     final success =
         await context.read<FeedbackController>().submitFeedback(feedback);
-    if (success && mounted) {
-      setState(() => _submitted = true);
+    
+    if (mounted) {
+      if (success) {
+        setState(() => _submitted = true);
+      } else {
+        final errorMsg = context.read<FeedbackController>().error ?? '';
+        String displayMsg = 'No se pudo enviar la reseña. Inténtalo nuevamente.';
+        
+        if (errorMsg.contains('Usuario no existe')) {
+          displayMsg = 'Tu usuario no está sincronizado con el servidor. Inicia con un usuario demo e inténtalo nuevamente.';
+        } else {
+          displayMsg = 'No se pudo enviar la reseña. Usuario no válido o sesión no sincronizada.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(displayMsg),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 

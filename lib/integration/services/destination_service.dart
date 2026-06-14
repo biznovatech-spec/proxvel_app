@@ -36,8 +36,26 @@ class DestinationService {
   Map<String, Map<String, dynamic>>? _rankingByDestination;
 
   Future<List<DestinationModel>> getDestinations() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    // Solo los destinos cubiertos por la tesis (Fases 2-4)
+    if (_api != null) {
+      try {
+        final json = await _api.get('/destinations');
+        final items = json['data'] as List? ?? [];
+        
+        final parsedList = items
+            .whereType<Map<String, dynamic>>()
+            .map((item) => DestinationModel.fromApiCatalog(item))
+            .toList();
+
+        if (parsedList.isNotEmpty) {
+          return parsedList;
+        }
+      } catch (e) {
+        debugPrint('[DestinationService] Falló getDestinations API, usando fallback: $e');
+      }
+    }
+
+    // Fallback explícito a mock
+    debugPrint('[DestinationService] Backend no disponible, usando MockDestinationDataSource como fallback.');
     return MockDestinationDataSource.activeDestinations;
   }
 
@@ -51,17 +69,6 @@ class DestinationService {
     final detail = await _fetchDetail(id);
     if (detail != null) {
       final dest = DestinationModel.fromApiDetail(detail);
-      // El catálogo del backend no trae cover separado: usa galería o
-      // conserva el asset local si el destino también existe en mocks.
-      if (dest.imageUrl.isEmpty) {
-        final mock = _findMockByName(dest.name);
-        if (mock != null) {
-          return DestinationModel.fromApiDetail(detail).copyWithImage(
-            mock.imageUrl,
-            mock.galleryImages,
-          );
-        }
-      }
       return dest;
     }
     // Fallback: buscar en mocks por id (slug)
@@ -151,12 +158,5 @@ class DestinationService {
     }
     return _rankingByDestination?[destinationId];
   }
-
-  DestinationModel? _findMockByName(String name) {
-    final lower = name.toLowerCase();
-    for (final d in MockDestinationDataSource.destinations) {
-      if (d.name.toLowerCase() == lower) return d;
-    }
-    return null;
-  }
 }
+
