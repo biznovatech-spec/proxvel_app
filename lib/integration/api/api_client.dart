@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
+import '../local/secure_token_storage.dart';
 
 /// Error de la API PROXVEL (4xx/5xx o respuesta inválida).
 class ApiException implements Exception {
@@ -20,8 +21,29 @@ class ApiException implements Exception {
 /// si la petición falla (backend apagado, timeout, error), el servicio
 /// captura la excepción y continúa con datos locales.
 class ApiClient {
+  static Function()? onUnauthorized;
+  static Function(String)? onForbidden;
+
   final http.Client _http;
-  ApiClient({http.Client? httpClient}) : _http = httpClient ?? http.Client();
+  final SecureTokenStorage _secureStorage;
+
+  ApiClient({http.Client? httpClient, SecureTokenStorage? secureStorage}) 
+      : _http = httpClient ?? http.Client(),
+        _secureStorage = secureStorage ?? SecureTokenStorage();
+
+  Future<Map<String, String>> _getHeaders({bool isGet = false}) async {
+    final headers = <String, String>{
+      'Accept': 'application/json',
+    };
+    if (!isGet) {
+      headers['Content-Type'] = 'application/json';
+    }
+    final token = await _secureStorage.getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
 
   Future<dynamic> get(String endpoint, {Map<String, String>? queryParams}) async {
     var uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
@@ -29,8 +51,9 @@ class ApiClient {
       uri = uri.replace(queryParameters: queryParams);
     }
     debugPrint('[API] GET $uri');
+    final headers = await _getHeaders(isGet: true);
     final response = await _http
-        .get(uri, headers: {'Accept': 'application/json'})
+        .get(uri, headers: headers)
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
     return _decode(response);
   }
@@ -38,13 +61,11 @@ class ApiClient {
   Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] POST $uri');
+    final headers = await _getHeaders();
     final response = await _http
         .post(
           uri,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
@@ -54,13 +75,11 @@ class ApiClient {
   Future<dynamic> put(String endpoint, Map<String, dynamic> body) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PUT $uri');
+    final headers = await _getHeaders();
     final response = await _http
         .put(
           uri,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
@@ -70,13 +89,11 @@ class ApiClient {
   Future<dynamic> patch(String endpoint, Map<String, dynamic> body) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PATCH $uri');
+    final headers = await _getHeaders();
     final response = await _http
         .patch(
           uri,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
+          headers: headers,
           body: jsonEncode(body),
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
@@ -84,6 +101,15 @@ class ApiClient {
   }
 
   dynamic _decode(http.Response response) {
+    if (response.statusCode == 401) {
+      onUnauthorized?.call();
+      throw ApiException(401, 'Tu sesión expiró. Inicia sesión nuevamente.');
+    }
+    if (response.statusCode == 403) {
+      final message = 'No tienes permiso para realizar esta acción.';
+      onForbidden?.call(message);
+      throw ApiException(403, message);
+    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(utf8.decode(response.bodyBytes));
     }

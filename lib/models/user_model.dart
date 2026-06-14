@@ -4,6 +4,8 @@ class UserModel {
   final String lastName;
   final String email;
   final String password; // Local-only simulated password (not hashed)
+  final String role;
+  final bool isActive;
 
   UserModel({
     required this.id,
@@ -11,6 +13,8 @@ class UserModel {
     this.lastName = '',
     required this.email,
     this.password = '',
+    this.role = 'user',
+    this.isActive = true,
   });
 
   /// Full display name.
@@ -19,25 +23,32 @@ class UserModel {
 
   /// Construye un usuario desde el backend (GET /users/demo o /users/{id}).
   factory UserModel.fromApiJson(Map<String, dynamic> json) => UserModel(
-        id: json['user_id'] ?? '',
+        id: json['user_id'] ?? json['id'] ?? '',
         name: json['name'] ?? '',
         email: json['email'] ?? '',
+        role: json['role'] ?? 'user',
+        isActive: json['is_active'] ?? true,
       );
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'],
-        name: json['name'],
+        id: json['user_id'] ?? json['id'] ?? '',
+        name: json['name'] ?? '',
         lastName: json['lastName'] ?? '',
-        email: json['email'],
+        email: json['email'] ?? '',
         password: json['password'] ?? '',
+        role: json['role'] ?? 'user',
+        isActive: json['is_active'] ?? true,
       );
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'user_id': id,
         'name': name,
         'lastName': lastName,
         'email': email,
         'password': password,
+        'role': role,
+        'is_active': isActive,
       };
 
   /// Serializa el usuario para enviarlo al backend (POST /users).

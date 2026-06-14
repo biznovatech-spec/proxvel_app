@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import '../models/user_model.dart';
+import '../integration/local/secure_token_storage.dart';
 import '../integration/local/local_storage_service.dart';
 import '../integration/services/user_service.dart';
+import '../integration/services/auth_service.dart';
 
 class AuthController extends ChangeNotifier {
   final LocalStorageService _storage;
+  final SecureTokenStorage _secureStorage;
   final UserService? _userService;
+  final AuthService? _authService;
 
-  AuthController(this._storage, [this._userService]);
+  AuthController(this._storage, this._secureStorage, [this._userService, this._authService]);
 
   bool get isAuthenticated => _storage.isSessionActive;
 
   /// Returns the currently stored session user, or null if none saved.
   UserModel? get currentUser => _storage.getUser();
 
-  /// Register a new user in the backend and set session active.
+  Future<void> saveToken(String token) async => await _secureStorage.saveAccessToken(token);
+  Future<void> clearToken() async => await _secureStorage.deleteAccessToken();
+  Future<bool> hasToken() async => await _secureStorage.hasAccessToken();
+
   Future<void> register({
     required String name,
     required String lastName,
@@ -22,32 +29,86 @@ class AuthController extends ChangeNotifier {
     required String password,
   }) async {
     if (_userService == null) throw Exception('Servicio de usuarios no disponible.');
+    if (_authService == null) throw Exception('Servicio de autenticación no disponible.');
     
     // Concatena nombres antes de enviar si es necesario
     final unifiedName = lastName.isNotEmpty ? '$name $lastName'.trim() : name;
 
     // Llama al backend
-    final realUser = await _userService.createUser(
+    await _userService.createUser(
       name: unifiedName,
       email: email,
       password: password,
     );
 
-    // Save as current user and activate session
-    await _storage.saveUser(realUser);
-    await _storage.setSessionActive(true);
-    notifyListeners();
+    // Auto-login post-registro
+    try {
+      final loginResponse = await _authService.login(
+        email: email,
+        password: password,
+      );
+      
+      await saveToken(loginResponse.accessToken);
+      await _storage.saveUser(loginResponse.user);
+      await _storage.setSessionActive(true);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Tu cuenta fue creada, pero no se pudo iniciar sesión automáticamente. Inicia sesión manualmente.');
+    }
   }
 
-  /// Login functionality is temporarily disabled until real JWT is implemented.
+  /// Autentica usando JWT y guarda la sesión
   Future<String?> login(String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 500)); // Simulate delay
-    return 'El inicio de sesión real estará disponible próximamente.';
+    if (email.trim().isEmpty || password.isEmpty) {
+      return 'Correo y contraseña son requeridos.';
+    }
+    
+    if (_authService == null) return 'Servicio de autenticación no disponible.';
+    
+    try {
+      final response = await _authService.login(email: email.trim(), password: password);
+      
+      await saveToken(response.accessToken);
+      await _storage.saveUser(response.user);
+      await _storage.setSessionActive(true);
+      notifyListeners();
+      
+      return null; // Null means success (no error)
+    } catch (e) {
+      return e.toString().replaceAll('Exception: ', '');
+    }
   }
 
   Future<void> logout() async {
+    await clearToken();
     await _storage.setSessionActive(false);
+    // Optionally remove user data if needed, but the current UI might depend on it for some logic, 
+    // or we can remove it if we want a completely clean state. For now, setting session active to false is enough.
     notifyListeners();
+  }
+
+  /// Restaura la sesión validando el token contra el backend
+  Future<bool> restoreSession() async {
+    final token = await _secureStorage.getAccessToken();
+    if (token == null || token.isEmpty) {
+      await _storage.setSessionActive(false);
+      notifyListeners();
+      return false;
+    }
+
+    if (_authService == null) return false;
+
+    try {
+      final user = await _authService.me();
+      await _storage.saveUser(user);
+      await _storage.setSessionActive(true);
+      notifyListeners();
+      return true;
+    } catch (e) {
+      // Si falla (por ejemplo 401), limpiamos sesión
+      await logout();
+      return false;
+    }
   }
 
   /// Updates the current user's profile info

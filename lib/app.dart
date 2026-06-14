@@ -4,6 +4,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'integration/api/api_client.dart';
 import 'integration/local/local_storage_service.dart';
+import 'integration/local/secure_token_storage.dart';
 import 'integration/services/profile_service.dart';
 import 'integration/services/destination_service.dart';
 import 'integration/services/recommendation_service.dart';
@@ -12,6 +13,7 @@ import 'integration/services/feedback_service.dart';
 import 'integration/services/tourism_service.dart';
 import 'integration/services/review_service.dart';
 import 'integration/services/user_service.dart';
+import 'integration/services/auth_service.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/onboarding_controller.dart';
@@ -35,7 +37,10 @@ class ProxvelApp extends StatelessWidget {
       providers: [
         // Services
         Provider<LocalStorageService>.value(value: storageService),
-        Provider<ApiClient>(create: (_) => ApiClient()),
+        Provider<SecureTokenStorage>(create: (_) => SecureTokenStorage()),
+        ProxyProvider<SecureTokenStorage, ApiClient>(
+          update: (_, secureStorage, previous) => ApiClient(secureStorage: secureStorage),
+        ),
         ProxyProvider2<LocalStorageService, ApiClient, ProfileService>(
           update: (_, storage, api, previous) =>
               ProfileService(storage, apiClient: api),
@@ -58,12 +63,15 @@ class ProxvelApp extends StatelessWidget {
         ProxyProvider<ApiClient, UserService>(
           update: (_, api, previous) => UserService(apiClient: api),
         ),
+        ProxyProvider<ApiClient, AuthService>(
+          update: (_, api, previous) => AuthService(apiClient: api),
+        ),
         Provider<RouteService>(create: (_) => RouteService()),
 
         // Controllers
-        ChangeNotifierProxyProvider2<LocalStorageService, UserService, AuthController>(
-          create: (context) => AuthController(context.read<LocalStorageService>(), context.read<UserService>()),
-          update: (context, local, userSvc, auth) => auth ?? AuthController(local, userSvc),
+        ChangeNotifierProxyProvider4<LocalStorageService, SecureTokenStorage, UserService, AuthService, AuthController>(
+          create: (context) => AuthController(context.read<LocalStorageService>(), context.read<SecureTokenStorage>(), context.read<UserService>(), context.read<AuthService>()),
+          update: (context, local, secure, userSvc, authSvc, auth) => auth ?? AuthController(local, secure, userSvc, authSvc),
         ),
         ChangeNotifierProvider<HomeController>(create: (_) => HomeController()),
         ChangeNotifierProxyProvider<ProfileService, OnboardingController>(

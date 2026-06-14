@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../views/intro/intro_screen.dart';
 import '../../views/auth/welcome_screen.dart';
@@ -14,10 +15,15 @@ import '../../views/profile/edit_profile_screen.dart';
 import '../../views/profile/preferences_screen.dart';
 import '../../views/profile/my_reviews_screen.dart';
 import '../../views/feedback/feedback_screen.dart';
+import '../../views/splash/splash_screen.dart';
+
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/welcome',
+  navigatorKey: rootNavigatorKey,
+  initialLocation: '/',
   routes: [
+    GoRoute(path: '/', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/intro', builder: (context, state) => const IntroScreen()),
     GoRoute(path: '/welcome', pageBuilder: (context, state) => const NoTransitionPage(child: WelcomeScreen())),
     GoRoute(path: '/login', pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen())),
