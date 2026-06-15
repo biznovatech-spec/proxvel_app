@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../models/route_model.dart';
 import '../../controllers/routes_controller.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/widgets/cards/route_card.dart';
 import '../../core/widgets/states/loading_view.dart';
 import '../../core/widgets/states/proxvel_empty_state.dart';
 
@@ -147,122 +146,13 @@ class _RoutesScreenState extends State<RoutesScreen> with SingleTickerProviderSt
   }
 
   Widget _buildRoutesView(RoutesController controller, List<RouteModel> list) {
-    if (list.isEmpty) {
-      return ProxvelEmptyState(
-        icon: Icons.map_outlined,
-        title: 'Aún no hay rutas',
-        subtitle: 'Crea rutas turísticas para organizar tu viaje.',
-        actionLabel: 'Explorar destinos',
-        onAction: () {
-          context.go('/home');
-        },
-      );
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.all(20),
-      physics: const BouncingScrollPhysics(),
-      itemCount: list.length,
-      itemBuilder: (context, i) {
-        final route = list[i];
-        return RouteCard(
-          route: route,
-          onTap: () => _showRouteDetail(context, controller, route),
-        );
-      },
-    );
-  }
-
-  void _showRouteDetail(BuildContext context, RoutesController controller, RouteModel route) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) {
-        final isCompleted = route.isCompleted;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.map_rounded, color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          route.name,
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${route.destinationIds.length} destinos • ${route.estimatedDurationMinutes ~/ 60} horas',
-                          style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Text('Descripción', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-              const SizedBox(height: 8),
-              Text(
-                route.description,
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.4),
-              ),
-              const SizedBox(height: 32),
-              GestureDetector(
-                onTap: () {
-                  controller.toggleRouteCompletion(route.id);
-                  Navigator.pop(context);
-                },
-                child: Container(
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: isCompleted ? AppColors.surface : AppColors.primary,
-                    border: isCompleted ? Border.all(color: AppColors.border) : null,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    isCompleted ? 'Marcar como activa' : 'Marcar como completada',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isCompleted ? AppColors.textPrimary : Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
+    return ProxvelEmptyState(
+      icon: Icons.map_outlined,
+      title: 'Próximamente',
+      subtitle: 'Estamos preparando rutas turísticas personalizadas para futuras versiones.',
+      actionLabel: 'Explorar destinos',
+      onAction: () {
+        context.go('/home');
       },
     );
   }
