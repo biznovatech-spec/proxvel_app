@@ -35,7 +35,7 @@ class UserModel {
         name: json['name'] ?? '',
         lastName: json['lastName'] ?? '',
         email: json['email'] ?? '',
-        password: json['password'] ?? '',
+        password: '', // NO persistir password local
         role: json['role'] ?? 'user',
         isActive: json['is_active'] ?? true,
       );
@@ -46,7 +46,6 @@ class UserModel {
         'name': name,
         'lastName': lastName,
         'email': email,
-        'password': password,
         'role': role,
         'is_active': isActive,
       };

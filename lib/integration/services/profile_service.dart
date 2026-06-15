@@ -28,7 +28,11 @@ class ProfileService {
             .toList();
       } catch (e) {
         debugPrint('[ProfileService] usuarios demo API falló: $e');
+        if (!ApiConfig.useMockFallback) rethrow;
       }
+    }
+    if (ApiConfig.useMockFallback) {
+      return [];
     }
     return [];
   }

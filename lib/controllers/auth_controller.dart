@@ -120,7 +120,7 @@ class AuthController extends ChangeNotifier {
     if (currentUser != null) {
       final unifiedName = lastName.isNotEmpty ? '$name $lastName'.trim() : name;
       
-      if (_userService != null && currentUser.id.startsWith('U000')) {
+      if (_userService != null) {
         final realUser = await _userService.updateUser(
           userId: currentUser.id,
           name: unifiedName,
@@ -133,6 +133,7 @@ class AuthController extends ChangeNotifier {
           lastName: lastName,
           email: email, // Nota: el correo solo se actualiza localmente por ahora
           password: currentUser.password,
+          role: currentUser.role,
         );
         await _storage.saveUser(updatedUser);
       }

@@ -18,7 +18,7 @@ class MyReviewsController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      if (currentUser == null || !currentUser.id.startsWith('U000')) {
+      if (currentUser == null) {
         error = 'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.';
         reviews = [];
         isLoading = false;

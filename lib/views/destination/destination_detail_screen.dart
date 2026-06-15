@@ -400,65 +400,53 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       ),
       child: Row(
         children: [
-          // Favorite toggle
-          GestureDetector(
-            onTap: () =>
-                context.read<FavoritesController>().toggleFavorite(destId),
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.divider,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                context.watch<FavoritesController>().isFavorite(destId)
-                    ? Icons.favorite_rounded
-                    : Icons.favorite_border_rounded,
-                color: context.watch<FavoritesController>().isFavorite(destId)
-                    ? AppColors.error
-                    : AppColors.textSecondary,
-                size: 24,
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-          // Feedback button
           Expanded(
             child: GestureDetector(
-              onTap: () async {
-                await context.push('/feedback/$destId');
-                if (mounted) {
-                  context.read<DestinationController>().loadDestination(destId);
-                }
-              },
-              child: Container(
+              onTap: () =>
+                  context.read<FavoritesController>().toggleFavorite(destId),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppColors.primary,
+                  color: context.watch<FavoritesController>().isFavorite(destId)
+                      ? AppColors.error.withValues(alpha: 0.1)
+                      : AppColors.primary,
                   borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  border: context.watch<FavoritesController>().isFavorite(destId)
+                      ? Border.all(color: AppColors.error.withValues(alpha: 0.5))
+                      : null,
+                  boxShadow: context.watch<FavoritesController>().isFavorite(destId)
+                      ? []
+                      : [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                 ),
                 alignment: Alignment.center,
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.rate_review_rounded,
-                      color: AppColors.accent,
+                      context.watch<FavoritesController>().isFavorite(destId)
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: context.watch<FavoritesController>().isFavorite(destId)
+                          ? AppColors.error
+                          : Colors.white,
                       size: 20,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Text(
-                      'Enviar feedback',
+                      context.watch<FavoritesController>().isFavorite(destId)
+                          ? 'En favoritos'
+                          : 'Añadir a favoritos',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: context.watch<FavoritesController>().isFavorite(destId)
+                            ? AppColors.error
+                            : Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),

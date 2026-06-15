@@ -27,7 +27,7 @@ class ProfileController extends ChangeNotifier {
       final localUser = _storageService.getUser();
       final userId = localUser?.id;
 
-      if (userId != null && userId.startsWith('U000')) {
+      if (userId != null) {
         // 2. Consultar backend
         if (_userService != null) {
           try {
@@ -85,7 +85,7 @@ class ProfileController extends ChangeNotifier {
 
   Future<void> updatePreferences(TravelerProfileModel updatedProfile) async {
     final userId = user?.id;
-    if (userId != null && userId.startsWith('U000')) {
+    if (userId != null) {
       // Llamada real al backend
       final realProfile = await _profileService.putTravelerProfile(
         userId: userId,

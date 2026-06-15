@@ -191,7 +191,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
   Future<void> _submit() async {
     final currentUser = context.read<AuthController>().currentUser;
     
-    if (currentUser == null || !currentUser.id.startsWith('U000')) {
+    if (currentUser == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -224,10 +224,8 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
         final errorMsg = context.read<FeedbackController>().error ?? '';
         String displayMsg = 'No se pudo enviar la reseña. Inténtalo nuevamente.';
         
-        if (errorMsg.contains('Usuario no existe')) {
-          displayMsg = 'Tu usuario no está sincronizado con el servidor. Inicia con un usuario demo e inténtalo nuevamente.';
-        } else {
-          displayMsg = 'No se pudo enviar la reseña. Usuario no válido o sesión no sincronizada.';
+        if (errorMsg.isNotEmpty) {
+          displayMsg = errorMsg;
         }
 
         ScaffoldMessenger.of(context).showSnackBar(

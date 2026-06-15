@@ -140,8 +140,9 @@ class SearchController extends ChangeNotifier {
       }).toList();
 
       // Enrich with compatibility and classify
-      final enriched = filtered.map((d) {
-        final compat = MockAspectDataSource.getCompatibility(d.id);
+      final enriched = <SearchResultItem>[];
+      for (final d in filtered) {
+        final compat = await _destinationService.getCompatibility(d.id);
         String label;
         if (compat >= 85) {
           label = 'Recomendado';
@@ -150,12 +151,12 @@ class SearchController extends ChangeNotifier {
         } else {
           label = 'Normal';
         }
-        return SearchResultItem(
+        enriched.add(SearchResultItem(
           destination: d,
           compatibility: compat,
           label: label,
-        );
-      }).toList();
+        ));
+      }
 
       // Filter by min compatibility if set
       final compatFiltered = filters.minCompatibility != null

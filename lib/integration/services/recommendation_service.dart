@@ -18,9 +18,8 @@ class RecommendationService {
     if (_api != null) {
       try {
         final json = await _api.get(
-          '/recommendations/contextual',
+          '/recommendations/me',
           queryParams: {
-            'user_id': userId ?? ApiConfig.demoUserId,
             'limit': '$limit',
           },
         );
@@ -32,11 +31,17 @@ class RecommendationService {
               .toList();
         }
       } catch (e) {
-        debugPrint('[RecommendationService] API falló, usando mock: $e');
+        debugPrint('[RecommendationService] API falló, fallback=$ApiConfig.useMockFallback: $e');
+        if (!ApiConfig.useMockFallback) rethrow;
       }
     }
-    await Future.delayed(const Duration(milliseconds: 500));
-    return MockRecommendationDataSource.getRecommendations();
+    
+    if (ApiConfig.useMockFallback) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      return MockRecommendationDataSource.getRecommendations();
+    }
+    
+    return [];
   }
 
   /// Consume el motor real (engine_v0) sin user_id (requiere token JWT activo)
