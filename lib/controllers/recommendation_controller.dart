@@ -15,9 +15,15 @@ class RecommendationController extends ChangeNotifier {
     error = null;
     notifyListeners();
     try {
-      recommendations = await _recommendationService.getRecommendations();
+      // Usamos el motor real para el usuario autenticado
+      recommendations = await _recommendationService.getMyRecommendations();
     } catch (e) {
-      error = e.toString();
+      if (e.toString().contains('400')) {
+        error = 'Completa tu perfil viajero para recibir recomendaciones personalizadas.';
+      } else {
+        // Limpiamos mensajes como "Exception: "
+        error = e.toString().replaceAll('Exception: ', '');
+      }
     }
     isLoading = false;
     notifyListeners();

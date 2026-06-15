@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../models/recommendation_result_model.dart';
 import '../../../core/theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
+import '../../../views/home/widgets/recommendation_explanation_section.dart';
 
 /// Card showing a personalized recommendation with compatibility score.
 class DestinationRecommendationCard extends StatelessWidget {
@@ -161,6 +162,12 @@ class DestinationRecommendationCard extends StatelessWidget {
                   ],
                 ),
               ),
+            ),
+            
+            // ── Explanation Section ──
+            RecommendationExplanationSection(
+              explanation: recommendation.explanation,
+              contextSignals: recommendation.contextSignals,
             ),
             
             // ── Footer Section ──

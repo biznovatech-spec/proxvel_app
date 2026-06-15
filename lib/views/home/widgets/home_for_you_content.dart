@@ -22,7 +22,7 @@ class HomeForYouContent extends StatelessWidget {
     }
 
     if (controller.recommendations.isEmpty) {
-      return _emptyState();
+      return _emptyState(controller.error);
     }
 
     return SingleChildScrollView(
@@ -102,7 +102,7 @@ class HomeForYouContent extends StatelessWidget {
     );
   }
 
-  Widget _emptyState() {
+  Widget _emptyState(String? error) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
@@ -113,26 +113,29 @@ class HomeForYouContent extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.accentSoft,
+                color: error != null ? Colors.red.withValues(alpha: 0.1) : AppColors.accentSoft,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.auto_awesome_rounded,
-                  color: AppColors.accent, size: 36),
+              child: Icon(
+                error != null ? Icons.error_outline_rounded : Icons.auto_awesome_rounded,
+                color: error != null ? Colors.red : AppColors.accent,
+                size: 36,
+              ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Personalizando tu experiencia',
-              style: TextStyle(
+            Text(
+              error != null ? 'Algo salió mal' : 'Personalizando tu experiencia',
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Completa tu perfil de viajero para\nrecibir recomendaciones a tu medida.',
+            Text(
+              error ?? 'Completa tu perfil de viajero para\nrecibir recomendaciones a tu medida.',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 color: AppColors.textSecondary,
                 height: 1.5,

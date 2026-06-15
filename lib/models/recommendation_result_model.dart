@@ -1,16 +1,18 @@
 import 'destination_model.dart';
 import 'aspect_score_model.dart';
 import 'context_signal_model.dart';
+import 'explanation_model.dart';
 
 class RecommendationResultModel {
   final String id;
   final DestinationModel destination;
   final double compatibilityPercentage;
   final double finalScore;
-  final String label; // Recomendado, Parcialmente recomendado, No recomendado
+  final String label;
   final List<String> reasons;
   final List<AspectScoreModel> aspectScores;
   final List<ContextSignalModel> contextSignals;
+  final ExplanationModel? explanation;
 
   RecommendationResultModel({
     required this.id,
@@ -21,13 +23,21 @@ class RecommendationResultModel {
     required this.reasons,
     required this.aspectScores,
     required this.contextSignals,
+    this.explanation,
   });
 
-  /// Construye un resultado desde un item del ranking contextual del backend
-  /// (GET /recommendations/contextual). El backend V2 no envía etiqueta,
-  /// así que se deriva del porcentaje de compatibilidad contextual.
   factory RecommendationResultModel.fromApiJson(Map<String, dynamic> json) {
-    final compat = (json['compatibility_percentage'] as num?)?.toDouble() ?? 0.0;
+    // Para /recommendations/me (engine_v0)
+    final isEngineV0 = json.containsKey('compatibility_percent');
+    
+    final compat = isEngineV0 
+      ? (json['compatibility_percent'] as num?)?.toDouble() ?? 0.0
+      : (json['compatibility_percentage'] as num?)?.toDouble() ?? 0.0;
+      
+    final score = isEngineV0
+      ? (json['compatibility_score'] as num?)?.toDouble() ?? 0.0
+      : (json['final_score'] as num?)?.toDouble() ?? 0.0;
+
     final context = json['context'] as Map<String, dynamic>? ?? {};
 
     String label = json['label'] ??
@@ -38,54 +48,82 @@ class RecommendationResultModel {
                 : 'No recomendado');
 
     final reasons = <String>[];
-    final contextReason = context['context_reason'];
-    if (contextReason is String && contextReason.isNotEmpty) {
-      reasons.add(contextReason);
-    }
-    final explanation = json['short_explanation'];
-    if (explanation is String && explanation.isNotEmpty) {
-      reasons.add(explanation);
+    
+    ExplanationModel? parsedExplanation;
+    if (json.containsKey('explanation') && json['explanation'] != null) {
+      parsedExplanation = ExplanationModel.fromJson(json['explanation']);
+      if (parsedExplanation.summary.isNotEmpty) {
+        reasons.add(parsedExplanation.summary);
+      }
+    } else {
+      final contextReason = context['context_reason'];
+      if (contextReason is String && contextReason.isNotEmpty) {
+        reasons.add(contextReason);
+      }
+      final explanationStr = json['short_explanation'];
+      if (explanationStr is String && explanationStr.isNotEmpty) {
+        reasons.add(explanationStr);
+      }
     }
 
     final signals = <ContextSignalModel>[];
-    final weatherCat = context['weather_category'];
-    final weatherScore = (context['weather_score'] as num?)?.toDouble();
-    if (weatherCat is String && weatherCat.isNotEmpty) {
-      signals.add(ContextSignalModel(
-        type: 'climate',
-        value: weatherCat,
-        weight: weatherScore ?? 0.0,
-      ));
-    }
-    final crowdLevel = context['crowd_level'];
-    final crowdScore = (context['crowd_score'] as num?)?.toDouble();
-    if (crowdLevel is String && crowdLevel.isNotEmpty) {
-      signals.add(ContextSignalModel(
-        type: 'crowdLevel',
-        value: crowdLevel,
-        weight: crowdScore ?? 0.0,
-      ));
+    
+    if (isEngineV0) {
+      final contextStatus = json['context_status'];
+      if (contextStatus is String && contextStatus.isNotEmpty) {
+        signals.add(ContextSignalModel(
+          type: 'climate', // default for context_status right now
+          value: contextStatus,
+          weight: 0.0,
+        ));
+      }
+    } else {
+      final weatherCat = context['weather_category'];
+      final weatherScore = (context['weather_score'] as num?)?.toDouble();
+      if (weatherCat is String && weatherCat.isNotEmpty) {
+        signals.add(ContextSignalModel(
+          type: 'climate',
+          value: weatherCat,
+          weight: weatherScore ?? 0.0,
+        ));
+      }
+      final crowdLevel = context['crowd_level'];
+      final crowdScore = (context['crowd_score'] as num?)?.toDouble();
+      if (crowdLevel is String && crowdLevel.isNotEmpty) {
+        signals.add(ContextSignalModel(
+          type: 'crowdLevel',
+          value: crowdLevel,
+          weight: crowdScore ?? 0.0,
+        ));
+      }
     }
 
     final aspects = <AspectScoreModel>[];
-    final aspectMap = json['aspect_scores'] as Map<String, dynamic>?;
-    if (aspectMap != null) {
-      aspectMap.forEach((key, value) {
-        if (value is num) {
-          aspects.add(AspectScoreModel(aspect: key, score: value.toDouble()));
-        }
-      });
+    if (parsedExplanation != null) {
+      for (var top in parsedExplanation.topAspects) {
+        aspects.add(AspectScoreModel(aspect: top.aspect, score: top.destinationScore));
+      }
+    } else {
+      final aspectMap = json['aspect_scores'] as Map<String, dynamic>?;
+      if (aspectMap != null) {
+        aspectMap.forEach((key, value) {
+          if (value is num) {
+            aspects.add(AspectScoreModel(aspect: key, score: value.toDouble()));
+          }
+        });
+      }
     }
 
     return RecommendationResultModel(
       id: json['destination_id'] ?? '',
       destination: DestinationModel.fromApiRecommendation(json),
       compatibilityPercentage: compat,
-      finalScore: (json['final_score'] as num?)?.toDouble() ?? 0.0,
+      finalScore: score,
       label: label,
       reasons: reasons,
       aspectScores: aspects,
       contextSignals: signals,
+      explanation: parsedExplanation,
     );
   }
 
@@ -98,6 +136,7 @@ class RecommendationResultModel {
         reasons: List<String>.from(json['reasons'] ?? []),
         aspectScores: (json['aspectScores'] as List).map((i) => AspectScoreModel.fromJson(i)).toList(),
         contextSignals: (json['contextSignals'] as List).map((i) => ContextSignalModel.fromJson(i)).toList(),
+        explanation: json['explanation'] != null ? ExplanationModel.fromJson(json['explanation']) : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -109,5 +148,6 @@ class RecommendationResultModel {
         'reasons': reasons,
         'aspectScores': aspectScores.map((i) => i.toJson()).toList(),
         'contextSignals': contextSignals.map((i) => i.toJson()).toList(),
+        'explanation': explanation?.toJson(),
       };
 }
