@@ -5,11 +5,13 @@ import '../../../core/theme/app_colors.dart';
 class MapLocationPreview extends StatelessWidget {
   final double? latitude;
   final double? longitude;
+  final String? destinationId;
 
   const MapLocationPreview({
     super.key,
     this.latitude,
     this.longitude,
+    this.destinationId,
   });
 
   @override
@@ -111,7 +113,11 @@ class MapLocationPreview extends StatelessWidget {
                 right: 12,
                 child: GestureDetector(
                   onTap: () {
-                    context.push('/map');
+                    if (destinationId != null) {
+                      context.push('/map/destination/$destinationId');
+                    } else {
+                      context.push('/map');
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/map_marker_model.dart';
 import '../integration/services/tourism_map_service.dart';
 
@@ -18,6 +20,15 @@ class TourismMapController extends ChangeNotifier {
 
   String? _selectedCategory;
   String? get selectedCategory => _selectedCategory;
+
+  MapMarkerModel? _selectedMarker;
+  MapMarkerModel? get selectedMarker => _selectedMarker;
+
+  LatLng? _userLocation;
+  LatLng? get userLocation => _userLocation;
+
+  double? _distanceKm;
+  double? get distanceKm => _distanceKm;
 
   List<String> get availableCategories {
     final categories = _markers.map((m) => m.category).whereType<String>().toSet().toList();
@@ -51,5 +62,60 @@ class TourismMapController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> selectDestination(MapMarkerModel marker) async {
+    _selectedMarker = marker;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _errorMessage = "Los servicios de ubicación están deshabilitados.";
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _errorMessage = "Permiso de ubicación denegado.";
+          notifyListeners();
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        _errorMessage = "Los permisos de ubicación están denegados permanentemente.";
+        notifyListeners();
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition();
+          
+      _userLocation = LatLng(position.latitude, position.longitude);
+      
+      const Distance distance = Distance();
+      final double meter = distance(
+          _userLocation!,
+          LatLng(marker.latitude, marker.longitude)
+      );
+      _distanceKm = meter / 1000;
+      
+    } catch (e) {
+      _errorMessage = "No se pudo obtener la ubicación: $e";
+    }
+    
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    _selectedMarker = null;
+    _userLocation = null;
+    _distanceKm = null;
+    _errorMessage = null;
+    notifyListeners();
   }
 }

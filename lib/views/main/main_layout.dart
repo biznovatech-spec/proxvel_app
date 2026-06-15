@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
 import '../favorites/favorites_screen.dart';
+import '../map/map_screen.dart';
 import '../routes/routes_screen.dart';
 import '../profile/profile_screen.dart';
 import '../../core/widgets/navigation/proxvel_bottom_navigation.dart';
@@ -16,6 +17,7 @@ class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
   final List<Widget> _screens = const [
     HomeScreen(),
+    MapScreen(),
     FavoritesScreen(),
     RoutesScreen(),
     ProfileScreen(),

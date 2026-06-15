@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../controllers/tourism_map_controller.dart';
+import '../../models/map_marker_model.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -15,8 +16,7 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  
-  // Coordenadas centrales por defecto (ej. Centro aproximado de Perú)
+
   final LatLng _initialCenter = const LatLng(-9.1900, -75.0152);
   final double _initialZoom = 5.0;
 
@@ -32,7 +32,10 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mapa Turístico', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Mapa Turístico',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
@@ -44,16 +47,20 @@ class _MapScreenState extends State<MapScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (controller.errorMessage != null) {
-            return Center(child: Text('Error al cargar mapa: ${controller.errorMessage}'));
+          if (controller.errorMessage != null && controller.filteredMarkers.isEmpty) {
+            return Center(
+              child: Text('Error al cargar mapa: ${controller.errorMessage}'),
+            );
           }
 
-          final markers = controller.filteredMarkers.map((m) {
+          // Determinar marcadores a mostrar: TODOS los destinos
+          List<Marker> markers = controller.filteredMarkers.map((m) {
             return Marker(
               point: LatLng(m.latitude, m.longitude),
               width: 50,
               height: 50,
               child: _AnimatedMapMarker(
+                color: AppColors.primary,
                 onTap: () => context.push('/destination/${m.destinationId}'),
               ),
             );
@@ -65,9 +72,12 @@ class _MapScreenState extends State<MapScreen> {
               Expanded(
                 child: FlutterMap(
                   mapController: _mapController,
-                  options: MapOptions(
-                    initialCenter: _initialCenter,
-                    initialZoom: _initialZoom,
+                  options: const MapOptions(
+                    initialCenter: LatLng(-9.1900, -75.0152),
+                    initialZoom: 5.0,
+                    interactionOptions: InteractionOptions(
+                      flags: InteractiveFlag.all,
+                    ),
                   ),
                   children: [
                     TileLayer(
@@ -124,9 +134,16 @@ class _MapScreenState extends State<MapScreen> {
 }
 
 class _AnimatedMapMarker extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final Color color;
+  final IconData icon;
 
-  const _AnimatedMapMarker({required this.onTap});
+  const _AnimatedMapMarker({
+    super.key,
+    this.onTap, 
+    required this.color,
+    this.icon = Icons.location_on,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -135,10 +152,7 @@ class _AnimatedMapMarker extends StatelessWidget {
       duration: const Duration(milliseconds: 500),
       curve: Curves.elasticOut,
       builder: (context, value, child) {
-        return Transform.scale(
-          scale: value,
-          child: child,
-        );
+        return Transform.scale(scale: value, child: child);
       },
       child: GestureDetector(
         onTap: onTap,
@@ -154,12 +168,8 @@ class _AnimatedMapMarker extends StatelessWidget {
               ),
             ],
           ),
-          child: const Center(
-            child: Icon(
-              Icons.location_on,
-              color: AppColors.primary,
-              size: 28,
-            ),
+          child: Center(
+            child: Icon(icon, color: color, size: 28),
           ),
         ),
       ),
