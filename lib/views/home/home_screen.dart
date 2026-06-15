@@ -16,7 +16,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -38,10 +39,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     // Dark status bar icons on the dark header
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final authController = context.watch<AuthController>();
     final userName = authController.currentUser?.fullName ?? 'Viajero';
@@ -55,40 +58,44 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           child: NestedScrollView(
             headerSliverBuilder: (context, innerBoxIsScrolled) {
               return [
-                SliverToBoxAdapter(
-                  child: HomeHeader(userName: userName),
-                ),
+                SliverToBoxAdapter(child: HomeHeader(userName: userName)),
                 SliverPersistentHeader(
                   pinned: true,
                   delegate: _StickyTabBarDelegate(
                     TabBar(
-                  controller: _tabController,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  indicatorColor: AppColors.accent,
-                  indicatorWeight: 3,
-                  labelColor: AppColors.textOnDark,
-                  unselectedLabelColor: AppColors.textOnDarkMuted,
-                  labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  unselectedLabelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  tabs: const [
-                    Tab(text: 'Explorar'),
-                    Tab(text: 'Para ti'),
-                  ],
+                      controller: _tabController,
+                      indicatorSize: TabBarIndicatorSize.tab,
+                      indicatorColor: AppColors.accent,
+                      indicatorWeight: 3,
+                      labelColor: AppColors.textOnDark,
+                      unselectedLabelColor: AppColors.textOnDarkMuted,
+                      labelStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      tabs: const [
+                        Tab(text: 'Explorar'),
+                        Tab(text: 'Para ti'),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
+              ];
+            },
+            body: TabBarView(
+              controller: _tabController,
+              children: [
+                HomeExploreContent(
+                  onSwitchToForYou: () => _tabController.animateTo(1),
+                ),
+                const HomeForYouContent(),
+              ],
             ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            HomeExploreContent(
-              onSwitchToForYou: () => _tabController.animateTo(1),
-            ),
-            const HomeForYouContent(),
-          ],
-        ),
-      ),
+          ),
         ),
       ),
     );
@@ -106,16 +113,16 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.primary,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          )
+          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: tabBar,

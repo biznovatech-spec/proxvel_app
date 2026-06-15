@@ -16,6 +16,8 @@ import '../../views/profile/preferences_screen.dart';
 import '../../views/profile/my_reviews_screen.dart';
 import '../../views/feedback/feedback_screen.dart';
 import '../../views/splash/splash_screen.dart';
+import '../../views/map/map_screen.dart';
+import '../../views/map/destination_map_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -47,6 +49,11 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/feedback/:destinationId', builder: (context, state) {
       final destId = state.pathParameters['destinationId']!;
       return FeedbackScreen(destinationId: destId);
+    }),
+    GoRoute(path: '/map', builder: (context, state) => const MapScreen()),
+    GoRoute(path: '/map/destination/:id', builder: (context, state) {
+      final id = state.pathParameters['id']!;
+      return DestinationMapScreen(destinationId: id);
     }),
   ],
 );

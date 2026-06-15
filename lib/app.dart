@@ -15,6 +15,7 @@ import 'integration/services/review_service.dart';
 import 'integration/services/user_service.dart';
 import 'integration/services/auth_service.dart';
 import 'integration/services/favorites_service.dart';
+import 'integration/services/tourism_map_service.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/onboarding_controller.dart';
@@ -26,6 +27,7 @@ import 'controllers/routes_controller.dart';
 import 'controllers/profile_controller.dart';
 import 'controllers/feedback_controller.dart';
 import 'controllers/my_reviews_controller.dart';
+import 'controllers/tourism_map_controller.dart';
 
 class ProxvelApp extends StatelessWidget {
   final LocalStorageService storageService;
@@ -69,6 +71,9 @@ class ProxvelApp extends StatelessWidget {
         ),
         ProxyProvider<ApiClient, FavoritesService>(
           update: (_, api, previous) => FavoritesService(), // api already in singleton ApiClient inside
+        ),
+        ProxyProvider<ApiClient, TourismMapService>(
+          update: (_, api, previous) => TourismMapService(apiClient: api),
         ),
         Provider<RouteService>(create: (_) => RouteService()),
 
@@ -129,6 +134,10 @@ class ProxvelApp extends StatelessWidget {
         ChangeNotifierProxyProvider<ReviewService, MyReviewsController>(
           create: (context) => MyReviewsController(context.read<ReviewService>()),
           update: (context, reviewSvc, ctl) => ctl ?? MyReviewsController(reviewSvc),
+        ),
+        ChangeNotifierProxyProvider<TourismMapService, TourismMapController>(
+          create: (context) => TourismMapController(context.read<TourismMapService>()),
+          update: (context, mapSvc, ctl) => ctl ?? TourismMapController(mapSvc),
         ),
       ],
       child: MaterialApp.router(

@@ -40,7 +40,7 @@ class DestinationService {
       try {
         final json = await _api.get('/destinations');
         final items = json['data'] as List? ?? [];
-        
+
         final parsedList = items
             .whereType<Map<String, dynamic>>()
             .map((item) => DestinationModel.fromApiCatalog(item))
@@ -50,12 +50,16 @@ class DestinationService {
           return parsedList;
         }
       } catch (e) {
-        debugPrint('[DestinationService] Falló getDestinations API, usando fallback: $e');
+        debugPrint(
+          '[DestinationService] Falló getDestinations API, usando fallback: $e',
+        );
       }
     }
 
     // Fallback explícito a mock
-    debugPrint('[DestinationService] Backend no disponible, usando MockDestinationDataSource como fallback.');
+    debugPrint(
+      '[DestinationService] Backend no disponible, usando MockDestinationDataSource como fallback.',
+    );
     return MockDestinationDataSource.activeDestinations;
   }
 
@@ -73,7 +77,9 @@ class DestinationService {
     }
     // Fallback: buscar en mocks por id (slug)
     try {
-      return MockDestinationDataSource.destinations.firstWhere((d) => d.id == id);
+      return MockDestinationDataSource.destinations.firstWhere(
+        (d) => d.id == id,
+      );
     } catch (_) {
       return null;
     }
@@ -159,4 +165,3 @@ class DestinationService {
     return _rankingByDestination?[destinationId];
   }
 }
-

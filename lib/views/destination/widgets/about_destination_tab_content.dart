@@ -92,6 +92,7 @@ class AboutDestinationTabContent extends StatelessWidget {
         MapLocationPreview(
           latitude: tourismInfo?.latitude,
           longitude: tourismInfo?.longitude,
+          destinationId: destination.id,
         ),
         
         const SizedBox(height: 28),
