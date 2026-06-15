@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/destination_model.dart';
+import '../core/constants/app_constants.dart';
 import '../integration/services/destination_service.dart';
 import '../integration/local/local_storage_service.dart';
-import '../integration/mock/mock_aspect_data_source.dart';
 
 /// Search filter criteria.
 class SearchFilters {
@@ -144,9 +144,9 @@ class SearchController extends ChangeNotifier {
       for (final d in filtered) {
         final compat = await _destinationService.getCompatibility(d.id);
         String label;
-        if (compat >= 85) {
+        if (compat >= AppConstants.compatibilityRecommended) {
           label = 'Recomendado';
-        } else if (compat >= 70) {
+        } else if (compat >= AppConstants.compatibilityPartial) {
           label = 'Parcialmente';
         } else {
           label = 'Normal';

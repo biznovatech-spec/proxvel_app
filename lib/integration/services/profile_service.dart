@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/user_model.dart';
 import '../../models/traveler_profile_model.dart';
 import '../api/api_client.dart';
+import '../api/api_config.dart';
 import '../local/local_storage_service.dart';
 
 /// Servicio de perfil: almacenamiento local primero; si no hay usuario
@@ -31,9 +32,7 @@ class ProfileService {
         if (!ApiConfig.useMockFallback) rethrow;
       }
     }
-    if (ApiConfig.useMockFallback) {
-      return [];
-    }
+    // No hay fuente mock para usuarios demo: lista vacía en cualquier caso.
     return [];
   }
 

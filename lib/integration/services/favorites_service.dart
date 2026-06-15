@@ -3,7 +3,9 @@ import '../api/api_client.dart';
 import '../api/api_config.dart';
 
 class FavoritesService {
-  final ApiClient _apiClient = ApiClient();
+  final ApiClient _apiClient;
+
+  FavoritesService({ApiClient? apiClient}) : _apiClient = apiClient ?? ApiClient();
 
   Future<List<FavoriteModel>> getFavorites() async {
     try {

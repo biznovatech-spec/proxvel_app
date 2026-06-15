@@ -70,7 +70,7 @@ class ProxvelApp extends StatelessWidget {
           update: (_, api, previous) => AuthService(apiClient: api),
         ),
         ProxyProvider<ApiClient, FavoritesService>(
-          update: (_, api, previous) => FavoritesService(), // api already in singleton ApiClient inside
+          update: (_, api, previous) => FavoritesService(apiClient: api),
         ),
         ProxyProvider<ApiClient, TourismMapService>(
           update: (_, api, previous) => TourismMapService(apiClient: api),

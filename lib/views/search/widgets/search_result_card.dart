@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../controllers/search_controller.dart' show SearchResultItem;
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/images/adaptive_destination_image.dart';
 
@@ -199,8 +200,8 @@ class SearchResultCard extends StatelessWidget {
   }
 
   Color _compatColor(int pct) {
-    if (pct >= 85) return AppColors.success;
-    if (pct >= 70) return AppColors.accent;
+    if (pct >= AppConstants.compatibilityRecommended) return AppColors.success;
+    if (pct >= AppConstants.compatibilityPartial) return AppColors.accent;
     return AppColors.textSecondary;
   }
 }

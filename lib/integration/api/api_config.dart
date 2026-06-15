@@ -2,6 +2,7 @@
 ///
 /// `10.0.2.2` es el alias del host (localhost de tu PC) visto desde
 /// el emulador Android. Para dispositivo físico usar la IP LAN de la PC.
+library;
 
 class ApiConfig {
   static const String baseUrl = String.fromEnvironment(

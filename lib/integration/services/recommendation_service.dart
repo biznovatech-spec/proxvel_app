@@ -31,7 +31,7 @@ class RecommendationService {
               .toList();
         }
       } catch (e) {
-        debugPrint('[RecommendationService] API falló, fallback=$ApiConfig.useMockFallback: $e');
+        debugPrint('[RecommendationService] API falló, fallback=${ApiConfig.useMockFallback}: $e');
         if (!ApiConfig.useMockFallback) rethrow;
       }
     }

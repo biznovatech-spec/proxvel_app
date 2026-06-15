@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Circular badge showing compatibility percentage.
@@ -46,8 +47,8 @@ class CompatibilityBadge extends StatelessWidget {
   }
 
   Color _colorForPct(int pct) {
-    if (pct >= 85) return AppColors.success;
-    if (pct >= 70) return AppColors.accent;
+    if (pct >= AppConstants.compatibilityRecommended) return AppColors.success;
+    if (pct >= AppConstants.compatibilityPartial) return AppColors.accent;
     return AppColors.textSecondary;
   }
 }

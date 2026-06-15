@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/maps/animated_map_marker.dart';
 import '../../controllers/tourism_map_controller.dart';
 import '../../models/map_marker_model.dart';
 
@@ -107,7 +108,7 @@ class _DestinationMapScreenState extends State<DestinationMapScreen> {
                 point: LatLng(m.latitude, m.longitude),
                 width: 50,
                 height: 50,
-                child: const _AnimatedMapMarker(color: AppColors.primary),
+                child: const AnimatedMapMarker(color: AppColors.primary),
               ),
             );
 
@@ -117,7 +118,7 @@ class _DestinationMapScreenState extends State<DestinationMapScreen> {
                   point: controller.userLocation!,
                   width: 50,
                   height: 50,
-                  child: const _AnimatedMapMarker(color: Colors.blue, icon: Icons.person_pin_circle),
+                  child: const AnimatedMapMarker(color: Colors.blue, icon: Icons.person_pin_circle),
                 ),
               );
 
@@ -125,7 +126,7 @@ class _DestinationMapScreenState extends State<DestinationMapScreen> {
                 Polyline(
                   points: [controller.userLocation!, LatLng(m.latitude, m.longitude)],
                   strokeWidth: 4.0,
-                  color: Colors.blueAccent.withOpacity(0.7),
+                  color: Colors.blueAccent.withValues(alpha: 0.7),
                 ),
               );
             }
@@ -230,49 +231,6 @@ class _DestinationMapScreenState extends State<DestinationMapScreen> {
                 child: CircularProgressIndicator(),
               )),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AnimatedMapMarker extends StatelessWidget {
-  final VoidCallback? onTap;
-  final Color color;
-  final IconData icon;
-
-  const _AnimatedMapMarker({
-    this.onTap, 
-    required this.color,
-    this.icon = Icons.location_on,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.elasticOut,
-      builder: (context, value, child) {
-        return Transform.scale(scale: value, child: child);
-      },
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Center(
-            child: Icon(icon, color: color, size: 28),
-          ),
         ),
       ),
     );

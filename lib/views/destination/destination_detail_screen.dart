@@ -6,6 +6,7 @@ import '../../controllers/destination_controller.dart';
 import '../../controllers/favorites_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../models/traveler_profile_model.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/images/adaptive_destination_image.dart';
 import '../../core/widgets/states/loading_view.dart';
@@ -54,9 +55,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       );
     }
 
-    final favCtrl = context.watch<FavoritesController>();
-    final isFav = favCtrl.isFavorite(dest.id);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -75,12 +73,19 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                   () => context.pop(),
                 ),
                 actions: [
-                  _circleButton(
-                    isFav
-                        ? Icons.favorite_rounded
-                        : Icons.favorite_border_rounded,
-                    () => favCtrl.toggleFavorite(dest.id),
-                    iconColor: isFav ? AppColors.error : Colors.black,
+                  // Solo este botón se reconstruye al cambiar el favorito,
+                  // no toda la pantalla de detalle.
+                  Selector<FavoritesController, bool>(
+                    selector: (_, c) => c.isFavorite(dest.id),
+                    builder: (context, isFav, _) => _circleButton(
+                      isFav
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      () => context
+                          .read<FavoritesController>()
+                          .toggleFavorite(dest.id),
+                      iconColor: isFav ? AppColors.error : Colors.black,
+                    ),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -306,9 +311,9 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       key: const ValueKey('why_for_me'),
       rankPosition: rankPosition,
       compatibilityPercentage: controller.compatibility,
-      label: controller.compatibility >= 85
+      label: controller.compatibility >= AppConstants.compatibilityRecommended
           ? 'Recomendado'
-          : controller.compatibility >= 70
+          : controller.compatibility >= AppConstants.compatibilityPartial
           ? 'Parcialmente rec.'
           : 'Por explorar',
       explanation: controller.explanation,
@@ -401,57 +406,56 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       child: Row(
         children: [
           Expanded(
-            child: GestureDetector(
-              onTap: () =>
-                  context.read<FavoritesController>().toggleFavorite(destId),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                height: 52,
-                decoration: BoxDecoration(
-                  color: context.watch<FavoritesController>().isFavorite(destId)
-                      ? AppColors.error.withValues(alpha: 0.1)
-                      : AppColors.primary,
-                  borderRadius: BorderRadius.circular(14),
-                  border: context.watch<FavoritesController>().isFavorite(destId)
-                      ? Border.all(color: AppColors.error.withValues(alpha: 0.5))
-                      : null,
-                  boxShadow: context.watch<FavoritesController>().isFavorite(destId)
-                      ? []
-                      : [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.25),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      context.watch<FavoritesController>().isFavorite(destId)
-                          ? Icons.favorite_rounded
-                          : Icons.favorite_border_rounded,
-                      color: context.watch<FavoritesController>().isFavorite(destId)
-                          ? AppColors.error
-                          : Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      context.watch<FavoritesController>().isFavorite(destId)
-                          ? 'En favoritos'
-                          : 'Añadir a favoritos',
-                      style: TextStyle(
-                        color: context.watch<FavoritesController>().isFavorite(destId)
-                            ? AppColors.error
-                            : Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+            // Selector aísla el rebuild: solo este botón se redibuja cuando
+            // cambia el estado de favorito de este destino.
+            child: Selector<FavoritesController, bool>(
+              selector: (_, c) => c.isFavorite(destId),
+              builder: (context, isFav, _) => GestureDetector(
+                onTap: () =>
+                    context.read<FavoritesController>().toggleFavorite(destId),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isFav
+                        ? AppColors.error.withValues(alpha: 0.1)
+                        : AppColors.primary,
+                    borderRadius: BorderRadius.circular(14),
+                    border: isFav
+                        ? Border.all(color: AppColors.error.withValues(alpha: 0.5))
+                        : null,
+                    boxShadow: isFav
+                        ? []
+                        : [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.25),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isFav
+                            ? Icons.favorite_rounded
+                            : Icons.favorite_border_rounded,
+                        color: isFav ? AppColors.error : Colors.white,
+                        size: 20,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 10),
+                      Text(
+                        isFav ? 'En favoritos' : 'Añadir a favoritos',
+                        style: TextStyle(
+                          color: isFav ? AppColors.error : Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

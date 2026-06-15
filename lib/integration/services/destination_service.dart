@@ -166,7 +166,7 @@ class DestinationService {
     if (_detailCache.containsKey(destinationId)) {
       return _detailCache[destinationId];
     }
-    final json = await _api!.get(
+    final json = await _api.get(
       '/destinations/$destinationId',
       queryParams: {'month': '${DateTime.now().month}'},
     );
@@ -181,7 +181,7 @@ class DestinationService {
   Future<Map<String, dynamic>?> _rankingEntry(String destinationId) async {
     if (_api == null) return null;
     if (_rankingByDestination == null) {
-      final json = await _api!.get(
+      final json = await _api.get(
         '/recommendations/me',
         queryParams: {'limit': '20'},
       );
