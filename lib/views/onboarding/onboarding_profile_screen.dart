@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +8,6 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
-import '../../core/widgets/images/proxvel_enhanced_image.dart';
 
 const _kDark = Color(0xFF2B323B);
 const _kGray = Color(0xFF6B7280);
@@ -362,13 +360,9 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
   );
 
   // ── FELICIDADES (PREMIUM) ──
-  Widget _completionView() => Scaffold(body: Stack(children: [
-    Positioned.fill(child: ProxvelEnhancedImage(imagePath: 'assets/images/Lugares-Turisticos-del-Valle-Sagrado.png', fit: BoxFit.cover)),
-    Positioned.fill(child: BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-      child: Container(color: Colors.white.withValues(alpha: 0.75)),
-    )),
-    SafeArea(child: Center(child: Padding(
+  Widget _completionView() => Scaffold(
+    backgroundColor: _kLightGray,
+    body: SafeArea(child: Center(child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         const Spacer(flex: 2),
@@ -404,8 +398,7 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
           child: const Text('Ir ahora', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _kDark))),
         const Spacer(flex: 3),
       ]),
-    ))),
-  ]));
+    ))));
 
   // ── SHARED WIDGETS ──
   Widget _opt(String label, bool sel, VoidCallback onTap) => GestureDetector(onTap: onTap,

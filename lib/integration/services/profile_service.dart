@@ -60,7 +60,7 @@ class ProfileService {
       return TravelerProfileModel.fromApiJson(data);
     } on ApiException catch (e) {
       if (e.statusCode == 404) {
-        throw Exception('Perfil o usuario no encontrado.');
+        rethrow;
       }
       throw Exception('Error al obtener perfil: ${e.message}');
     } catch (e) {

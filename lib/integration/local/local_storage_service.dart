@@ -108,4 +108,15 @@ class LocalStorageService {
   Future<void> clearRecentSearches() async {
     await _prefs?.setStringList('recent_searches', []);
   }
+
+  // ── Limpieza Total de Sesión (Seguridad) ──
+  Future<void> clearAllUserData() async {
+    await _prefs?.remove('user');
+    await _prefs?.remove('profile');
+    // Mantenemos favorites y completed_routes si la app permite usarlas offline sin login, 
+    // o las borramos si queremos aislamiento estricto. Por seguridad, aislamos:
+    await _prefs?.remove('favorites');
+    await _prefs?.remove('completed_routes');
+    // No borramos 'intro_seen' ni 'recent_searches' ya que son de la app, no del usuario específico
+  }
 }

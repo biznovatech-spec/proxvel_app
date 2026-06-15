@@ -81,9 +81,8 @@ class AuthController extends ChangeNotifier {
 
   Future<void> logout() async {
     await clearToken();
+    await _storage.clearAllUserData(); // Borrado estricto de seguridad
     await _storage.setSessionActive(false);
-    // Optionally remove user data if needed, but the current UI might depend on it for some logic, 
-    // or we can remove it if we want a completely clean state. For now, setting session active to false is enough.
     notifyListeners();
   }
 

@@ -24,7 +24,7 @@ class AdaptiveDestinationImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (imagePath.isEmpty) return _placeholder();
+    if (imagePath.isEmpty || imagePath == 'PENDIENTE') return _placeholder();
 
     if (imagePath.startsWith('http')) {
       return Image.network(
@@ -37,7 +37,11 @@ class AdaptiveDestinationImage extends StatelessWidget {
           if (progress == null) return child;
           return _placeholder(); // Clean placeholder without eternal spinner
         },
-        errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+        errorBuilder: (context, error, stack) => _placeholder(
+          child: const Center(
+            child: Icon(Icons.broken_image_rounded, size: 40, color: Color(0xFFB0BEC5)),
+          ),
+        ),
       );
     }
 
@@ -47,7 +51,11 @@ class AdaptiveDestinationImage extends StatelessWidget {
       height: height,
       fit: fit,
       alignment: alignment,
-      errorBuilder: (context, error, stack) => const SizedBox.shrink(),
+      errorBuilder: (context, error, stack) => _placeholder(
+        child: const Center(
+          child: Icon(Icons.broken_image_rounded, size: 40, color: Color(0xFFB0BEC5)),
+        ),
+      ),
     );
   }
 

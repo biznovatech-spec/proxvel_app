@@ -4,6 +4,7 @@ import '../models/traveler_profile_model.dart';
 import '../integration/services/profile_service.dart';
 import '../integration/services/user_service.dart';
 import '../integration/local/local_storage_service.dart';
+import '../integration/api/api_client.dart';
 
 class ProfileController extends ChangeNotifier {
   final ProfileService _profileService;
@@ -37,10 +38,32 @@ class ProfileController extends ChangeNotifier {
             if (user != null) await _storageService.saveUser(user!);
             if (profile != null) await _storageService.saveProfile(profile!);
           } catch (e) {
-            // Fallback en caso de error
-            error = 'Mostrando datos locales (offline o error API).';
-            user = localUser;
-            profile = _storageService.getProfile() ?? await _profileService.getProfile();
+            final localProfile = _storageService.getProfile();
+            
+            // ── Auto-sanación (Self-Healing) ──
+            // Si el backend dice que no existe el perfil (404), pero tenemos uno localmente, 
+            // intentamos subirlo silenciosamente para reparar la desincronización.
+            final isProfileNotFound = e is ApiException && e.statusCode == 404;
+            
+            if (isProfileNotFound && localProfile != null && localUser?.id == userId) {
+              try {
+                profile = await _profileService.putTravelerProfile(
+                  userId: userId,
+                  profile: localProfile,
+                );
+                user = localUser;
+                error = null; // El problema se resolvió solo, no mostramos alerta
+              } catch (syncError) {
+                error = 'Mostrando datos locales (falló auto-sincronización).';
+                user = localUser;
+                profile = localProfile;
+              }
+            } else {
+              // Fallback normal por falta de internet u otro error
+              error = 'Mostrando datos locales (offline o error API).';
+              user = localUser;
+              profile = localProfile;
+            }
           }
         } else {
           // Si no hay UserService inyectado
@@ -79,6 +102,10 @@ class ProfileController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    user = null;
+    profile = null;
+    await _storageService.clearAllUserData();
     await _storageService.setSessionActive(false);
+    notifyListeners();
   }
 }
