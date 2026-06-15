@@ -58,7 +58,7 @@ class ApiClient {
     return _decode(response);
   }
 
-  Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
+  Future<dynamic> post(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] POST $uri');
     final headers = await _getHeaders();
@@ -66,13 +66,13 @@ class ApiClient {
         .post(
           uri,
           headers: headers,
-          body: jsonEncode(body),
+          body: body != null ? jsonEncode(body) : null,
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
     return _decode(response);
   }
 
-  Future<dynamic> put(String endpoint, Map<String, dynamic> body) async {
+  Future<dynamic> put(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PUT $uri');
     final headers = await _getHeaders();
@@ -80,13 +80,13 @@ class ApiClient {
         .put(
           uri,
           headers: headers,
-          body: jsonEncode(body),
+          body: body != null ? jsonEncode(body) : null,
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
     return _decode(response);
   }
 
-  Future<dynamic> patch(String endpoint, Map<String, dynamic> body) async {
+  Future<dynamic> patch(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PATCH $uri');
     final headers = await _getHeaders();
@@ -94,7 +94,20 @@ class ApiClient {
         .patch(
           uri,
           headers: headers,
-          body: jsonEncode(body),
+          body: body != null ? jsonEncode(body) : null,
+        )
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
+    return _decode(response);
+  }
+
+  Future<dynamic> delete(String endpoint) async {
+    final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
+    debugPrint('[API] DELETE $uri');
+    final headers = await _getHeaders();
+    final response = await _http
+        .delete(
+          uri,
+          headers: headers,
         )
         .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
     return _decode(response);

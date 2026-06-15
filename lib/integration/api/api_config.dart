@@ -12,5 +12,8 @@ class ApiConfig {
   /// Ya NO se usa como fuente principal en Feedback, Mis Reseñas, Perfil ni Preferencias en el flujo real.
   static const String demoUserId = 'U00001';
 
+  // Endpoints
+  static const String favorites = '/favorites';
+
   static String get apiBaseUrl => baseUrl;
 }

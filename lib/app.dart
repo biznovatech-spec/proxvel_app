@@ -14,6 +14,7 @@ import 'integration/services/tourism_service.dart';
 import 'integration/services/review_service.dart';
 import 'integration/services/user_service.dart';
 import 'integration/services/auth_service.dart';
+import 'integration/services/favorites_service.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/home_controller.dart';
 import 'controllers/onboarding_controller.dart';
@@ -66,6 +67,9 @@ class ProxvelApp extends StatelessWidget {
         ProxyProvider<ApiClient, AuthService>(
           update: (_, api, previous) => AuthService(apiClient: api),
         ),
+        ProxyProvider<ApiClient, FavoritesService>(
+          update: (_, api, previous) => FavoritesService(), // api already in singleton ApiClient inside
+        ),
         Provider<RouteService>(create: (_) => RouteService()),
 
         // Controllers
@@ -98,9 +102,9 @@ class ProxvelApp extends StatelessWidget {
           update: (context, destSvc, tourismSvc, reviewSvc, ctl) => 
             ctl ?? DestinationController(destSvc, tourismSvc, reviewSvc),
         ),
-        ChangeNotifierProxyProvider2<LocalStorageService, DestinationService, FavoritesController>(
-          create: (context) => FavoritesController(context.read<LocalStorageService>(), context.read<DestinationService>()),
-          update: (context, local, destSvc, ctl) => ctl ?? FavoritesController(local, destSvc),
+        ChangeNotifierProxyProvider<FavoritesService, FavoritesController>(
+          create: (context) => FavoritesController(context.read<FavoritesService>()),
+          update: (context, favSvc, ctl) => ctl ?? FavoritesController(favSvc),
         ),
         ChangeNotifierProxyProvider2<RouteService, LocalStorageService, RoutesController>(
           create: (context) => RoutesController(

@@ -142,6 +142,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
             Positioned.fill(
               child: DestinationCard(
                 destination: dest,
+                showFavoriteButton: false,
                 onTap: () => context.push('/destination/${dest.id}'),
               ),
             ),

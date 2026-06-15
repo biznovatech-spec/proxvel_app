@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/recommendation_result_model.dart';
+import '../../../controllers/favorites_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
 import '../../../views/home/widgets/recommendation_explanation_section.dart';
@@ -85,20 +87,47 @@ class DestinationRecommendationCard extends StatelessWidget {
                     Positioned(
                       top: 16,
                       right: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Recomendado',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: AppColors.accent,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Recomendado',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          // Favorite Heart
+                          Consumer<FavoritesController>(
+                            builder: (context, favCtrl, child) {
+                              final isFav = favCtrl.isFavorite(dest.id);
+                              return GestureDetector(
+                                onTap: () => favCtrl.toggleFavorite(dest.id),
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                    color: isFav ? AppColors.error : Colors.white,
+                                    size: 18,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     // Bottom content overlay

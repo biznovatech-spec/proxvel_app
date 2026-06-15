@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
 import '../models/destination_model.dart';
-import '../integration/services/destination_service.dart';
-import '../integration/local/local_storage_service.dart';
+import '../integration/services/favorites_service.dart';
 
 class FavoritesController extends ChangeNotifier {
-  final LocalStorageService _storage;
-  final DestinationService _destinationService;
+  final FavoritesService _favoritesService;
+  
   bool isLoading = false;
   List<DestinationModel> favorites = [];
+  Set<String> favoriteDestinationIds = {};
   String? error;
 
-  FavoritesController(this._storage, this._destinationService);
+  FavoritesController(this._favoritesService);
 
   Future<void> loadFavorites() async {
     isLoading = true;
     error = null;
     notifyListeners();
     try {
-      final allIds = _storage.getFavorites();
-      final allDests = await _destinationService.getDestinations();
-      favorites = allDests.where((d) => allIds.contains(d.id)).toList();
-      // Resolver favoritos del backend (slugs) que no están en el catálogo local
-      final foundIds = favorites.map((d) => d.id).toSet();
-      for (final id in allIds.where((id) => !foundIds.contains(id))) {
-        final dest = await _destinationService.getDestinationById(id);
-        if (dest != null) favorites.add(dest);
-      }
+      final favModels = await _favoritesService.getFavorites();
+      favorites = favModels.map((f) => DestinationModel.fromFavoriteModel(f)).toList();
+      favoriteDestinationIds = favorites.map((d) => d.id).toSet();
     } catch (e) {
       error = e.toString();
     }
@@ -34,16 +28,41 @@ class FavoritesController extends ChangeNotifier {
   }
 
   Future<void> toggleFavorite(String id) async {
-    final allIds = _storage.getFavorites();
-    if (allIds.contains(id)) {
-      await _storage.removeFavorite(id);
+    final isFav = isFavorite(id);
+    
+    // Optimistic UI update
+    if (isFav) {
+      favoriteDestinationIds.remove(id);
+      favorites.removeWhere((d) => d.id == id);
     } else {
-      await _storage.addFavorite(id);
+      favoriteDestinationIds.add(id);
     }
-    await loadFavorites();
+    notifyListeners();
+
+    try {
+      if (isFav) {
+        await _favoritesService.removeFavorite(id);
+      } else {
+        await _favoritesService.addFavorite(id);
+        // We added a new favorite, but we don't have the full model in the list yet.
+        // We should reload to get the model with images and data.
+        await loadFavorites();
+      }
+    } catch (e) {
+      // Revert optimistic update on failure
+      if (isFav) {
+        favoriteDestinationIds.add(id);
+      } else {
+        favoriteDestinationIds.remove(id);
+      }
+      error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
   }
   
   bool isFavorite(String id) {
-    return _storage.getFavorites().contains(id);
+    return favoriteDestinationIds.contains(id);
   }
 }
+

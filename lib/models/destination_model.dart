@@ -124,6 +124,28 @@ class DestinationModel {
     );
   }
 
+  /// Construye un destino desde un modelo de favorito (GET /favorites).
+  factory DestinationModel.fromFavoriteModel(dynamic fav) {
+    final rawImageUrl = fav.coverImageUrl ?? '';
+    final imageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : '';
+
+    return DestinationModel(
+      id: fav.destinationId,
+      name: fav.name,
+      city: fav.city ?? '',
+      region: fav.region ?? '',
+      category: fav.category ?? '',
+      description: '', 
+      imageUrl: imageUrl,
+      averageCost: 0.0,
+      climate: '', 
+      crowdLevel: '', 
+      rating: fav.rating ?? 0.0, 
+      aspects: const [],
+      type: fav.category,
+    );
+  }
+
   /// Construye un destino desde el detalle del backend
   /// (GET /destinations/{id}). Incluye clima/aforo del contexto.
   factory DestinationModel.fromApiDetail(Map<String, dynamic> json) {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/destination_model.dart';
+import '../../../controllers/favorites_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
 
@@ -133,6 +135,28 @@ class TrendingDestinationCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Favorite Heart
+                    Consumer<FavoritesController>(
+                      builder: (context, favCtrl, child) {
+                        final isFav = favCtrl.isFavorite(destination.id);
+                        return GestureDetector(
+                          onTap: () => favCtrl.toggleFavorite(destination.id),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isFav ? AppColors.error : Colors.white,
+                              size: 18,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
