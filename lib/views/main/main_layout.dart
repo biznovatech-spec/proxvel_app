@@ -24,10 +24,7 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: ProxvelBottomNavigation(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
