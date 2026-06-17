@@ -4,7 +4,10 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/images/adaptive_destination_image.dart';
 
-/// Card for search results showing image, info, compatibility, and label.
+/// Card de resultado de búsqueda.
+/// La compatibilidad y la etiqueta IA solo se muestran cuando el orden IA está
+/// activo (item.compatibility != null). En búsqueda normal no se pinta ningún
+/// score ni dato inventado (sin rating ni precio falsos).
 class SearchResultCard extends StatelessWidget {
   final SearchResultItem item;
   final VoidCallback onTap;
@@ -18,7 +21,11 @@ class SearchResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dest = item.destination;
-    final compatColor = _compatColor(item.compatibility);
+    final compat = item.compatibility;
+    final compatColor = compat != null ? _compatColor(compat) : AppColors.accent;
+    final location = [dest.city, dest.region]
+        .where((s) => s.trim().isNotEmpty)
+        .join(', ');
 
     return GestureDetector(
       onTap: onTap,
@@ -51,27 +58,28 @@ class SearchResultCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     AdaptiveDestinationImage(imagePath: dest.imageUrl),
-                    // Compatibility badge
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: compatColor.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${item.compatibility}%',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                    // Compatibility badge — solo en orden IA.
+                    if (compat != null)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: compatColor.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$compat%',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -80,29 +88,31 @@ class SearchResultCard extends StatelessWidget {
             // ── Info ──
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Label chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: compatColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        item.label,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: compatColor,
+                    // Label chip — solo en orden IA.
+                    if (item.label != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: compatColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          item.label!,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: compatColor,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 6),
+                      const SizedBox(height: 6),
+                    ],
 
                     // Name
                     Text(
@@ -115,56 +125,34 @@ class SearchResultCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-
-                    // Location
-                    Row(
-                      children: [
-                        const Icon(Icons.location_on,
-                            size: 13, color: AppColors.accent),
-                        const SizedBox(width: 3),
-                        Expanded(
-                          child: Text(
-                            '${dest.city}, ${dest.region}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                    if (location.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on,
+                              size: 13, color: AppColors.accent),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-
-                    // Bottom row: category + rating + cost
-                    Row(
-                      children: [
-                        _miniTag(dest.category),
-                        const Spacer(),
-                        Icon(Icons.star_rounded,
-                            size: 14, color: AppColors.accent),
-                        const SizedBox(width: 2),
-                        Text(
-                          dest.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'S/ ${dest.averageCost.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
+                    if (dest.category.trim().isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _miniTag(dest.category),
+                      ),
+                    ],
                   ],
                 ),
               ),

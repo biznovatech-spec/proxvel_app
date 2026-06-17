@@ -5,13 +5,15 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/profile_controller.dart';
 import '../../controllers/favorites_controller.dart';
-import '../../controllers/routes_controller.dart';
 import '../../controllers/recommendation_controller.dart';
+import '../../controllers/my_reviews_controller.dart';
 import '../../core/theme/app_colors.dart';
-import '../../models/traveler_profile_model.dart';
-import '../../core/widgets/cards/stats_card.dart';
 import 'widgets/profile_header.dart';
-import 'widgets/profile_menu_item.dart';
+import 'widgets/profile_stats_row.dart';
+import 'widgets/preferences_summary_card.dart';
+import 'widgets/profile_menu_section.dart';
+import 'widgets/about_proxvel_sheet.dart';
+import 'widgets/logout_confirm_sheet.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -26,22 +28,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProfileController>().loadProfileData();
+      final auth = context.read<AuthController>();
+      context.read<MyReviewsController>().loadUserReviews(auth.currentUser);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final auth = context.watch<AuthController>();
     final profileCtrl = context.watch<ProfileController>();
     final favCount = context.watch<FavoritesController>().favorites.length;
-    final routeCount = context.watch<RoutesController>().routes.length;
-    final recCount =
-        context.watch<RecommendationController>().recommendations.length;
+    final reviewCount = context.watch<MyReviewsController>().reviews.length;
+    final recCount = context
+        .watch<RecommendationController>()
+        .recommendations
+        .length;
 
     final user = auth.currentUser ?? profileCtrl.user;
     final userName = user?.fullName ?? 'Viajero';
@@ -51,396 +59,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: profileCtrl.isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  // ── Header ──
                   ProfileHeader(name: userName, email: userEmail),
 
                   if (profileCtrl.error != null)
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              profileCtrl.error!,
-                              style: const TextStyle(color: AppColors.error, fontSize: 13),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _ErrorBanner(profileCtrl.error!),
 
-                  // ── Stats ──
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Row(
-                children: [
-                  StatsCard(
-                    icon: Icons.favorite_rounded,
-                    value: '$favCount',
-                    label: 'Favoritos',
+                  ProfileStatsRow(
+                    favoritesCount: favCount,
+                    reviewsCount: reviewCount,
+                    recommendationsCount: recCount,
                   ),
-                  const SizedBox(width: 12),
-                  StatsCard(
-                    icon: Icons.map_rounded,
-                    value: '$routeCount',
-                    label: 'Rutas',
+
+                  if (profile != null) ...[
+                    const SizedBox(height: 24),
+                    PreferencesSummaryCard(profile: profile),
+                  ],
+
+                  const SizedBox(height: 24),
+                  ProfileMenuSection(
+                    onEditProfile: () => context.push('/profile/edit'),
+                    onPreferences: () async {
+                      // Capturamos el controller antes del await para no usar
+                      // BuildContext tras un gap asíncrono.
+                      final profileController =
+                          context.read<ProfileController>();
+                      await context.push('/profile/preferences');
+                      if (!mounted) return;
+                      profileController.loadProfileData();
+                    },
+                    onMyReviews: () => context.push('/profile/my-reviews'),
+                    onAbout: () => showAboutProxvelSheet(context),
+                    onLogout: () => showLogoutConfirmSheet(
+                      context,
+                      onConfirm: () async {
+                        final router = GoRouter.of(context);
+                        await auth.logout();
+                        router.go('/welcome');
+                      },
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  StatsCard(
-                    icon: Icons.auto_awesome_rounded,
-                    value: '$recCount',
-                    label: 'Para ti',
+
+                  const SizedBox(height: 32),
+                  Text(
+                    'PROXVEL v1.0.0',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textMuted.withValues(alpha: 0.5),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
-
-            // ── Preferences summary ──
-            if (profile != null) ...[
-              const SizedBox(height: 24),
-              _buildPreferencesSummary(profile),
-            ],
-
-            // ── Menu ──
-            const SizedBox(height: 24),
-            _buildMenuSection(auth),
-
-            const SizedBox(height: 32),
-
-            // ── App info ──
-            Text(
-              'PROXVEL v1.0.0',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textMuted.withValues(alpha: 0.5),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
     );
   }
+}
 
-  Widget _buildPreferencesSummary(TravelerProfileModel profile) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 1),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentSoft,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.tune_rounded,
-                      color: AppColors.accent, size: 18),
-                ),
-                const SizedBox(width: 10),
-                const Text(
-                  'Tus preferencias',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _prefChip('💰', profile.presupuesto),
-                _prefChip('📅', profile.diasViaje >= 7 ? '7+ días' : '${profile.diasViaje} días'),
-                _prefChip('🌤️', profile.climaPreferido),
-                _prefChip('👥', 'Multitud: ${profile.toleranciaMultitudes}'),
-                ...profile.intereses
-                    .take(4)
-                    .map<Widget>((i) => _prefChip('🏷️', i)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+/// Banner de error de carga del perfil.
+class _ErrorBanner extends StatelessWidget {
+  final String message;
+  const _ErrorBanner(this.message);
 
-  Widget _prefChip(String emoji, String label) {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.divider,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+          const Icon(
+            Icons.warning_amber_rounded,
+            color: AppColors.error,
+            size: 20,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildMenuSection(AuthController auth) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 1),
-        ),
-        child: Column(
-          children: [
-            ProfileMenuItem(
-              icon: Icons.edit_rounded,
-              label: 'Editar perfil',
-              onTap: () async {
-                await context.push('/profile/edit');
-                // The provider will automatically update the UI since we use context.watch<AuthController>()
-              },
-            ),
-            const Divider(height: 1, color: AppColors.divider),
-            ProfileMenuItem(
-              icon: Icons.tune_rounded,
-              label: 'Mis preferencias',
-              onTap: () async {
-                await context.push('/profile/preferences');
-                if (mounted) {
-                  context.read<ProfileController>().loadProfileData();
-                }
-              },
-            ),
-            const Divider(height: 1, color: AppColors.divider),
-            ProfileMenuItem(
-              icon: Icons.rate_review_rounded,
-              label: 'Mis reseñas',
-              onTap: () {
-                context.push('/profile/my-reviews');
-              },
-            ),
-            const Divider(height: 1, color: AppColors.divider),
-            ProfileMenuItem(
-              icon: Icons.info_outline_rounded,
-              label: 'Sobre PROXVEL',
-              onTap: () => _showAboutDialog(),
-            ),
-            const Divider(height: 1, color: AppColors.divider),
-            ProfileMenuItem(
-              icon: Icons.logout_rounded,
-              label: 'Cerrar sesión',
-              isDestructive: true,
-              onTap: () => _confirmLogout(auth),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAboutDialog() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Image.asset(
-              'assets/images/proxvel_logo_transparente.png',
-              width: 60,
-              height: 60,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'PROXVEL',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Aplicativo de recomendación\nturística personalizada',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Versión 1.0.0',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textMuted.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmLogout(AuthController auth) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.logout_rounded,
-                  color: AppColors.error, size: 30),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '¿Cerrar sesión?',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Podrás volver a iniciar sesión\nen cualquier momento.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                            color: AppColors.border, width: 1.5),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Cancelar',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await auth.logout();
-                      if (mounted) context.go('/welcome');
-                    },
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: AppColors.error,
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'Cerrar sesión',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

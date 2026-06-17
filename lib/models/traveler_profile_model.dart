@@ -6,6 +6,9 @@ class TravelerProfileModel {
   final List<String> intereses;
   final String toleranciaMultitudes;
 
+  /// Preferencia global de IA. No apaga la pestaña "Para ti".
+  final bool applyAiGlobally;
+
   // Pesos internos derivados (read-only for client)
   final double pesoAccesibilidad;
   final double pesoAforoMultitudes;
@@ -25,6 +28,7 @@ class TravelerProfileModel {
     required this.tipoInteres,
     required this.intereses,
     required this.toleranciaMultitudes,
+    this.applyAiGlobally = false,
     this.pesoAccesibilidad = 3.0,
     this.pesoAforoMultitudes = 3.0,
     this.pesoAlojamiento = 3.0,
@@ -44,6 +48,7 @@ class TravelerProfileModel {
         tipoInteres: json['tipo_interes'] ?? 'mixto',
         intereses: List<String>.from(json['intereses'] ?? []),
         toleranciaMultitudes: json['tolerancia_multitudes'] ?? 'moderado',
+        applyAiGlobally: json['apply_ai_globally'] ?? false,
         pesoAccesibilidad: json['peso_accesibilidad']?.toDouble() ?? 3.0,
         pesoAforoMultitudes: json['peso_aforo_multitudes']?.toDouble() ?? 3.0,
         pesoAlojamiento: json['peso_alojamiento']?.toDouble() ?? 3.0,
@@ -63,6 +68,7 @@ class TravelerProfileModel {
         'tipo_interes': tipoInteres,
         'intereses': intereses,
         'tolerancia_multitudes': toleranciaMultitudes,
+        'apply_ai_globally': applyAiGlobally,
         'peso_accesibilidad': pesoAccesibilidad,
         'peso_aforo_multitudes': pesoAforoMultitudes,
         'peso_alojamiento': pesoAlojamiento,
@@ -82,6 +88,7 @@ class TravelerProfileModel {
         tipoInteres: json['tipo_interes'] ?? 'mixto',
         intereses: List<String>.from(json['intereses'] ?? []),
         toleranciaMultitudes: json['tolerancia_multitudes'] ?? 'moderado',
+        applyAiGlobally: json['apply_ai_globally'] ?? false,
         pesoAccesibilidad: json['peso_accesibilidad']?.toDouble() ?? 3.0,
         pesoAforoMultitudes: json['peso_aforo_multitudes']?.toDouble() ?? 3.0,
         pesoAlojamiento: json['peso_alojamiento']?.toDouble() ?? 3.0,
@@ -101,5 +108,27 @@ class TravelerProfileModel {
         'tipo_interes': tipoInteres,
         'intereses': intereses,
         'tolerancia_multitudes': toleranciaMultitudes,
+        'apply_ai_globally': applyAiGlobally,
       };
+
+  /// Copia inmutable cambiando solo la preferencia global de IA.
+  TravelerProfileModel copyWithAi(bool value) => TravelerProfileModel(
+        presupuesto: presupuesto,
+        diasViaje: diasViaje,
+        climaPreferido: climaPreferido,
+        tipoInteres: tipoInteres,
+        intereses: intereses,
+        toleranciaMultitudes: toleranciaMultitudes,
+        applyAiGlobally: value,
+        pesoAccesibilidad: pesoAccesibilidad,
+        pesoAforoMultitudes: pesoAforoMultitudes,
+        pesoAlojamiento: pesoAlojamiento,
+        pesoAtencionServicio: pesoAtencionServicio,
+        pesoAtractivos: pesoAtractivos,
+        pesoClima: pesoClima,
+        pesoCostos: pesoCostos,
+        pesoGastronomia: pesoGastronomia,
+        pesoLimpieza: pesoLimpieza,
+        pesoSeguridad: pesoSeguridad,
+      );
 }

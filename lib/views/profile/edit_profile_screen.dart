@@ -27,7 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (user != null) {
         final fullName = user.fullName.trim();
         final parts = fullName.split(RegExp(r'\s+'));
-        
+
         if (parts.length == 1) {
           _nameController.text = parts[0];
           _lastNameController.text = '';
@@ -39,7 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _nameController.text = parts[0];
           _lastNameController.text = parts.skip(1).join(' ');
         }
-        
+
         _emailController.text = user.email;
       }
     });
@@ -73,7 +73,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
           onPressed: () => context.pop(),
         ),
         title: const Text(
@@ -123,15 +127,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         size: 16,
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 32),
-            ProxvelTextField(
-              label: 'Nombre',
-              controller: _nameController,
-            ),
+            ProxvelTextField(label: 'Nombre', controller: _nameController),
             const SizedBox(height: 16),
             ProxvelTextField(
               label: 'Apellidos',

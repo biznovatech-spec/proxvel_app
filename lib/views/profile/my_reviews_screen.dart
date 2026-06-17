@@ -41,7 +41,10 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -76,7 +79,11 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 48),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.error,
+                size: 48,
+              ),
               const SizedBox(height: 16),
               Text(
                 controller.error!,
@@ -91,16 +98,26 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
               ElevatedButton(
                 onPressed: () {
                   final auth = context.read<AuthController>();
-                  context.read<MyReviewsController>().loadUserReviews(auth.currentUser);
+                  context.read<MyReviewsController>().loadUserReviews(
+                    auth.currentUser,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text(
                   'Reintentar',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
@@ -116,7 +133,11 @@ class _MyReviewsScreenState extends State<MyReviewsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.rate_review_outlined, color: AppColors.textMuted, size: 56),
+              const Icon(
+                Icons.rate_review_outlined,
+                color: AppColors.textMuted,
+                size: 56,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Aún no has enviado reseñas.\nCuando comentes un destino, aparecerá aquí.',

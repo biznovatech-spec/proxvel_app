@@ -6,6 +6,7 @@ import '../../../controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/cards/destination_recommendation_card.dart';
 import '../../../core/widgets/states/loading_view.dart';
+import '../../../core/widgets/states/empty_profile_for_ai_state.dart';
 import 'profile_summary_card.dart';
 
 /// Scrollable content for the "Para Ti" tab, showing personalized recommendations.
@@ -22,7 +23,13 @@ class HomeForYouContent extends StatelessWidget {
     }
 
     if (controller.recommendations.isEmpty) {
-      return _emptyState(controller.error);
+      final err = controller.error;
+      // Caso perfil incompleto (o sin error): empty state honesto con acción.
+      final isProfileIssue = err == null || err.toLowerCase().contains('perfil');
+      if (isProfileIssue) {
+        return const EmptyProfileForAiState();
+      }
+      return _errorState(err);
     }
 
     return SingleChildScrollView(
@@ -44,7 +51,7 @@ class HomeForYouContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Recomendados para ti',
+                  'Recomendaciones IA',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -89,7 +96,8 @@ class HomeForYouContent extends StatelessWidget {
                   return DestinationRecommendationCard(
                     recommendation: rec,
                     index: index,
-                    onTap: () => context.push('/destination/${rec.destination.id}'),
+                    onTap: () => context.push(
+                        '/destination/${rec.destination.id}?source=ai_recommendation'),
                   );
                 },
               ).toList(),
@@ -102,7 +110,7 @@ class HomeForYouContent extends StatelessWidget {
     );
   }
 
-  Widget _emptyState(String? error) {
+  Widget _errorState(String error) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(48),
@@ -113,19 +121,19 @@ class HomeForYouContent extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: error != null ? Colors.red.withValues(alpha: 0.1) : AppColors.accentSoft,
+                color: Colors.red.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                error != null ? Icons.error_outline_rounded : Icons.auto_awesome_rounded,
-                color: error != null ? Colors.red : AppColors.accent,
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.red,
                 size: 36,
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              error != null ? 'Algo salió mal' : 'Personalizando tu experiencia',
-              style: const TextStyle(
+            const Text(
+              'Algo salió mal',
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -133,7 +141,7 @@ class HomeForYouContent extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              error ?? 'Completa tu perfil de viajero para\nrecibir recomendaciones a tu medida.',
+              error,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,

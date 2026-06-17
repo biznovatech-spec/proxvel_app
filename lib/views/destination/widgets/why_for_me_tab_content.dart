@@ -4,14 +4,13 @@ import '../../../models/aspect_score_model.dart';
 import '../../../models/traveler_profile_model.dart';
 import 'ranking_header_card.dart';
 import 'metric_circle_indicator.dart';
-import 'influence_factor_item.dart';
 import 'aspect_score_grid.dart';
 import 'traveler_profile_summary_card.dart';
 
 /// Full content for the "¿Por qué para mí?" tab in the destination detail.
 /// Assembles all sub-sections based on the prototype design.
 class WhyForMeTabContent extends StatelessWidget {
-  final int rankPosition;
+  final int? rankPosition;
   final int compatibilityPercentage;
   final String label;
   final String explanation;
@@ -22,7 +21,7 @@ class WhyForMeTabContent extends StatelessWidget {
 
   const WhyForMeTabContent({
     super.key,
-    required this.rankPosition,
+    this.rankPosition,
     required this.compatibilityPercentage,
     required this.label,
     required this.explanation,
@@ -51,18 +50,7 @@ class WhyForMeTabContent extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // ═══ 2. Summary line ═══
-        Text(
-          'Este destino es ideal para tu perfil de viajero.',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-
-        const SizedBox(height: 24),
+        // Removed fake summary line
 
         // ═══ 3. ¿Por qué se recomienda? ═══
         if (explanation.isNotEmpty) ...[
@@ -118,25 +106,13 @@ class WhyForMeTabContent extends StatelessWidget {
         // ═══ 5. Factores que más influyen ═══
         _buildSectionTitle('Factores que más influyen'),
         const SizedBox(height: 14),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: InfluenceFactorItem(
-                icon: Icons.wb_sunny_rounded,
-                title: 'Clima favorable',
-                description: 'Compatible con tu\npreferencia templada.',
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: InfluenceFactorItem(
-                icon: Icons.groups_rounded,
-                title: 'Aforo moderado',
-                description: 'Alineado con tu tolerancia\nbaja a multitudes.',
-              ),
-            ),
-          ],
+        const Text(
+          'Aún no hay suficientes datos para explicar este destino con detalle.',
+          style: TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            fontStyle: FontStyle.italic,
+          ),
         ),
 
         const SizedBox(height: 28),
@@ -248,13 +224,13 @@ class WhyForMeTabContent extends StatelessWidget {
   }
 
   /// Find a specific aspect's score by keyword.
-  int _findAspectScore(String keyword) {
+  int? _findAspectScore(String keyword) {
     final lower = keyword.toLowerCase();
     for (final a in aspectScores) {
       if (a.aspect.toLowerCase().contains(lower)) {
         return (a.score * 100).round().clamp(0, 100);
       }
     }
-    return 75; // Default fallback
+    return null; // No fallback
   }
 }

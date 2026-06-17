@@ -37,7 +37,7 @@ class MyReviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasAspects = review.aspectRatings.isNotEmpty;
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -66,7 +66,11 @@ class MyReviewCard extends StatelessWidget {
               ),
               Row(
                 children: [
-                  const Icon(Icons.star_rounded, color: AppColors.accent, size: 18),
+                  const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.accent,
+                    size: 18,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     review.ratingGeneral.toStringAsFixed(1),
@@ -81,7 +85,7 @@ class MyReviewCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Review Text
           Text(
             '"${review.reviewText}"',
@@ -92,11 +96,11 @@ class MyReviewCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          
+
           const SizedBox(height: 16),
           const Divider(height: 1, color: AppColors.divider),
           const SizedBox(height: 12),
-          
+
           // Aspects (if exist)
           if (hasAspects) ...[
             const Text(
@@ -112,9 +116,14 @@ class MyReviewCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: review.aspectRatings.entries.map((e) {
-                final double val = (e.value is num) ? (e.value as num).toDouble() : 0.0;
+                final double val = (e.value is num)
+                    ? (e.value as num).toDouble()
+                    : 0.0;
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.background,
                     borderRadius: BorderRadius.circular(8),
@@ -132,7 +141,7 @@ class MyReviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
           ],
-          
+
           // Status and processing month
           Row(
             children: [
@@ -153,7 +162,8 @@ class MyReviewCard extends StatelessWidget {
                   color: _getStatusColor(review.status),
                 ),
               ),
-              if (review.processingMonth != null && review.processingMonth!.isNotEmpty) ...[
+              if (review.processingMonth != null &&
+                  review.processingMonth!.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 const Text('•', style: TextStyle(color: AppColors.textMuted)),
                 const SizedBox(width: 8),

@@ -6,11 +6,7 @@ class ProfileHeader extends StatelessWidget {
   final String name;
   final String email;
 
-  const ProfileHeader({
-    super.key,
-    required this.name,
-    required this.email,
-  });
+  const ProfileHeader({super.key, required this.name, required this.email});
 
   @override
   Widget build(BuildContext context) {

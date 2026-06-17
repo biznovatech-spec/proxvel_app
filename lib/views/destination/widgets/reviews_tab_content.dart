@@ -112,7 +112,7 @@ class ReviewsTabContent extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Usuario: ${review.userId}',
+                      'Viajero PROXVEL',
                       style: const TextStyle(
                         color: AppColors.textMuted,
                         fontSize: 12,

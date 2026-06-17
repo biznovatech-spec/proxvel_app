@@ -4,13 +4,13 @@ import '../../../core/theme/app_colors.dart';
 /// Card displaying the recommendation ranking position, compatibility
 /// percentage, and recommendation label.
 class RankingHeaderCard extends StatelessWidget {
-  final int rankPosition;
+  final int? rankPosition;
   final int compatibilityPercentage;
   final String label; // 'Recomendado', 'Parcialmente recomendado', etc.
 
   const RankingHeaderCard({
     super.key,
-    required this.rankPosition,
+    this.rankPosition,
     required this.compatibilityPercentage,
     required this.label,
   });
@@ -51,14 +51,20 @@ class RankingHeaderCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
-                    child: Text(
-                      '#$rankPosition',
-                      style: const TextStyle(
-                        color: AppColors.accent,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
+                    child: rankPosition != null
+                        ? Text(
+                            '#$rankPosition',
+                            style: const TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.explore_rounded,
+                            color: AppColors.accent,
+                            size: 24,
+                          ),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -66,17 +72,17 @@ class RankingHeaderCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Recomendado',
-                      style: TextStyle(
+                    Text(
+                      rankPosition != null ? 'Recomendado' : 'Información',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const Text(
-                      'para ti',
-                      style: TextStyle(
+                    Text(
+                      rankPosition != null ? 'para ti' : 'del destino',
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,

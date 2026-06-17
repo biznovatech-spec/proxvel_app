@@ -3,14 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../controllers/home_controller.dart';
+import '../../../controllers/announcement_controller.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/widgets/cards/trending_destination_card.dart';
-import '../../../core/widgets/cards/destination_card.dart';
+import '../../../core/widgets/announcements/announcement_banner.dart';
+import '../../../core/widgets/cards/featured_destination_card.dart';
+import '../../../core/widgets/cards/classic_destination_card.dart';
 import '../../../core/widgets/cards/recent_search_chip.dart';
-import '../../../core/widgets/images/adaptive_destination_image.dart';
 import '../../../core/widgets/states/loading_view.dart';
 
-/// Scrollable content for the "Explorar" tab.
+/// Contenido de la pestaña "Explorar" — catálogo abierto.
+/// Solo muestra secciones que tienen datos reales. Nunca rellena la pantalla
+/// con datos inventados ni con mocks.
 class HomeExploreContent extends StatefulWidget {
   final VoidCallback onSwitchToForYou;
 
@@ -26,6 +29,15 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
   Timer? _autoTimer;
 
   @override
+  void initState() {
+    super.initState();
+    // Cargar anuncios internos (falla suave; no bloquea Explorar).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AnnouncementController>().load(placement: 'home_top');
+    });
+  }
+
+  @override
   void dispose() {
     _autoTimer?.cancel();
     _carouselCtrl.dispose();
@@ -35,7 +47,7 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
   void _startAutoScroll(int total) {
     _autoTimer?.cancel();
     if (total <= 1) return;
-    _autoTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    _autoTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_carouselCtrl.hasClients) return;
       final next = (_carouselPage + 1) % total;
       _carouselCtrl.animateToPage(
@@ -54,122 +66,141 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
       return const LoadingView();
     }
 
-    final trending = controller.trendingDestinations;
-    final nearby = controller.nearbyDestinations;
-    final getaways = controller.getawayDestinations;
+    final featured = controller.featuredDestinations;
+    final all = controller.allDestinations;
+    final categories = controller.categories;
     final recent = controller.recentSearches;
 
-    // Start auto-scroll when trending data is available
-    if (trending.isNotEmpty && _autoTimer == null) {
+    // Iniciar auto-scroll cuando hay destacados.
+    if (featured.length > 1 && _autoTimer == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _startAutoScroll(trending.length);
+        _startAutoScroll(featured.length);
       });
     }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
+    return RefreshIndicator(
+      onRefresh: () async {
+        await context.read<HomeController>().loadDestinations();
+        if (context.mounted) {
+          await context
+              .read<AnnouncementController>()
+              .refresh(placement: 'home_top');
+        }
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
 
-          // ═══════════════ SEARCH BAR ═══════════════
-          _buildSearchBar(context),
+            // ═══ SEARCH BAR ═══
+            _buildSearchBar(context),
+            const SizedBox(height: 20),
 
-          const SizedBox(height: 24),
+            // ═══ ANUNCIO INTERNO (si hay) ═══
+            const AnnouncementBanner(),
 
-          // ═══════════════ BÚSQUEDAS RECIENTES ═══════════════
-          if (recent.isNotEmpty) ...[
-            _sectionHeader('Búsquedas recientes', onSeeMore: null),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 70,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                itemCount: recent.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (_, i) => RecentSearchChip(
-                  destination: recent[i],
-                  onTap: () => context.push('/search?q=${Uri.encodeComponent(recent[i].name)}'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
-          ],
+            // ═══ ERROR (si el backend falló) ═══
+            if (controller.error != null && all.isEmpty) ...[
+              _buildError(controller.error!),
+              const SizedBox(height: 24),
+            ],
 
-          // ═══════════════ LUGARES TURÍSTICOS DEL MOMENTO ═══════════════
-          if (trending.isNotEmpty) ...[
-            _sectionHeader('Lugares turísticos del momento', onSeeMore: () => context.push('/search')),
-            const SizedBox(height: 14),
-            SizedBox(
-              height: 360, // Increased height for premium feel
-              child: PageView.builder(
-                controller: _carouselCtrl,
-                itemCount: trending.length,
-                onPageChanged: (i) => setState(() => _carouselPage = i),
-                itemBuilder: (_, i) => TrendingDestinationCard(
-                  destination: trending[i],
-                  onTap: () =>
-                      context.push('/destination/${trending[i].id}'),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-            _buildDots(trending.length),
-            const SizedBox(height: 28),
-          ],
-
-          // ═══════════════ BANNER CTA ═══════════════
-          _buildBannerCTA(),
-          const SizedBox(height: 28),
-
-          // ═══════════════ CERCA DE TI ═══════════════
-          if (nearby.isNotEmpty || controller.currentLocation.isNotEmpty) ...[
-            _sectionHeaderWithLocation(context, 'Cerca de ti', controller.currentLocation, (newCity) {
-              controller.changeLocation(newCity);
-            }),
-            const SizedBox(height: 14),
-            if (nearby.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                child: Text('No hay destinos cercanos encontrados en esta ubicación.', style: TextStyle(color: AppColors.textSecondary)),
-              )
-            else
+            // ═══ BÚSQUEDAS RECIENTES ═══
+            if (recent.isNotEmpty) ...[
+              _sectionHeader('Búsquedas recientes'),
+              const SizedBox(height: 12),
               SizedBox(
-                height: 200,
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                scrollDirection: Axis.horizontal,
-                itemCount: nearby.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 14),
-                itemBuilder: (_, i) => DestinationCard(
-                  destination: nearby[i],
-                  onTap: () =>
-                      context.push('/destination/${nearby[i].id}'),
+                height: 70,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: recent.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (_, i) => RecentSearchChip(
+                    destination: recent[i],
+                    onTap: () => context.push(
+                        '/search?q=${Uri.encodeComponent(recent[i].name)}'),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 28),
-          ],
+              const SizedBox(height: 28),
+            ],
 
-          // ═══════════════ ESCAPADAS SEGÚN TU TIEMPO ═══════════════
-          if (getaways.isNotEmpty) ...[
-            _sectionHeader('Escapadas según tu tiempo', onSeeMore: () {}),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: getaways
-                    .take(5)
-                    .map((d) => _buildGetawayTile(context, d))
-                    .toList(),
+            // ═══ DESTINOS DESTACADOS ═══
+            if (featured.isNotEmpty) ...[
+              _sectionHeader('Destinos destacados',
+                  onSeeMore: () => context.push('/search')),
+              const SizedBox(height: 14),
+              SizedBox(
+                height: 320,
+                child: PageView.builder(
+                  controller: _carouselCtrl,
+                  itemCount: featured.length,
+                  onPageChanged: (i) => setState(() => _carouselPage = i),
+                  itemBuilder: (_, i) => FeaturedDestinationCard(
+                    destination: featured[i],
+                    onTap: () => context.push(
+                        '/destination/${featured[i].id}?source=explore'),
+                  ),
+                ),
               ),
-            ),
-          ],
+              if (featured.length > 1) ...[
+                const SizedBox(height: 14),
+                _buildDots(featured.length),
+              ],
+              const SizedBox(height: 28),
+            ],
 
-          const SizedBox(height: 32),
-        ],
+            // ═══ CATEGORÍAS (reales) ═══
+            if (categories.isNotEmpty) ...[
+              _sectionHeader('Explora por categoría'),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 40,
+                child: ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: categories.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (_, i) => _categoryChip(context, categories[i]),
+                ),
+              ),
+              const SizedBox(height: 28),
+            ],
+
+            // ═══ CTA A "PARA TI" (IA) ═══
+            if (all.isNotEmpty) ...[
+              _buildAiCta(),
+              const SizedBox(height: 28),
+            ],
+
+            // ═══ TODOS LOS DESTINOS ═══
+            if (all.isNotEmpty) ...[
+              _sectionHeader('Todos los destinos'),
+              const SizedBox(height: 14),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: all
+                      .map((d) => ClassicDestinationCard(
+                            destination: d,
+                            onTap: () => context
+                                .push('/destination/${d.id}?source=explore'),
+                          ))
+                      .toList(),
+                ),
+              ),
+            ] else if (controller.error == null) ...[
+              _buildEmpty(),
+            ],
+
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }
@@ -268,76 +299,102 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Section header with location ──
-  Widget _sectionHeaderWithLocation(BuildContext context, String title, String location, ValueChanged<String> onLocationChanged) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
+  // ── Category chip ──
+  Widget _categoryChip(BuildContext context, String category) {
+    return GestureDetector(
+      onTap: () =>
+          context.push('/search?q=${Uri.encodeComponent(category)}'),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border, width: 1),
+        ),
+        child: Text(
+          category,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
           ),
-          GestureDetector(
-            onTap: () {
-              _showLocationPicker(context, location, onLocationChanged);
-            },
-            child: Row(
-              children: [
-                Text(
-                  location,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.accent,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.accent),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  void _showLocationPicker(BuildContext context, String currentLocation, ValueChanged<String> onLocationChanged) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        final cities = ['Lima', 'Cusco', 'Arequipa', 'Ica', 'Huaraz', 'Iquitos'];
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text('Selecciona tu ubicación', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+  // ── CTA hacia la pestaña "Para ti" (IA) ──
+  Widget _buildAiCta() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: GestureDetector(
+        onTap: widget.onSwitchToForYou,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primaryDark, AppColors.primary],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
-              ...cities.map((c) => ListTile(
-                title: Text(c, style: TextStyle(fontWeight: c == currentLocation ? FontWeight.w700 : FontWeight.w400)),
-                trailing: c == currentLocation ? const Icon(Icons.check, color: AppColors.accent) : null,
-                onTap: () {
-                  onLocationChanged(c);
-                  Navigator.pop(ctx);
-                },
-              )),
-              const SizedBox(height: 20),
             ],
           ),
-        );
-      },
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'RECOMENDACIONES IA',
+                      style: TextStyle(
+                        color: AppColors.textOnDark,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Descubre destinos según tu perfil viajero',
+                      style: TextStyle(
+                        color: AppColors.textOnDark.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.accent,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Text(
+                  'Para ti',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -361,194 +418,62 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Banner CTA ──
-  Widget _buildBannerCTA() {
+  // ── Error state ──
+  Widget _buildError(String message) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GestureDetector(
-        onTap: widget.onSwitchToForYou,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryDark, AppColors.primaryLight],
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.cloud_off_rounded, color: AppColors.error),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'No se pudieron cargar los destinos.\n$message',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'BUSCA TU LUGAR\nESPECIAL',
-                      style: TextStyle(
-                        color: AppColors.textOnDark,
-                        fontSize: 19,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Recomendaciones personalizadas',
-                      style: TextStyle(
-                        color: AppColors.textOnDark.withValues(alpha: 0.6),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Text(
-                  '¡Pruébalo!',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
-  // ── Getaway tile (Escapadas según tu tiempo) ──
-  Widget _buildGetawayTile(BuildContext context, dest) {
-    return GestureDetector(
-      onTap: () => context.push('/destination/${dest.id}'),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cardShadow,
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+  // ── Empty state ──
+  Widget _buildEmpty() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(40, 40, 40, 20),
+      child: Column(
+        children: [
+          Icon(Icons.travel_explore_rounded,
+              size: 56, color: AppColors.textMuted.withValues(alpha: 0.5)),
+          const SizedBox(height: 16),
+          const Text(
+            'Aún no hay destinos disponibles',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: SizedBox(
-                width: 80,
-                height: 80,
-                child: AdaptiveDestinationImage(
-                  imagePath: dest.imageUrl,
-                ),
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    dest.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${dest.city}, ${dest.region}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      if (dest.distanceKm != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.divider,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.location_on_outlined,
-                                  size: 13, color: AppColors.textSecondary),
-                              const SizedBox(width: 4),
-                              Text(
-                                'a ${dest.distanceKm!.round()} km',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (dest.estimatedDays != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accentSoft,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            dest.estimatedDays!,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.accent,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppColors.textMuted, size: 22),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'El catálogo se mostrará aquí cuando haya destinos publicados.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+        ],
       ),
     );
   }

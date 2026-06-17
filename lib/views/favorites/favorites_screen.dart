@@ -51,7 +51,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         'Explora destinos y guarda los que más\nte gusten tocando el corazón.',
                     actionLabel: 'Explorar destinos',
                     onAction: () {
-                      context.go('/home');
+                      context.go('/main');
                     },
                   )
                 : _buildFavoritesList(controller),

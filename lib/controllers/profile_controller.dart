@@ -101,6 +101,39 @@ class ProfileController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Cambia la preferencia "Aplicar IA en toda la app".
+  /// Usa PATCH parcial (no recalcula pesos en backend). Optimista con reversión.
+  Future<void> setApplyAiGlobally(bool value) async {
+    final userId = user?.id;
+    final current = profile;
+    if (current == null) return; // Sin perfil no hay preferencia que aplicar.
+
+    final previous = current;
+    profile = current.copyWithAi(value);
+    notifyListeners();
+
+    if (userId == null) {
+      // Sin sesión backend: persistir solo local.
+      await _storageService.saveProfile(profile!);
+      return;
+    }
+
+    try {
+      final updated = await _profileService.patchTravelerProfile(
+        userId: userId,
+        updates: {'apply_ai_globally': value},
+      );
+      profile = updated;
+      await _storageService.saveProfile(updated);
+      notifyListeners();
+    } catch (e) {
+      // Revertir si falla la persistencia.
+      profile = previous;
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   Future<void> logout() async {
     user = null;
     profile = null;

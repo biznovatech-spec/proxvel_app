@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/search_controller.dart' show SearchController, SearchFilters;
+import '../../controllers/profile_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states/loading_view.dart';
 import '../../core/widgets/states/proxvel_empty_state.dart';
@@ -26,9 +27,15 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     super.initState();
     _queryCtrl = TextEditingController(text: widget.initialQuery);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Asegura que el perfil esté cargado para poder gatear el orden IA.
+      final profileCtrl = context.read<ProfileController>();
+      if (profileCtrl.profile == null) profileCtrl.loadProfileData();
+
       final ctrl = context.read<SearchController>();
       ctrl.search(
         newFilters: SearchFilters(query: widget.initialQuery),
+        aiSort: false,
+        hasProfile: profileCtrl.profile != null,
       );
     });
   }
@@ -39,10 +46,23 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     super.dispose();
   }
 
+  bool get _hasProfile => context.read<ProfileController>().profile != null;
+
   void _onSearch() {
     final ctrl = context.read<SearchController>();
     ctrl.search(
       newFilters: ctrl.filters.copyWith(query: _queryCtrl.text.trim()),
+      aiSort: ctrl.aiSortEnabled,
+      hasProfile: _hasProfile,
+    );
+  }
+
+  void _onToggleAiSort(bool value) {
+    final ctrl = context.read<SearchController>();
+    ctrl.search(
+      newFilters: ctrl.filters.copyWith(query: _queryCtrl.text.trim()),
+      aiSort: value,
+      hasProfile: _hasProfile,
     );
   }
 
@@ -239,6 +259,76 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 ),
               ),
 
+              // ── Toggle: Ordenar por recomendación IA ──
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 10, 8, 0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_awesome_rounded,
+                        color: AppColors.accent, size: 18),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Ordenar por recomendación IA',
+                        style: TextStyle(
+                          color: AppColors.textOnDark,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: ctrl.aiSortEnabled,
+                      activeThumbColor: AppColors.accent,
+                      onChanged: _onToggleAiSort,
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Aviso: IA pedida sin perfil ──
+              if (ctrl.aiBlockedNoProfile)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppColors.accent.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded,
+                            color: AppColors.accent, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Completa tu perfil viajero para ordenar resultados con IA.',
+                            style: TextStyle(
+                              color: AppColors.textOnDark.withValues(alpha: 0.9),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push('/profile/preferences'),
+                          child: const Text(
+                            'Completar',
+                            style: TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
               // ── Active filters summary ──
               if (ctrl.filters.hasActiveFilters) ...[
                 const SizedBox(height: 12),
@@ -315,10 +405,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             itemCount: ctrl.results.length,
             itemBuilder: (_, i) {
               final item = ctrl.results[i];
+              final source = ctrl.aiSortEnabled ? 'ai_search' : 'search';
               return SearchResultCard(
                 item: item,
-                onTap: () =>
-                    context.push('/destination/${item.destination.id}'),
+                onTap: () => context.push(
+                    '/destination/${item.destination.id}?source=$source'),
               );
             },
           ),

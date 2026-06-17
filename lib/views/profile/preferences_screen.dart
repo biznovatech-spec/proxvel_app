@@ -15,21 +15,31 @@ class PreferencesScreen extends StatefulWidget {
 
 class _PreferencesScreenState extends State<PreferencesScreen> {
   bool _isEditing = false;
-  
+
   String _budget = '';
   String _climate = '';
   String _crowdTolerance = '';
   List<String> _interests = [];
   String _days = '';
+  bool _applyAi = false;
 
   final List<String> _budgetOptions = ['Bajo', 'Medio', 'Alto', 'Lujo'];
   final List<String> _climateOptions = ['Frío', 'Templado', 'Cálido'];
   final List<String> _crowdOptions = ['Baja', 'Media', 'Alta'];
   final List<String> _daysOptions = ['1', '2', '3', '5', '7+'];
   final List<String> _allInterests = [
-    'Naturaleza', 'Cultura', 'Gastronomía', 'Compras',
-    'Aventura', 'Playa', 'Urbano', 'Rural',
-    'Negocios', 'Académico', 'Relax', 'Familiar'
+    'Naturaleza',
+    'Cultura',
+    'Gastronomía',
+    'Compras',
+    'Aventura',
+    'Playa',
+    'Urbano',
+    'Rural',
+    'Negocios',
+    'Académico',
+    'Relax',
+    'Familiar',
   ];
 
   @override
@@ -46,24 +56,29 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       setState(() {
         _budget = _matchOption(_budgetOptions, profile.presupuesto) ?? '';
         _climate = _matchOption(_climateOptions, profile.climaPreferido) ?? '';
-        _crowdTolerance = _matchOption(_crowdOptions, profile.toleranciaMultitudes) ?? '';
-        
+        _crowdTolerance =
+            _matchOption(_crowdOptions, profile.toleranciaMultitudes) ?? '';
+
         final days = profile.diasViaje;
         _days = days >= 7 ? '7+' : days.toString();
         if (!_daysOptions.contains(_days)) _days = '3'; // Default fallback
-        
+
         // Intereses
         _interests = profile.intereses
             .map((i) => _matchOption(_allInterests, i))
             .where((i) => i != null)
             .cast<String>()
             .toList();
+
+        _applyAi = profile.applyAiGlobally;
       });
     }
   }
 
   String _normalize(String text) {
-    return text.toLowerCase().trim()
+    return text
+        .toLowerCase()
+        .trim()
         .replaceAll('á', 'a')
         .replaceAll('é', 'e')
         .replaceAll('í', 'i')
@@ -95,12 +110,12 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     if (_isSaving) return;
 
     setState(() => _isSaving = true);
-    
+
     try {
       final tipoInteres = _interests.isEmpty
           ? 'mixto'
           : (_interests.length == 1 ? _normalize(_interests.first) : 'mixto');
-          
+
       String mapCrowd(String val) {
         final lower = _normalize(val);
         if (lower == 'alta') return 'alto';
@@ -125,11 +140,15 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         climaPreferido: _climate.isEmpty ? 'templado' : _normalize(_climate),
         tipoInteres: tipoInteres,
         intereses: validInterests.isEmpty ? ['playa'] : validInterests,
-        toleranciaMultitudes: _crowdTolerance.isEmpty ? 'medio' : mapCrowd(_crowdTolerance),
+        toleranciaMultitudes: _crowdTolerance.isEmpty
+            ? 'medio'
+            : mapCrowd(_crowdTolerance),
+        // Preservar la preferencia de IA en el PUT (si no, el backend la limpiaría).
+        applyAiGlobally: _applyAi,
       );
-      
+
       await context.read<ProfileController>().updatePreferences(updated);
-      
+
       if (mounted) {
         setState(() {
           _isEditing = false;
@@ -147,7 +166,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         setState(() => _isSaving = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al guardar: ${e.toString().replaceAll("Exception: ", "")}'),
+            content: Text(
+              'Error al guardar: ${e.toString().replaceAll("Exception: ", "")}',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -164,7 +185,9 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           _interests.add(interest);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Puedes seleccionar máximo 5 intereses')),
+            const SnackBar(
+              content: Text('Puedes seleccionar máximo 5 intereses'),
+            ),
           );
         }
       }
@@ -180,12 +203,20 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Mis Preferencias',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         actions: [
           if (!_isEditing)
@@ -204,36 +235,65 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           children: [
             const Text(
               'Ajusta cómo te recomendamos destinos basándonos en lo que más te gusta.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.4),
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 15,
+                height: 1.4,
+              ),
             ),
-            const SizedBox(height: 32),
-            
-            _buildSectionTitle('Presupuesto de viaje', Icons.account_balance_wallet_rounded),
+            const SizedBox(height: 24),
+
+            // ── Switch maestro de IA ──
+            _buildAiSwitch(),
+            const SizedBox(height: 24),
+
+            _buildSectionTitle(
+              'Presupuesto de viaje',
+              Icons.account_balance_wallet_rounded,
+            ),
             const SizedBox(height: 12),
-            _buildSelectionGrid(_budgetOptions, _budget, (val) => setState(() => _budget = val)),
-            
+            _buildSelectionGrid(
+              _budgetOptions,
+              _budget,
+              (val) => setState(() => _budget = val),
+            ),
+
             const SizedBox(height: 24),
             _buildSectionTitle('Días de viaje', Icons.calendar_month_rounded),
             const SizedBox(height: 12),
-            _buildSelectionGrid(_daysOptions, _days, (val) => setState(() => _days = val)),
+            _buildSelectionGrid(
+              _daysOptions,
+              _days,
+              (val) => setState(() => _days = val),
+            ),
 
             const SizedBox(height: 24),
             _buildSectionTitle('Clima preferido', Icons.thermostat_rounded),
             const SizedBox(height: 12),
-            _buildSelectionGrid(_climateOptions, _climate, (val) => setState(() => _climate = val)),
-            
+            _buildSelectionGrid(
+              _climateOptions,
+              _climate,
+              (val) => setState(() => _climate = val),
+            ),
+
             const SizedBox(height: 24),
             _buildSectionTitle('Tolerancia a multitudes', Icons.groups_rounded),
             const SizedBox(height: 12),
-            _buildSelectionGrid(_crowdOptions, _crowdTolerance, (val) => setState(() => _crowdTolerance = val)),
-            
+            _buildSelectionGrid(
+              _crowdOptions,
+              _crowdTolerance,
+              (val) => setState(() => _crowdTolerance = val),
+            ),
+
             const SizedBox(height: 24),
             _buildSectionTitle('Tus Intereses (Máx 5)', Icons.favorite_rounded),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 12,
-              children: _allInterests.map((i) => _buildInterestChip(i)).toList(),
+              children: _allInterests
+                  .map((i) => _buildInterestChip(i))
+                  .toList(),
             ),
 
             const SizedBox(height: 48),
@@ -247,15 +307,91 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               ProxvelButton(
                 text: 'Cancelar',
                 isSecondary: true,
-                onPressed: _isSaving ? null : () {
-                  _loadCurrentPreferences();
-                  setState(() => _isEditing = false);
-                },
+                onPressed: _isSaving
+                    ? null
+                    : () {
+                        _loadCurrentPreferences();
+                        setState(() => _isEditing = false);
+                      },
               ),
               const SizedBox(height: 24),
-            ]
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAiSwitch() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.accentSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              color: AppColors.accent,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Aplicar IA en toda la app',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  'Ordena Explorar y Búsqueda por compatibilidad. No afecta "Para ti".',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: _applyAi,
+            activeThumbColor: AppColors.accent,
+            onChanged: (val) async {
+              setState(() => _applyAi = val);
+              try {
+                await context.read<ProfileController>().setApplyAiGlobally(val);
+              } catch (e) {
+                if (mounted) {
+                  setState(() => _applyAi = !val); // revertir
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'No se pudo guardar la preferencia: ${e.toString().replaceAll("Exception: ", "")}',
+                      ),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
     );
   }
@@ -277,7 +413,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     );
   }
 
-  Widget _buildSelectionGrid(List<String> options, String currentValue, Function(String) onSelect) {
+  Widget _buildSelectionGrid(
+    List<String> options,
+    String currentValue,
+    Function(String) onSelect,
+  ) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -296,13 +436,21 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
                 width: 1.5,
               ),
               boxShadow: isSelected
-                  ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
+                  ? [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
                   : [],
             ),
             child: Text(
               opt,
               style: TextStyle(
-                color: isSelected ? AppColors.textOnDark : AppColors.textSecondary,
+                color: isSelected
+                    ? AppColors.textOnDark
+                    : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -331,7 +479,11 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              const Icon(Icons.check_rounded, color: AppColors.accent, size: 16),
+              const Icon(
+                Icons.check_rounded,
+                color: AppColors.accent,
+                size: 16,
+              ),
               const SizedBox(width: 6),
             ],
             Text(

@@ -16,7 +16,16 @@ import 'widgets/reviews_tab_content.dart';
 
 class DestinationDetailScreen extends StatefulWidget {
   final String destinationId;
-  const DestinationDetailScreen({super.key, required this.destinationId});
+
+  /// Origen de navegación: explore | search | ai_recommendation | ai_search.
+  /// Define la jerarquía de pestañas (info primero vs IA primero).
+  final String source;
+
+  const DestinationDetailScreen({
+    super.key,
+    required this.destinationId,
+    this.source = 'explore',
+  });
 
   @override
   State<DestinationDetailScreen> createState() =>
@@ -25,6 +34,27 @@ class DestinationDetailScreen extends StatefulWidget {
 
 class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   int _selectedTabIndex = 0;
+
+  /// La IA es primaria solo cuando se llega desde una recomendación IA.
+  bool get _aiPrimary =>
+      widget.source == 'ai_recommendation' || widget.source == 'ai_search';
+
+  /// Orden de pestañas según el origen.
+  /// - IA primaria: [IA, Sobre el destino, Opiniones]
+  /// - Catálogo/Búsqueda: [Sobre el destino, Opiniones, IA] (IA al final)
+  List<String> get _tabKeys =>
+      _aiPrimary ? const ['ai', 'about', 'reviews'] : const ['about', 'reviews', 'ai'];
+
+  String _tabLabel(String key) {
+    switch (key) {
+      case 'ai':
+        return '¿Por qué para mí?';
+      case 'about':
+        return 'Sobre el destino';
+      default:
+        return 'Opiniones';
+    }
+  }
 
   @override
   void initState() {
@@ -206,14 +236,13 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
 
                       const SizedBox(height: 24),
 
-                      // ── Tab content ──
+                      // ── Tab content (según el orden definido por el origen) ──
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 250),
-                        child: _selectedTabIndex == 0
-                            ? _buildWhyForMeContent(controller)
-                            : _selectedTabIndex == 1
-                                ? _buildAboutDestinationContent(controller)
-                                : ReviewsTabContent(key: const ValueKey('reviews'), controller: controller),
+                        child: _buildTabContent(
+                          _tabKeys[_selectedTabIndex],
+                          controller,
+                        ),
                       ),
                     ],
                   ),
@@ -252,12 +281,23 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _tabItem('¿Por qué para mí?', 0)),
-          Expanded(child: _tabItem('Sobre el destino', 1)),
-          Expanded(child: _tabItem('Opiniones', 2)),
+          for (int i = 0; i < _tabKeys.length; i++)
+            Expanded(child: _tabItem(_tabLabel(_tabKeys[i]), i)),
         ],
       ),
     );
+  }
+
+  Widget _buildTabContent(String key, DestinationController controller) {
+    switch (key) {
+      case 'ai':
+        return _buildWhyForMeContent(controller);
+      case 'about':
+        return _buildAboutDestinationContent(controller);
+      default:
+        return ReviewsTabContent(
+            key: const ValueKey('reviews'), controller: controller);
+    }
   }
 
   Widget _tabItem(String title, int index) {
@@ -304,12 +344,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     }
 
     // Determine rank position from recommendations context
-    // Default to 1 since we don't have the list index here
-    final rankPosition = 1;
+    // We don't have the list index here, so we pass null instead of a fake rank
 
     return WhyForMeTabContent(
       key: const ValueKey('why_for_me'),
-      rankPosition: rankPosition,
+      rankPosition: null,
       compatibilityPercentage: controller.compatibility,
       label: controller.compatibility >= AppConstants.compatibilityRecommended
           ? 'Recomendado'

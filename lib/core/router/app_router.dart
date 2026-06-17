@@ -34,7 +34,8 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/main', builder: (context, state) => const MainLayout()),
     GoRoute(path: '/destination/:id', builder: (context, state) {
       final id = state.pathParameters['id']!;
-      return DestinationDetailScreen(destinationId: id);
+      final source = state.uri.queryParameters['source'] ?? 'explore';
+      return DestinationDetailScreen(destinationId: id, source: source);
     }),
     GoRoute(path: '/search', builder: (context, state) {
       final query = state.uri.queryParameters['q'] ?? '';

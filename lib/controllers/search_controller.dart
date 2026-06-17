@@ -65,16 +65,17 @@ class SearchFilters {
   }
 }
 
-/// Result item enriched with compatibility score and label.
+/// Result item. La compatibilidad/label solo existen cuando el orden IA está
+/// activo y hay perfil; en búsqueda normal son null (no se inventan scores).
 class SearchResultItem {
   final DestinationModel destination;
-  final int compatibility;
-  final String label; // 'Recomendado', 'Parcialmente', 'Normal'
+  final int? compatibility;
+  final String? label; // 'Recomendado', 'Parcialmente', 'Normal'
 
   SearchResultItem({
     required this.destination,
-    required this.compatibility,
-    required this.label,
+    this.compatibility,
+    this.label,
   });
 }
 
@@ -91,29 +92,55 @@ class SearchController extends ChangeNotifier {
   List<String> availableCategories = [];
   List<String> availableClimates = [];
 
+  /// Orden por recomendación IA. Apagado por defecto: la búsqueda es normal.
+  bool aiSortEnabled = false;
+
+  /// True cuando se pidió orden IA pero el usuario no tiene perfil viajero.
+  /// La UI muestra un aviso para completar el perfil; los resultados se
+  /// mantienen en orden normal (sin inventar scores).
+  bool aiBlockedNoProfile = false;
+
   SearchController(this._destinationService, this._storageService);
 
-  Future<void> search({SearchFilters? newFilters}) async {
+  /// [aiSort] activa/desactiva el orden por IA.
+  /// [hasProfile] indica si el usuario tiene perfil viajero (lo pasa la vista
+  /// leyendo ProfileController), necesario para poder ordenar por IA.
+  Future<void> search({
+    SearchFilters? newFilters,
+    bool? aiSort,
+    bool hasProfile = false,
+  }) async {
     if (newFilters != null) filters = newFilters;
+    if (aiSort != null) aiSortEnabled = aiSort;
     isLoading = true;
     error = null;
+    aiBlockedNoProfile = false;
     notifyListeners();
 
     try {
       final all = await _destinationService.getDestinations();
 
-      // Populate filter options from data
-      availableCities = all.map((d) => d.city).toSet().toList()..sort();
-      availableCategories = all.map((d) => d.category).toSet().toList()..sort();
-      availableClimates = all.map((d) => d.climate).toSet().toList()..sort();
+      // Populate filter options from real data (descarta vacíos).
+      availableCities =
+          all.map((d) => d.city).where((s) => s.trim().isNotEmpty).toSet().toList()
+            ..sort();
+      availableCategories = all
+          .map((d) => d.category)
+          .where((s) => s.trim().isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+      availableClimates = all
+          .map((d) => d.climate)
+          .where((s) => s.trim().isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
 
-      // Apply filters
-      var filtered = all.where((d) {
-        // Text query
+      // Apply text + faceted filters (sin filtros sobre datos inexistentes).
+      final filtered = all.where((d) {
         if (filters.query.isNotEmpty) {
-          // If searching by text, save it as a recent search
           _storageService.addRecentSearch(filters.query);
-          
           final q = filters.query.toLowerCase();
           final matches = d.name.toLowerCase().contains(q) ||
               d.city.toLowerCase().contains(q) ||
@@ -122,55 +149,50 @@ class SearchController extends ChangeNotifier {
               d.description.toLowerCase().contains(q);
           if (!matches) return false;
         }
-        // City
         if (filters.city != null && d.city != filters.city) return false;
-        // Category
         if (filters.category != null && d.category != filters.category) {
-          return false;
-        }
-        // Climate
-        if (filters.climate != null && d.climate != filters.climate) {
-          return false;
-        }
-        // Budget
-        if (filters.maxBudget != null && d.averageCost > filters.maxBudget!) {
           return false;
         }
         return true;
       }).toList();
 
-      // Enrich with compatibility and classify
-      final enriched = <SearchResultItem>[];
-      for (final d in filtered) {
-        final compat = await _destinationService.getCompatibility(d.id);
-        String label;
-        if (compat >= AppConstants.compatibilityRecommended) {
-          label = 'Recomendado';
-        } else if (compat >= AppConstants.compatibilityPartial) {
-          label = 'Parcialmente';
-        } else {
-          label = 'Normal';
+      if (aiSortEnabled && hasProfile) {
+        // ── Orden IA: enriquecer con compatibilidad real y ordenar desc. ──
+        final enriched = <SearchResultItem>[];
+        for (final d in filtered) {
+          final compat = await _destinationService.getCompatibility(d.id);
+          final label = compat >= AppConstants.compatibilityRecommended
+              ? 'Recomendado'
+              : compat >= AppConstants.compatibilityPartial
+                  ? 'Parcialmente'
+                  : 'Normal';
+          enriched.add(SearchResultItem(
+            destination: d,
+            compatibility: compat,
+            label: label,
+          ));
         }
-        enriched.add(SearchResultItem(
-          destination: d,
-          compatibility: compat,
-          label: label,
-        ));
+        final compatFiltered = filters.minCompatibility != null
+            ? enriched
+                .where((r) => (r.compatibility ?? 0) >= filters.minCompatibility!)
+                .toList()
+            : enriched;
+        compatFiltered.sort(
+            (a, b) => (b.compatibility ?? 0).compareTo(a.compatibility ?? 0));
+        results = compatFiltered;
+      } else {
+        // ── Orden normal: alfabético. Sin scores IA inventados. ──
+        if (aiSortEnabled && !hasProfile) {
+          aiBlockedNoProfile = true;
+        }
+        filtered.sort(
+            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        results = filtered
+            .map((d) => SearchResultItem(destination: d))
+            .toList();
       }
-
-      // Filter by min compatibility if set
-      final compatFiltered = filters.minCompatibility != null
-          ? enriched
-              .where((r) => r.compatibility >= filters.minCompatibility!)
-              .toList()
-          : enriched;
-
-      // Sort: highest compatibility first
-      compatFiltered.sort((a, b) => b.compatibility.compareTo(a.compatibility));
-
-      results = compatFiltered;
     } catch (e) {
-      error = e.toString();
+      error = e.toString().replaceAll('Exception: ', '');
     }
 
     isLoading = false;
@@ -179,6 +201,6 @@ class SearchController extends ChangeNotifier {
 
   void clearFilters() {
     filters = SearchFilters(query: filters.query);
-    search();
+    search(aiSort: aiSortEnabled);
   }
 }

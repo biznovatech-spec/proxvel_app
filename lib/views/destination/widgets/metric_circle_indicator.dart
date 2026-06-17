@@ -6,7 +6,7 @@ import '../../../core/theme/app_colors.dart';
 /// Used to display "Afinidad base", "Clima favorable", "Aforo moderado", etc.
 class MetricCircleIndicator extends StatelessWidget {
   final String label;
-  final int percentage;
+  final int? percentage;
   final IconData icon;
   final Color color;
 
@@ -47,7 +47,7 @@ class MetricCircleIndicator extends StatelessWidget {
               CustomPaint(
                 size: const Size(64, 64),
                 painter: _CircleTrackPainter(
-                  progress: percentage / 100,
+                  progress: (percentage ?? 0) / 100,
                   trackColor: AppColors.divider,
                   progressColor: color,
                   strokeWidth: 5,
@@ -69,7 +69,7 @@ class MetricCircleIndicator extends StatelessWidget {
         const SizedBox(height: 8),
         // Percentage
         Text(
-          '$percentage%',
+          percentage != null ? '$percentage%' : 'N/D',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,

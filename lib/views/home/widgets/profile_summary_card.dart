@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ProfileSummaryCard extends StatefulWidget {
@@ -55,7 +56,7 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                         ),
                         child: Row(
                           children: [
-                            const Text('🌤️', style: TextStyle(fontSize: 24)),
+                            const Text('🌍', style: TextStyle(fontSize: 24)),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -63,7 +64,7 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: const [
                                   Text(
-                                    'Marzo 2026',
+                                    'Viajero',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 13,
@@ -72,7 +73,7 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    'Clima templado y\nvariable',
+                                    'PROXVEL',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: AppColors.textSecondary,
@@ -163,18 +164,13 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 10,
-                      children: [
-                        _chip(Icons.calendar_month, 'Marzo 2026'),
-                        _chip(Icons.people, 'Afluencia media en la región'),
-                        _chipYellow('💰 Medio'),
-                        _chip(Icons.emoji_emotions, 'Tranquilo', iconColor: AppColors.accent),
-                        _chip(Icons.landscape, 'Paisaje'),
-                        _chip(Icons.restaurant, 'Gastronomía'),
-                        _chip(Icons.attractions, 'Atractivos'),
-                      ],
+                    const Text(
+                      'Completa tu perfil viajero para mejorar tus recomendaciones.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     Container(
@@ -188,7 +184,7 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
                           onTap: () {
-                            // TODO: Edit profile logic
+                            context.push('/profile/edit');
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -220,46 +216,4 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
     );
   }
 
-  Widget _chip(IconData icon, String label, {Color? iconColor}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: iconColor ?? AppColors.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _chipYellow(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.accent,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-        ),
-      ),
-    );
-  }
 }
