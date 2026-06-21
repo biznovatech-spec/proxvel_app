@@ -32,35 +32,45 @@ class ProxvelBottomNavigation extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _NavItem(
-                icon: Icons.home_rounded,
-                label: 'Home',
-                isActive: currentIndex == 0,
-                onTap: () => onTap(0),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.home_rounded,
+                  label: 'Home',
+                  isActive: currentIndex == 0,
+                  onTap: () => onTap(0),
+                ),
               ),
-              _NavItem(
-                icon: Icons.map_rounded,
-                label: 'Mapa',
-                isActive: currentIndex == 1,
-                onTap: () => onTap(1),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.map_rounded,
+                  label: 'Mapa',
+                  isActive: currentIndex == 1,
+                  onTap: () => onTap(1),
+                ),
               ),
-              _NavItem(
-                icon: Icons.favorite_rounded,
-                label: 'Favoritos',
-                isActive: currentIndex == 2,
-                onTap: () => onTap(2),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.favorite_rounded,
+                  label: 'Favoritos',
+                  isActive: currentIndex == 2,
+                  onTap: () => onTap(2),
+                ),
               ),
-              _NavItem(
-                icon: Icons.alt_route_rounded,
-                label: 'Rutas',
-                isActive: currentIndex == 3,
-                onTap: () => onTap(3),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.alt_route_rounded,
+                  label: 'Rutas',
+                  isActive: currentIndex == 3,
+                  onTap: () => onTap(3),
+                ),
               ),
-              _NavItem(
-                icon: Icons.person_rounded,
-                label: 'Perfil',
-                isActive: currentIndex == 4,
-                onTap: () => onTap(4),
+              Expanded(
+                child: _NavItem(
+                  icon: Icons.person_rounded,
+                  label: 'Perfil',
+                  isActive: currentIndex == 4,
+                  onTap: () => onTap(4),
+                ),
               ),
             ],
           ),
@@ -113,7 +123,11 @@ class _NavItem extends StatelessWidget {
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                 color: isActive ? AppColors.navActive : AppColors.navInactive,
               ),
-              child: Text(label),
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

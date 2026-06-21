@@ -40,10 +40,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+      ),
+    );
 
     final fbCtrl = context.watch<FeedbackController>();
 
@@ -100,7 +102,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                             color: AppColors.surface,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                                color: AppColors.border, width: 1),
+                              color: AppColors.border,
+                              width: 1,
+                            ),
                           ),
                           child: TextField(
                             controller: _commentController,
@@ -143,8 +147,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                 boxShadow: _canSubmit
                                     ? [
                                         BoxShadow(
-                                          color: AppColors.primary
-                                              .withValues(alpha: 0.25),
+                                          color: AppColors.primary.withValues(
+                                            alpha: 0.25,
+                                          ),
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
                                         ),
@@ -162,7 +167,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                                       ),
                                     )
                                   : Text(
-                                      'Enviar feedback',
+                                      'Enviar Reseña',
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w700,
@@ -190,12 +195,14 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
   Future<void> _submit() async {
     final currentUser = context.read<AuthController>().currentUser;
-    
+
     if (currentUser == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No se encontró un usuario activo. Regístrate o inicia sesión para continuar.'),
+            content: Text(
+              'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.',
+            ),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
           ),
@@ -214,16 +221,18 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       interactionType: _selectedType,
     );
 
-    final success =
-        await context.read<FeedbackController>().submitFeedback(feedback);
-    
+    final success = await context.read<FeedbackController>().submitFeedback(
+      feedback,
+    );
+
     if (mounted) {
       if (success) {
         setState(() => _submitted = true);
       } else {
         final errorMsg = context.read<FeedbackController>().error ?? '';
-        String displayMsg = 'No se pudo enviar la reseña. Inténtalo nuevamente.';
-        
+        String displayMsg =
+            'No se pudo enviar la reseña. Inténtalo nuevamente.';
+
         if (errorMsg.isNotEmpty) {
           displayMsg = errorMsg;
         }
@@ -259,8 +268,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
             children: [
               IconButton(
                 onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back_rounded,
-                    color: Colors.white, size: 24),
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 4),
               Expanded(
@@ -293,8 +305,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   color: AppColors.accent.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.rate_review_rounded,
-                    color: AppColors.accent, size: 22),
+                child: const Icon(
+                  Icons.rate_review_rounded,
+                  color: AppColors.accent,
+                  size: 22,
+                ),
               ),
             ],
           ),
@@ -317,12 +332,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 color: AppColors.success.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_circle_rounded,
-                  color: AppColors.success, size: 50),
+              child: const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.success,
+                size: 50,
+              ),
             ),
             const SizedBox(height: 28),
             const Text(
-              '¡Gracias por tu feedback!',
+              '¡Gracias por tu reseña!',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 22,
@@ -345,7 +363,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               onTap: () => context.pop(),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 14),
+                  horizontal: 28,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(16),
