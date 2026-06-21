@@ -24,33 +24,23 @@ class AboutDestinationTabContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 0. Información Oficial MINCETUR
-        if (tourismInfo != null) ...[
-          _buildOfficialInfo(tourismInfo!),
-          const SizedBox(height: 28),
-        ],
+
 
         // 1. Descripción
         const Text(
           'Descripción',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
-        ExpandableDescriptionText(text: tourismInfo?.description ?? destination.description),
-        
+        ExpandableDescriptionText(
+          text: tourismInfo?.description ?? destination.description,
+        ),
+
         const SizedBox(height: 28),
 
-        // 2. Galería
-        if (destination.galleryImages.isNotEmpty) ...[
-          DestinationGalleryPreview(imageUrls: destination.galleryImages),
-          const SizedBox(height: 28),
-        ],
-
         // 3. ¿Qué puedes hacer?
-        if (destination.activities.isNotEmpty || (tourismInfo?.activitiesSummary != null)) ...[
+        if (destination.activities.isNotEmpty ||
+            (tourismInfo?.activitiesSummary != null)) ...[
           if (tourismInfo?.activitiesSummary != null) ...[
             const Text(
               'Actividades',
@@ -59,7 +49,10 @@ class AboutDestinationTabContent extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               tourismInfo!.activitiesSummary!,
-              style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                height: 1.5,
+              ),
             ),
           ] else ...[
             ActivitiesList(activities: destination.activities),
@@ -81,11 +74,8 @@ class AboutDestinationTabContent extends StatelessWidget {
           const SizedBox(height: 28),
         ],
 
-        KeyInfoGrid(
-          destination: destination,
-          tourismInfo: tourismInfo,
-        ),
-        
+        KeyInfoGrid(destination: destination, tourismInfo: tourismInfo),
+
         const SizedBox(height: 28),
 
         // 5. Ubicación
@@ -94,7 +84,7 @@ class AboutDestinationTabContent extends StatelessWidget {
           longitude: tourismInfo?.longitude,
           destinationId: destination.id,
         ),
-        
+
         const SizedBox(height: 28),
 
         // 6. Información práctica
@@ -102,6 +92,12 @@ class AboutDestinationTabContent extends StatelessWidget {
           bestSeason: destination.bestSeason,
           estimatedDays: destination.estimatedDays,
         ),
+
+        // 7. Información Explícita (MINCETUR)
+        if (tourismInfo != null) ...[
+          const SizedBox(height: 28),
+          _buildOfficialInfo(tourismInfo!),
+        ],
       ],
     );
   }
@@ -119,11 +115,15 @@ class AboutDestinationTabContent extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_rounded, color: AppColors.success, size: 20),
+              const Icon(
+                Icons.verified_rounded,
+                color: AppColors.success,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text(
-                  'Información Oficial (MINCETUR)',
+                  'Información Explícita',
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -133,21 +133,33 @@ class AboutDestinationTabContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          if (info.officialName != null) _infoRow('Nombre oficial:', info.officialName!),
-          _infoRow('Fuente:', 'Inventario de Recursos Turísticos del Perú - MINCETUR'),
-          if (info.officialSourceCode != null) _infoRow('Código de fuente:', info.officialSourceCode!),
-          if (info.officialSourceUrl != null) _infoRow('Link oficial:', info.officialSourceUrl!),
+          if (info.officialName != null)
+            _infoRow('Nombre oficial:', info.officialName!),
+          _infoRow(
+            'Fuente:',
+            'Inventario de Recursos Turísticos del Perú - MINCETUR',
+          ),
+          if (info.officialSourceCode != null)
+            _infoRow('Código de fuente:', info.officialSourceCode!),
+          if (info.officialSourceUrl != null)
+            _infoRow('Link oficial:', info.officialSourceUrl!),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 4),
             child: Divider(),
           ),
-          if (info.department != null && info.province != null) 
-            _infoRow('Ubicación:', '${info.district != null ? '${info.district}, ' : ''}${info.province}, ${info.department}'),
+          if (info.department != null && info.province != null)
+            _infoRow(
+              'Ubicación:',
+              '${info.district != null ? '${info.district}, ' : ''}${info.province}, ${info.department}',
+            ),
           if (info.type != null) _infoRow('Tipo:', info.type!),
           if (info.subtype != null) _infoRow('Subtipo:', info.subtype!),
-          if (info.hierarchy != null && info.hierarchy != 'null') _infoRow('Jerarquía:', info.hierarchy!),
-          if (info.experienceType != null) _infoRow('Experiencia:', info.experienceType!),
-          if (info.altitudeM != null) _infoRow('Altitud:', '${info.altitudeM} m.s.n.m.'),
+          if (info.hierarchy != null && info.hierarchy != 'null')
+            _infoRow('Jerarquía:', info.hierarchy!),
+          if (info.experienceType != null)
+            _infoRow('Experiencia:', info.experienceType!),
+          if (info.altitudeM != null)
+            _infoRow('Altitud:', '${info.altitudeM} m.s.n.m.'),
         ],
       ),
     );

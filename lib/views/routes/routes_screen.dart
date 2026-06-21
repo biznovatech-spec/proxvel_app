@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../main/main_layout.dart';
 import '../../core/widgets/states/proxvel_empty_state.dart';
 
 class RoutesScreen extends StatelessWidget {
@@ -29,7 +30,12 @@ class RoutesScreen extends StatelessWidget {
               subtitle: 'Estamos preparando rutas turísticas personalizadas para futuras versiones.',
               actionLabel: 'Explorar destinos',
               onAction: () {
-                context.go('/main');
+                final mainLayout = MainLayout.of(context);
+                if (mainLayout != null) {
+                  mainLayout.changeTab(0);
+                } else {
+                  context.go('/main');
+                }
               },
             ),
           ),

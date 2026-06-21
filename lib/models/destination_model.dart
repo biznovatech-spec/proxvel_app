@@ -158,6 +158,9 @@ class DestinationModel {
         const <String>[];
         
     final gallery = rawGallery.where((url) => isValidImageUrl(url)).toList();
+    
+    final rawImageUrl = json['cover_image_url'] as String? ?? '';
+    final coverImageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : '';
 
     return DestinationModel(
       id: json['destination_id'] ?? '',
@@ -166,7 +169,7 @@ class DestinationModel {
       region: json['region'] ?? '',
       category: json['category'] ?? '',
       description: tourism['description'] ?? '',
-      imageUrl: gallery.isNotEmpty ? gallery.first : '',
+      imageUrl: gallery.isNotEmpty ? gallery.first : coverImageUrl,
       averageCost: 0.0,
       climate: context['weather_category'] ?? '',
       crowdLevel: context['crowd_level'] ?? '',
