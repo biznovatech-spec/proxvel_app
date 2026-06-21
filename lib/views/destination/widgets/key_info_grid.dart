@@ -40,29 +40,15 @@ class KeyInfoGrid extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _KeyInfoItem(
-                    icon: Icons.landscape_outlined,
-                    label: 'Altitud',
-                    value: (tourismInfo?.altitudeM ?? destination.altitudeM) != null
-                        ? '${(tourismInfo?.altitudeM ?? destination.altitudeM)!.toStringAsFixed(0)} m\ns. n. m.'
-                        : 'N/A',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                children: [
-                  _KeyInfoItem(
                     icon: Icons.account_balance_outlined,
                     label: 'Tipo',
                     value: tourismInfo?.type ?? destination.type ?? 'N/A',
                   ),
                   const SizedBox(height: 16),
                   _KeyInfoItem(
-                    icon: Icons.location_on_outlined,
-                    label: 'Región',
-                    value: tourismInfo?.region ?? destination.region,
+                    icon: Icons.star_border_rounded,
+                    label: 'Jerarquía',
+                    value: tourismInfo?.hierarchy ?? destination.hierarchy ?? 'N/A',
                   ),
                 ],
               ),
@@ -72,9 +58,17 @@ class KeyInfoGrid extends StatelessWidget {
               child: Column(
                 children: [
                   _KeyInfoItem(
-                    icon: Icons.star_border_rounded,
-                    label: 'Jerarquía',
-                    value: tourismInfo?.hierarchy ?? destination.hierarchy ?? 'N/A',
+                    icon: Icons.landscape_outlined,
+                    label: 'Altitud',
+                    value: (tourismInfo?.altitudeM ?? destination.altitudeM) != null
+                        ? '${(tourismInfo?.altitudeM ?? destination.altitudeM)!.toStringAsFixed(0)} m\ns. n. m.'
+                        : 'N/A',
+                  ),
+                  const SizedBox(height: 16),
+                  _KeyInfoItem(
+                    icon: Icons.location_on_outlined,
+                    label: 'Región',
+                    value: tourismInfo?.region ?? destination.region,
                   ),
                   const SizedBox(height: 16),
                   _KeyInfoItem(
