@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../main/main_layout.dart';
 import '../../controllers/favorites_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/cards/destination_card.dart';
@@ -51,7 +52,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         'Explora destinos y guarda los que más\nte gusten tocando el corazón.',
                     actionLabel: 'Explorar destinos',
                     onAction: () {
-                      context.go('/main');
+                      final mainLayout = MainLayout.of(context);
+                      if (mainLayout != null) {
+                        mainLayout.changeTab(0);
+                      } else {
+                        context.go('/main');
+                      }
                     },
                   )
                 : _buildFavoritesList(controller),

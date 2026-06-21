@@ -191,7 +191,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               // ═══ BODY ═══
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -250,14 +250,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               ),
             ],
           ),
-
-          // ── Bottom action bar ──
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _buildBottomBar(dest.id),
-          ),
         ],
       ),
     );
@@ -309,8 +301,12 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         children: [
           Text(
             title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
+              height: 1.2,
               fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
               color: isActive ? AppColors.accent : AppColors.textMuted,
             ),
@@ -416,87 +412,6 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Bottom action bar ──
-  Widget _buildBottomBar(String destId) {
-    return Container(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 16,
-        bottom: MediaQuery.of(context).padding.bottom + 16,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            // Selector aísla el rebuild: solo este botón se redibuja cuando
-            // cambia el estado de favorito de este destino.
-            child: Selector<FavoritesController, bool>(
-              selector: (_, c) => c.isFavorite(destId),
-              builder: (context, isFav, _) => GestureDetector(
-                onTap: () =>
-                    context.read<FavoritesController>().toggleFavorite(destId),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: isFav
-                        ? AppColors.error.withValues(alpha: 0.1)
-                        : AppColors.primary,
-                    borderRadius: BorderRadius.circular(14),
-                    border: isFav
-                        ? Border.all(color: AppColors.error.withValues(alpha: 0.5))
-                        : null,
-                    boxShadow: isFav
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.25),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isFav
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: isFav ? AppColors.error : Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        isFav ? 'En favoritos' : 'Añadir a favoritos',
-                        style: TextStyle(
-                          color: isFav ? AppColors.error : Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
         ],

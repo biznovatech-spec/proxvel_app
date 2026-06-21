@@ -9,12 +9,20 @@ import '../../core/widgets/navigation/proxvel_bottom_navigation.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
+  static MainLayoutState? of(BuildContext context) => context.findAncestorStateOfType<MainLayoutState>();
+
   @override
-  State<MainLayout> createState() => _MainLayoutState();
+  State<MainLayout> createState() => MainLayoutState();
 }
 
-class _MainLayoutState extends State<MainLayout> {
+class MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+
+  void changeTab(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
   final List<Widget> _screens = const [
     HomeScreen(),
     MapScreen(),
