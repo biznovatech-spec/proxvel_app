@@ -1,5 +1,7 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/announcement_controller.dart';
@@ -78,34 +80,52 @@ class _HomeScreenState extends State<HomeScreen>
     final userName = authController.currentUser?.fullName ?? 'Viajero';
 
     return Scaffold(
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           SafeArea(
+            top: false,
             bottom: false,
             child: Container(
               color: AppColors.background,
               child: NestedScrollView(
                 headerSliverBuilder: (context, innerBoxIsScrolled) {
                   return [
-                    SliverToBoxAdapter(child: HomeHeader(userName: userName)),
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _CustomHomeHeaderDelegate(
+                        safeAreaTop: MediaQuery.of(context).padding.top,
+                        userName: userName,
+                      ),
+                    ),
                     SliverPersistentHeader(
                       pinned: true,
                       delegate: _StickyTabBarDelegate(
                         TabBar(
                           controller: _tabController,
+                          dividerColor: Colors.transparent,
                           indicatorSize: TabBarIndicatorSize.tab,
-                          indicatorColor: AppColors.accent,
-                          indicatorWeight: 3,
-                          labelColor: AppColors.textOnDark,
-                          unselectedLabelColor: AppColors.textOnDarkMuted,
-                          labelStyle: const TextStyle(
-                            fontSize: 16,
+                          indicatorPadding: const EdgeInsets.all(6),
+                          indicator: BoxDecoration(
+                            color: AppColors.primaryDark,
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryDark.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          labelColor: Colors.white,
+                          unselectedLabelColor: AppColors.textSecondary,
+                          labelStyle: GoogleFonts.poppins(
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
                           ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                          unselectedLabelStyle: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
                           ),
                           tabs: const [
                             Tab(text: 'Explorar'),
@@ -146,9 +166,9 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
   _StickyTabBarDelegate(this.tabBar);
 
   @override
-  double get minExtent => tabBar.preferredSize.height;
+  double get minExtent => 76;
   @override
-  double get maxExtent => tabBar.preferredSize.height;
+  double get maxExtent => 76;
 
   @override
   Widget build(
@@ -157,18 +177,194 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
     bool overlapsContent,
   ) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
+      color: AppColors.background,
+      alignment: Alignment.center,
+      child: Container(
+        height: 60,
+        margin: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: tabBar,
       ),
-      child: tabBar,
     );
   }
 
   @override
-  bool shouldRebuild(_StickyTabBarDelegate oldDelegate) {
+  bool shouldRebuild(covariant _StickyTabBarDelegate oldDelegate) {
     return tabBar != oldDelegate.tabBar;
+  }
+}
+
+class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double safeAreaTop;
+  final String userName;
+
+  _CustomHomeHeaderDelegate({
+    required this.safeAreaTop,
+    required this.userName,
+  });
+
+  @override
+  double get minExtent => safeAreaTop + 60 + 32; // App bar height + curve height
+  @override
+  double get maxExtent => 280;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+
+    // Avatar Interpolation
+    final avatarRadius = ui.lerpDouble(22, 18, progress)!;
+    final avatarTop = ui.lerpDouble(safeAreaTop + 16, safeAreaTop + 12, progress)!;
+    final avatarLeft = 24.0;
+
+    // Notification Interpolation
+    final notifTop = avatarTop;
+    final notifRight = 24.0;
+
+    // Name Interpolation
+    final nameTopExpanded = maxExtent - 32 - 40 - 35; // maxExtent - curve - nameHeight - padding
+    final nameTopCollapsed = safeAreaTop + 18.0;
+    final nameTop = ui.lerpDouble(nameTopExpanded, nameTopCollapsed, progress)!;
+
+    final nameLeftExpanded = 24.0;
+    final nameLeftCollapsed = avatarLeft + (avatarRadius * 2) + 12.0; // Next to avatar
+    final nameLeft = ui.lerpDouble(nameLeftExpanded, nameLeftCollapsed, progress)!;
+
+    final nameFontSize = ui.lerpDouble(28, 18, progress)!;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // Background layer: Deep slate base
+        Container(color: const Color(0xFF0F172A)),
+        
+        // Background layer: Image that parallax scrolls
+        Positioned(
+          top: -shrinkOffset * 0.5,
+          left: 0,
+          right: 0,
+          height: maxExtent,
+          child: Image.asset('assets/images/hero-sky.webp', fit: BoxFit.cover),
+        ),
+        Positioned(
+          top: -shrinkOffset * 0.2,
+          left: 0,
+          right: 0,
+          height: maxExtent,
+          child: Image.asset('assets/images/hero-montanas.webp', fit: BoxFit.cover, alignment: Alignment.bottomCenter),
+        ),
+
+        // Gradient overlay for text readability
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                const Color(0xFF0F172A).withValues(alpha: progress), // Darkens as it collapses
+                Colors.transparent,
+                const Color(0xFF0B142E).withValues(alpha: 0.95 * (1 - progress)), // Fades out bottom dark as it collapses
+              ],
+              stops: const [0.0, 0.4, 1.0],
+            ),
+          ),
+        ),
+
+        // The permanent white curve at the bottom
+        Positioned(
+          bottom: -2,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 32,
+            decoration: const BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+          ),
+        ),
+
+        // Avatar
+        Positioned(
+          top: avatarTop,
+          left: avatarLeft,
+          child: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+            ),
+            child: CircleAvatar(
+              radius: avatarRadius,
+              backgroundColor: Colors.black.withOpacity(0.3),
+              child: Icon(Icons.person, color: Colors.white, size: avatarRadius * 1.2),
+            ),
+          ),
+        ),
+
+        // Notification Icon
+        Positioned(
+          top: notifTop,
+          right: notifRight,
+          child: Container(
+            width: avatarRadius * 2,
+            height: avatarRadius * 2,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withOpacity(0.3),
+              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+            ),
+            child: Icon(Icons.notifications_none, color: Colors.white, size: avatarRadius),
+          ),
+        ),
+
+        // User Name
+        Positioned(
+          top: nameTop,
+          left: nameLeft,
+          child: Text(
+            userName,
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontSize: nameFontSize,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+
+        // "Usuario" subtitle (only visible when expanded)
+        Positioned(
+          top: nameTop + 36,
+          left: nameLeft,
+          child: Opacity(
+            opacity: 1.0 - progress,
+            child: Row(
+              children: [
+                const Icon(Icons.person_outline, color: Colors.white70, size: 14),
+                const SizedBox(width: 6),
+                Text(
+                  'Usuario',
+                  style: GoogleFonts.poppins(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _CustomHomeHeaderDelegate oldDelegate) {
+    return safeAreaTop != oldDelegate.safeAreaTop || userName != oldDelegate.userName;
   }
 }

@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           // ── Fullscreen Background Image ──
           Positioned.fill(
             child: ProxvelEnhancedImage(
-              imagePath: 'assets/images/background_machu_picchu.png',
+              imagePath: 'assets/images/welcome.png',
               fit: BoxFit.cover,
               alignment: Alignment.center,
             ),
@@ -104,11 +104,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  stops: const [0.0, 0.40, 0.68, 1.0],
+                  stops: const [0.0, 0.25, 0.55, 1.0],
                   colors: [
                     Colors.black.withValues(alpha: 0.15),
                     Colors.transparent,
-                    Colors.black.withValues(alpha: 0.65),
+                    Colors.black.withValues(alpha: 0.75),
                     Colors.black.withValues(alpha: 0.95),
                   ],
                 ),
@@ -146,6 +146,13 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
                       letterSpacing: -0.2,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -160,7 +167,14 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.78),
+                      color: Colors.white.withValues(alpha: 0.85),
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                   ),
                 ),

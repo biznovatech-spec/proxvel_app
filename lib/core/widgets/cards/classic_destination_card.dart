@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/destination_model.dart';
 import '../../../controllers/favorites_controller.dart';
@@ -35,16 +36,15 @@ class ClassicDestinationCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
+        margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.border, width: 1),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow,
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
           ],
         ),
@@ -57,16 +57,16 @@ class ClassicDestinationCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Imagen ──
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  bottomLeft: Radius.circular(18),
-                ),
-                child: SizedBox(
-                  width: 118,
-                  height: 118,
-                  child: AdaptiveDestinationImage(
-                    imagePath: destination.imageUrl,
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: AdaptiveDestinationImage(
+                      imagePath: destination.imageUrl,
+                    ),
                   ),
                 ),
               ),
@@ -83,9 +83,9 @@ class ClassicDestinationCard extends StatelessWidget {
                         destination.name,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: GoogleFonts.poppins(
                           fontSize: 16,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                           height: 1.2,
                         ),
@@ -105,7 +105,7 @@ class ClassicDestinationCard extends StatelessWidget {
                                 location,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
+                                style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
                                 ),
@@ -134,7 +134,7 @@ class ClassicDestinationCard extends StatelessWidget {
                                   destination.category,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
+                                  style: GoogleFonts.poppins(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.primary,
@@ -158,18 +158,25 @@ class ClassicDestinationCard extends StatelessWidget {
 
               // ── Favorito ──
               Padding(
-                padding: const EdgeInsets.only(right: 8, top: 8),
+                padding: const EdgeInsets.all(12),
                 child: Consumer<FavoritesController>(
                   builder: (context, favCtrl, _) {
                     final isFav = favCtrl.isFavorite(destination.id);
                     return GestureDetector(
                       onTap: () => favCtrl.toggleFavorite(destination.id),
-                      child: Icon(
-                        isFav
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        color: isFav ? AppColors.error : AppColors.textMuted,
-                        size: 22,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isFav ? AppColors.error.withValues(alpha: 0.1) : AppColors.background,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          isFav
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color: isFav ? AppColors.error : AppColors.textMuted,
+                          size: 20,
+                        ),
                       ),
                     );
                   },

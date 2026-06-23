@@ -81,4 +81,32 @@ class UserService {
       throw Exception('Error inesperado al actualizar usuario: $e');
     }
   }
+
+  Future<String> uploadAvatar({
+    required String userId,
+    required String filePath,
+  }) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('POST MULTIPART URL: /users/$userId/avatar');
+      }
+      
+      final response = await _api.postMultipart(
+        '/users/$userId/avatar',
+        filePath: filePath,
+        fileField: 'file',
+      );
+      
+      if (kDebugMode) {
+        debugPrint('POST AVATAR RESPONSE: $response');
+      }
+      
+      final data = response['data'] as Map<String, dynamic>;
+      return data['avatar_url'] as String;
+    } on ApiException catch (e) {
+      throw Exception('Error al subir avatar: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al subir avatar: $e');
+    }
+  }
 }

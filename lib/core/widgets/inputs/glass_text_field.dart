@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class GlassTextField extends StatefulWidget {
@@ -9,6 +10,8 @@ class GlassTextField extends StatefulWidget {
   final String? errorText;
   final ValueChanged<String>? onChanged;
   final TextInputType keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   const GlassTextField({
     super.key,
@@ -18,6 +21,8 @@ class GlassTextField extends StatefulWidget {
     this.errorText,
     this.onChanged,
     this.keyboardType = TextInputType.text,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -78,6 +83,8 @@ class _GlassTextFieldState extends State<GlassTextField> {
                       obscureText: widget.isPassword ? _obscureText : false,
                       onChanged: widget.onChanged,
                       keyboardType: widget.keyboardType,
+                      inputFormatters: widget.inputFormatters,
+                      textCapitalization: widget.textCapitalization,
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 16,

@@ -140,4 +140,29 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Sube un nuevo avatar a Cloudinary y actualiza la sesión
+  Future<void> uploadAvatar(String filePath) async {
+    final currentUser = _storage.getUser();
+    if (currentUser != null && _userService != null) {
+      final newAvatarUrl = await _userService.uploadAvatar(
+        userId: currentUser.id,
+        filePath: filePath,
+      );
+      
+      final updatedUser = UserModel(
+        id: currentUser.id,
+        name: currentUser.name,
+        lastName: currentUser.lastName,
+        email: currentUser.email,
+        password: currentUser.password,
+        role: currentUser.role,
+        isActive: currentUser.isActive,
+        avatarUrl: newAvatarUrl,
+      );
+      
+      await _storage.saveUser(updatedUser);
+      notifyListeners();
+    }
+  }
 }

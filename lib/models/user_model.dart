@@ -6,6 +6,7 @@ class UserModel {
   final String password; // Local-only simulated password (not hashed)
   final String role;
   final bool isActive;
+  final String? avatarUrl;
 
   UserModel({
     required this.id,
@@ -15,6 +16,7 @@ class UserModel {
     this.password = '',
     this.role = 'user',
     this.isActive = true,
+    this.avatarUrl,
   });
 
   /// Full display name.
@@ -28,6 +30,7 @@ class UserModel {
         email: json['email'] ?? '',
         role: json['role'] ?? 'user',
         isActive: json['is_active'] ?? true,
+        avatarUrl: json['avatar_url'],
       );
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -38,6 +41,7 @@ class UserModel {
         password: '', // NO persistir password local
         role: json['role'] ?? 'user',
         isActive: json['is_active'] ?? true,
+        avatarUrl: json['avatar_url'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -48,6 +52,7 @@ class UserModel {
         'email': email,
         'role': role,
         'is_active': isActive,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 
   /// Serializa el usuario para enviarlo al backend (POST /users).
@@ -55,5 +60,6 @@ class UserModel {
         'name': lastName.isNotEmpty ? '$name $lastName'.trim() : name,
         'email': email,
         'password': password,
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 }

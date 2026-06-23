@@ -10,6 +10,7 @@ class DestinationModel {
   final String climate;
   final String crowdLevel;
   final double rating;
+  final int reviewsCount;
   final List<String> aspects;
   final double? distanceKm;
   final String? estimatedDays;
@@ -35,6 +36,7 @@ class DestinationModel {
     required this.climate,
     required this.crowdLevel,
     required this.rating,
+    this.reviewsCount = 0,
     required this.aspects,
     this.distanceKm,
     this.estimatedDays,
@@ -65,6 +67,7 @@ class DestinationModel {
         climate: climate,
         crowdLevel: crowdLevel,
         rating: rating,
+        reviewsCount: reviewsCount,
         aspects: aspects,
         distanceKm: distanceKm,
         estimatedDays: estimatedDays,
@@ -96,7 +99,8 @@ class DestinationModel {
       averageCost: 0.0,
       climate: context['weather_category'] ?? '',
       crowdLevel: context['crowd_level'] ?? '',
-      rating: 0.0,
+      rating: json['rating']?.toDouble() ?? (tourism['rating']?.toDouble() ?? 0.0),
+      reviewsCount: json['reviews_count'] ?? (tourism['reviews_count'] ?? 0),
       aspects: const [],
       type: tourism['experience_type'],
     );
@@ -118,7 +122,8 @@ class DestinationModel {
       averageCost: 0.0,
       climate: '', // No disponible en el catálogo base
       crowdLevel: '', // No disponible en el catálogo base
-      rating: 0.0, // Pendiente a integrarse si el backend lo añade
+      rating: json['rating']?.toDouble() ?? 0.0,
+      reviewsCount: json['reviews_count'] ?? 0,
       aspects: const [],
       type: json['category'],
     );
@@ -141,6 +146,7 @@ class DestinationModel {
       climate: '', 
       crowdLevel: '', 
       rating: fav.rating ?? 0.0, 
+      reviewsCount: fav.reviewsCount ?? 0,
       aspects: const [],
       type: fav.category,
     );
@@ -173,7 +179,8 @@ class DestinationModel {
       averageCost: 0.0,
       climate: context['weather_category'] ?? '',
       crowdLevel: context['crowd_level'] ?? '',
-      rating: 0.0,
+      rating: json['rating']?.toDouble() ?? (tourism['rating']?.toDouble() ?? 0.0),
+      reviewsCount: json['reviews_count'] ?? (tourism['reviews_count'] ?? 0),
       aspects: const [],
       type: tourism['experience_type'],
       galleryImages: gallery,
@@ -191,7 +198,8 @@ class DestinationModel {
         averageCost: json['averageCost'].toDouble(),
         climate: json['climate'],
         crowdLevel: json['crowdLevel'],
-        rating: json['rating'].toDouble(),
+        rating: json['rating']?.toDouble() ?? 0.0,
+        reviewsCount: json['reviewsCount'] ?? 0,
         aspects: List<String>.from(json['aspects'] ?? []),
         distanceKm: json['distanceKm']?.toDouble(),
         estimatedDays: json['estimatedDays'],
@@ -216,6 +224,7 @@ class DestinationModel {
         'climate': climate,
         'crowdLevel': crowdLevel,
         'rating': rating,
+        'reviewsCount': reviewsCount,
         'aspects': aspects,
         'distanceKm': distanceKm,
         'estimatedDays': estimatedDays,

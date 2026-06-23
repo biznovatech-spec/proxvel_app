@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -8,61 +9,37 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.primaryDark, AppColors.primary],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Greeting ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              24,
-              32,
-              24,
-              24,
-            ), // Increased padding for premium feel
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'BIENVENIDO DE VUELTA',
-                  style: TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.8,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    color: AppColors.textOnDark,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '¿Anhelas una nueva aventura?',
-                  style: TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          userName,
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 32, // Tamaño similar al de "Bromo Mountain"
+            fontWeight: FontWeight.w500, // Fuente más delgada
+            height: 1.15,
+            letterSpacing: -0.5, // Le da un toque más Premium
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Icon(Icons.person_outline, color: Colors.white70, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              'Usuario',
+              style: GoogleFonts.poppins(
+                color: Colors.white70,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

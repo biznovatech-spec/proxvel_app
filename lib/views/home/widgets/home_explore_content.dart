@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../controllers/home_controller.dart';
@@ -10,6 +11,9 @@ import '../../../core/widgets/cards/featured_destination_card.dart';
 import '../../../core/widgets/cards/classic_destination_card.dart';
 import '../../../core/widgets/cards/recent_search_chip.dart';
 import '../../../core/widgets/states/loading_view.dart';
+import '../../../models/destination_model.dart';
+import '../../../core/widgets/images/adaptive_destination_image.dart';
+import '../../../core/widgets/carousels/coverflow_carousel.dart';
 
 /// Contenido de la pestaña "Explorar" — catálogo abierto.
 /// Solo muestra secciones que tienen datos reales. Nunca rellena la pantalla
@@ -130,52 +134,62 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
               const SizedBox(height: 28),
             ],
 
-            // ═══ DESTINOS DESTACADOS ═══
-            if (featured.isNotEmpty) ...[
-              _sectionHeader('Destinos destacados',
-                  onSeeMore: () => context.push('/search')),
-              const SizedBox(height: 14),
-              SizedBox(
-                height: 320,
-                child: PageView.builder(
-                  controller: _carouselCtrl,
-                  itemCount: featured.length,
-                  onPageChanged: (i) => setState(() => _carouselPage = i),
-                  itemBuilder: (_, i) => FeaturedDestinationCard(
-                    destination: featured[i],
-                    onTap: () => context.push(
-                        '/destination/${featured[i].id}?source=explore'),
+            // ═══ CATEGORÍAS (reales) movidas arriba ═══
+            if (categories.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Explora nuevos horizontes',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              if (featured.length > 1) ...[
-                const SizedBox(height: 14),
-                _buildDots(featured.length),
-              ],
-              const SizedBox(height: 28),
-            ],
-
-            // ═══ CATEGORÍAS (reales) ═══
-            if (categories.isNotEmpty) ...[
-              _sectionHeader('Explora por categoría'),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               SizedBox(
                 height: 40,
                 child: ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   scrollDirection: Axis.horizontal,
                   itemCount: categories.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (_, i) => _categoryChip(context, categories[i]),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => _categoryChip(context, categories[i], i == 0),
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
             ],
+
+            // ═══ DESTINOS DESTACADOS (Coverflow Carousel) ═══
+            if (featured.isNotEmpty) ...[
+              CoverflowCarousel(
+                destinations: featured,
+                onDestinationTap: (dest) => context.push('/destination/${dest.id}?source=explore'),
+              ),
+              const SizedBox(height: 32),
+            ],
+
+            // ═══ COLECCIONES EXCLUSIVAS ═══
+            _buildCuratedCollections(context),
+            const SizedBox(height: 32),
 
             // ═══ CTA A "PARA TI" (IA) ═══
             if (all.isNotEmpty) ...[
               _buildAiCta(),
-              const SizedBox(height: 28),
+              const SizedBox(height: 32),
+            ],
+
+            // ═══ TOP TENDENCIAS ═══
+            if (all.isNotEmpty) ...[
+              _buildTrendingList(context, all),
+              const SizedBox(height: 24),
+            ],
+
+            // ═══ ESPECIAL DE TEMPORADA ═══
+            if (all.length > 1) ...[
+              _buildSeasonalSpotlight(context, all[all.length ~/ 2]),
+              const SizedBox(height: 32),
             ],
 
             // ═══ TODOS LOS DESTINOS ═══
@@ -205,63 +219,60 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Search Bar ──
   Widget _buildSearchBar(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => context.push('/search'),
-              child: Container(
-                height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: () => context.push('/search'),
+        child: Container(
+          height: 60,
+          padding: const EdgeInsets.only(left: 24, right: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 30,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search_rounded,
+                  color: AppColors.textMuted, size: 24),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  '¿A dónde viajas hoy?',
+                  style: GoogleFonts.poppins(
+                    color: AppColors.textMuted,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+              Container(
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border, width: 1),
+                  color: AppColors.primaryDark,
+                  shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.cardShadow,
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
+                      color: AppColors.primaryDark.withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search_rounded,
-                        color: AppColors.accent, size: 22),
-                    const SizedBox(width: 12),
-                    const Text(
-                      '¿A dónde viajas hoy?',
-                      style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ],
-                ),
+                child: const Icon(Icons.tune_rounded,
+                    color: Colors.white, size: 20),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => context.push('/search'),
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Icon(Icons.tune_rounded,
-                  color: AppColors.textOnDark, size: 22),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -275,9 +286,9 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
+              style: GoogleFonts.poppins(
                 fontSize: 18,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
@@ -285,9 +296,9 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
           if (onSeeMore != null)
             GestureDetector(
               onTap: onSeeMore,
-              child: const Text(
+              child: Text(
                 'Ver más',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMuted,
@@ -299,32 +310,30 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Category chip ──
-  Widget _categoryChip(BuildContext context, String category) {
+  Widget _categoryChip(BuildContext context, String category, bool isFirst) {
     return GestureDetector(
       onTap: () =>
           context.push('/search?q=${Uri.encodeComponent(category)}'),
       child: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isFirst ? Colors.black : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border, width: 1),
+          border: isFirst ? null : Border.all(color: Colors.grey.shade300),
         ),
         child: Text(
           category,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: isFirst ? FontWeight.w600 : FontWeight.w500,
+            color: isFirst ? Colors.white : AppColors.textPrimary,
           ),
         ),
       ),
     );
   }
 
-  // ── CTA hacia la pestaña "Para ti" (IA) ──
   Widget _buildAiCta() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -332,19 +341,15 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
         onTap: widget.onSwitchToForYou,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primaryDark, AppColors.primary],
-            ),
+            color: AppColors.primaryDark,
+            borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.3),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                color: AppColors.primaryDark.withValues(alpha: 0.25),
+                blurRadius: 32,
+                offset: const Offset(0, 16),
               ),
             ],
           ),
@@ -354,41 +359,46 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'RECOMENDACIONES IA',
-                      style: TextStyle(
-                        color: AppColors.textOnDark,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        height: 1.2,
-                        letterSpacing: 0.5,
+                    Text(
+                      'AI RECOMMENDATIONS',
+                      style: GoogleFonts.poppins(
+                        color: AppColors.accent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.0,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Text(
-                      'Descubre destinos según tu perfil viajero',
-                      style: TextStyle(
-                        color: AppColors.textOnDark.withValues(alpha: 0.6),
-                        fontSize: 12,
+                      'Destinos según\ntu perfil',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
                       ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(24),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: const Text(
-                  'Para ti',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: AppColors.primaryDark,
+                  size: 24,
                 ),
               ),
             ],
@@ -474,6 +484,220 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── Colecciones Exclusivas ──
+  Widget _buildCuratedCollections(BuildContext context) {
+    final collections = [
+      {'title': 'Joyas\nOcultas', 'color': const Color(0xFF1E293B)},
+      {'title': 'Escapadas\nde Lujo', 'color': const Color(0xFF0F172A)},
+      {'title': 'Paraíso\nNatural', 'color': const Color(0xFF334155)},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('Colecciones Exclusivas'),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 140,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            scrollDirection: Axis.horizontal,
+            itemCount: collections.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
+            itemBuilder: (_, i) {
+              final col = collections[i];
+              return GestureDetector(
+                onTap: () => context.push('/search'),
+                child: Container(
+                  width: 220,
+                  decoration: BoxDecoration(
+                    color: col['color'] as Color,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (col['color'] as Color).withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        col['title'] as String,
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          fontStyle: FontStyle.italic,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Top Tendencias ──
+  Widget _buildTrendingList(BuildContext context, List<DestinationModel> all) {
+    if (all.isEmpty) return const SizedBox.shrink();
+    final trending = all.take(3).toList();
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _sectionHeader('Top Tendencias'),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            children: List.generate(trending.length, (i) {
+              final dest = trending[i];
+              return GestureDetector(
+                onTap: () => context.push('/destination/${dest.id}?source=explore'),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    children: [
+                      Text(
+                        '0${i + 1}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.border,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              dest.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            Text(
+                              dest.city,
+                              style: GoogleFonts.poppins(
+                                fontSize: 13,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Especial de Temporada ──
+  Widget _buildSeasonalSpotlight(BuildContext context, DestinationModel? spot) {
+    if (spot == null) return const SizedBox.shrink();
+    return GestureDetector(
+      onTap: () => context.push('/destination/${spot.id}?source=explore'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        width: double.infinity,
+        height: 380,
+        color: AppColors.primaryDark,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.7,
+                child: AdaptiveDestinationImage(imagePath: spot.imageUrl),
+              ),
+            ),
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withValues(alpha: 0.85)],
+                    stops: const [0.3, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 24,
+              right: 24,
+              bottom: 32,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ESPECIAL DE TEMPORADA',
+                    style: GoogleFonts.poppins(
+                      color: AppColors.accent,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    spot.name,
+                    style: GoogleFonts.poppins(
+                      color: Colors.white,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                      height: 1.1,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          'Descubrir',
+                          style: GoogleFonts.poppins(
+                            color: AppColors.primaryDark,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

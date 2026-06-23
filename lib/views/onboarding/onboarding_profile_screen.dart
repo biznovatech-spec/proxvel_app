@@ -8,6 +8,8 @@ import '../../controllers/auth_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
+import '../../core/widgets/buttons/shimmer_button.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 const _kDark = Color(0xFF2B323B);
 const _kGray = Color(0xFF6B7280);
@@ -21,9 +23,11 @@ class OnboardingProfileScreen extends StatefulWidget {
   State<OnboardingProfileScreen> createState() => _OnboardingState();
 }
 
-class _OnboardingState extends State<OnboardingProfileScreen> {
+class _OnboardingState extends State<OnboardingProfileScreen> with TickerProviderStateMixin {
   final PageController _pc = PageController();
   int _page = 0; // 0=intro,1=presupuesto,2=clima,3=comodidad,4=intereses
+  
+  late final AnimationController _shimmerCtrl;
 
   String? _budget;
   int _days = 1;
@@ -55,17 +59,26 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     }
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _shimmerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2400),
+    )..repeat();
+  }
+
   void _next() {
     if (!_canProceed) return;
     if (_page < 4) {
-      _pc.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
+      _pc.nextPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
       setState(() => _page++);
     } else { _saveAndComplete(); }
   }
 
   void _prev() {
     if (_page > 0) {
-      _pc.previousPage(duration: const Duration(milliseconds: 350), curve: Curves.easeInOut);
+      _pc.previousPage(duration: const Duration(milliseconds: 400), curve: Curves.easeOutCubic);
       setState(() => _page--);
     }
   }
@@ -129,7 +142,12 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
   }
 
   @override
-  void dispose() { _timer?.cancel(); _pc.dispose(); super.dispose(); }
+  void dispose() { 
+    _timer?.cancel(); 
+    _pc.dispose(); 
+    _shimmerCtrl.dispose();
+    super.dispose(); 
+  }
 
   static const _titles = [
     'Personalicemos tu perfil', 'Ajusta presupuesto y días.',
@@ -145,22 +163,28 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     final isIntro = _page == 0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF9FAFB), // Soft premium iOS native background
       body: SafeArea(child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!isIntro) _header(_page) else Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 24, 0),
-            child: Align(alignment: Alignment.centerLeft, child: _backBtn(() => context.pop())),
-          ),
+          if (!isIntro) _header(_page) 
+          else const SizedBox(height: 48), // Top breathing room for intro
+          
           Padding(
-            padding: EdgeInsets.fromLTRB(24, isIntro ? 16 : 4, 24, 0),
-            child: Text(_titles[_page], style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _kDark, height: 1.2)),
+            padding: EdgeInsets.fromLTRB(32, isIntro ? 16 : 4, 32, 0),
+            child: Text(
+              _titles[_page], 
+              textAlign: isIntro ? TextAlign.center : TextAlign.left,
+              style: GoogleFonts.poppins(fontSize: isIntro ? 32 : 28, fontWeight: FontWeight.w700, color: _kDark, letterSpacing: -0.5, height: 1.2)
+            ),
           ),
           if (isIntro) Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-            child: Text('Ajustaremos tus preferencias para sugerirte\ndestinos más precisos',
-              style: TextStyle(fontSize: 14, color: _kGray.withValues(alpha: 0.9), height: 1.4)),
+            padding: const EdgeInsets.fromLTRB(32, 12, 32, 0),
+            child: Text(
+              'Ajustaremos tus preferencias para sugerirte destinos precisos.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 15, color: _kGray, height: 1.5)
+            ),
           ),
           const SizedBox(height: 8),
           Expanded(child: PageView(
@@ -200,9 +224,18 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
   );
 
   Widget _introButtons() => Column(children: [
-    ProxvelButton(text: 'Empezar', onPressed: _next),
-    const SizedBox(height: 12),
-    ProxvelButton(text: 'Omitir', isSecondary: true, onPressed: () => context.go('/main')),
+    ShimmerButton(
+      shimmer: _shimmerCtrl,
+      baseColor: _kAmber,
+      hoverColor: const Color(0xFFD97706),
+      text: 'Comenzar',
+      onPressed: _next,
+    ),
+    const SizedBox(height: 20),
+    GestureDetector(
+      onTap: () => context.go('/main'),
+      child: Text('Omitir por ahora', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: _kGray)),
+    )
   ]);
 
   Widget _stepButtons() => Column(children: [
@@ -215,34 +248,56 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
   Widget _introView() => SingleChildScrollView(
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(children: [
-      const SizedBox(height: 12),
-      SizedBox(height: 200, child: Image.asset('assets/images/undraw_mobile_post_zwbe_1.png', fit: BoxFit.contain)),
       const SizedBox(height: 24),
-      const Text('Responde unas preguntas rápidas. Tardarás\nmenos de 1 minuto.',
-        textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: _kDark, height: 1.5)),
-      const SizedBox(height: 20),
-      Wrap(spacing: 10, runSpacing: 8, alignment: WrapAlignment.center, children: [
-        _chip('💰', 'Presupuesto'), _chip('💬', 'Intereses'), _chip('🌤️', 'Clima'),
+      SizedBox(
+        height: 240, 
+        child: Image.asset(
+          'assets/images/clean_luggage_3d.png', 
+          fit: BoxFit.contain,
+          color: const Color(0xFFF9FAFB),
+          colorBlendMode: BlendMode.multiply,
+        )
+      ),
+      const SizedBox(height: 48),
+      Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: [
+        _floatingChip('💰', 'Presupuesto'), _floatingChip('💬', 'Intereses'), _floatingChip('🌤️', 'Clima'),
       ]),
-      const SizedBox(height: 20),
-      RichText(textAlign: TextAlign.center, text: TextSpan(
-        style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.9), height: 1.5),
-        children: const [
-          TextSpan(text: 'Ahorra tiempo: ', style: TextStyle(fontWeight: FontWeight.w700, color: _kDark)),
-          TextSpan(text: 'Recomendaciones mas precisas.\n'),
-          TextSpan(text: 'Filtra destinos ', style: TextStyle(fontWeight: FontWeight.w700, color: _kDark)),
-          TextSpan(text: 'según tu estilo de viaje.'),
-        ],
-      )),
+      const SizedBox(height: 36),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+           color: Colors.white,
+           borderRadius: BorderRadius.circular(16),
+           boxShadow: [
+              BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))
+           ]
+        ),
+        child: RichText(textAlign: TextAlign.center, text: TextSpan(
+          style: GoogleFonts.poppins(fontSize: 13, color: _kGray, height: 1.6),
+          children: const [
+            TextSpan(text: 'Ahorra tiempo: ', style: TextStyle(fontWeight: FontWeight.w700, color: _kDark)),
+            TextSpan(text: 'Recomendaciones más precisas.\n'),
+            TextSpan(text: 'Filtra destinos ', style: TextStyle(fontWeight: FontWeight.w700, color: _kDark)),
+            TextSpan(text: 'según tu estilo de viaje.'),
+          ],
+        )),
+      ),
+      const SizedBox(height: 24),
     ]),
   );
 
-  Widget _chip(String emoji, String label) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-    decoration: BoxDecoration(color: _kLightGray, borderRadius: BorderRadius.circular(20), border: Border.all(color: _kBorder)),
+  Widget _floatingChip(String emoji, String label) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    decoration: BoxDecoration(
+      color: Colors.white, 
+      borderRadius: BorderRadius.circular(24), 
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 16, offset: const Offset(0, 4))
+      ]
+    ),
     child: Row(mainAxisSize: MainAxisSize.min, children: [
-      Text(emoji, style: const TextStyle(fontSize: 16)), const SizedBox(width: 6),
-      Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _kDark)),
+      Text(emoji, style: const TextStyle(fontSize: 16)), const SizedBox(width: 8),
+      Text(label, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: _kDark)),
     ]),
   );
 
@@ -251,35 +306,39 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(children: [
       const SizedBox(height: 8),
-      const Text('¿Cuál es tu presupuesto aproximado?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kDark)),
-      const SizedBox(height: 4),
-      Text('Esto nos ayuda a ajustar las recomendaciones.', style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.8))),
-      const SizedBox(height: 20),
+      Text('¿Cuál es tu presupuesto aproximado?', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: _kDark)),
+      const SizedBox(height: 6),
+      Text('Esto nos ayuda a ajustar las recomendaciones.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: _kGray)),
+      const SizedBox(height: 24),
       _opt('Bajo', _budget == 'Bajo', () => setState(() => _budget = 'Bajo')),
-      const SizedBox(height: 12),
+      const SizedBox(height: 14),
       _opt('Medio', _budget == 'Medio', () => setState(() => _budget = 'Medio')),
-      const SizedBox(height: 12),
+      const SizedBox(height: 14),
       _opt('Alto', _budget == 'Alto', () => setState(() => _budget = 'Alto')),
-      const SizedBox(height: 8),
-      Text('Podrás cambiarlo después.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.8))),
-      const SizedBox(height: 28),
-      const Text('¿Cuántos días planeas viajar?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kDark)),
-      const SizedBox(height: 4),
-      Text('Puedes cambiarlo después.', style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.8))),
+      const SizedBox(height: 12),
+      Text('Podrás cambiarlo después.', style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9))),
+      const SizedBox(height: 36),
+      Text('¿Cuántos días planeas viajar?', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: _kDark)),
+      const SizedBox(height: 6),
+      Text('Puedes cambiarlo después.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: _kGray)),
       const SizedBox(height: 20),
       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        _dayBtn(Icons.arrow_back, () { if (_days > 1) setState(() => _days--); }),
-        const SizedBox(width: 20),
+        _dayBtn(Icons.remove, () { if (_days > 1) setState(() => _days--); }),
+        const SizedBox(width: 24),
         Container(width: 110, height: 56,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: _kBorder, width: 1.5)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16), 
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4))]
+          ),
           alignment: Alignment.center,
-          child: Text(_days.toString().padLeft(2, '0'), style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: _kDark)),
+          child: Text(_days.toString().padLeft(2, '0'), style: GoogleFonts.poppins(fontSize: 28, fontWeight: FontWeight.w700, color: _kDark)),
         ),
-        const SizedBox(width: 20),
-        _dayBtn(Icons.arrow_forward, () { if (_days < 30) setState(() => _days++); }),
+        const SizedBox(width: 24),
+        _dayBtn(Icons.add, () { if (_days < 30) setState(() => _days++); }),
       ]),
-      const SizedBox(height: 8),
-      Text('Podrás cambiarlo después.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.8))),
+      const SizedBox(height: 12),
+      Text('Podrás cambiarlo después.', style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9))),
     ]),
   );
 
@@ -288,18 +347,17 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(children: [
       const SizedBox(height: 8),
-      const Text('¿Qué clima prefieres para viajar?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kDark)),
-      const SizedBox(height: 4),
-      Text('Esto nos ayuda a sugerirte destinos ideales.', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.8))),
+      Text('¿Qué clima prefieres para viajar?', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: _kDark)),
+      const SizedBox(height: 6),
+      Text('Esto nos ayuda a sugerirte destinos ideales.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: _kGray)),
       const SizedBox(height: 24),
       _optDesc('❄️  Frío', 'Montañas, nieve y paisajes frescos', _climate == 'Frío', () => setState(() => _climate = 'Frío')),
-      const SizedBox(height: 12),
+      const SizedBox(height: 14),
       _optDesc('🌤️  Templado', 'Clima agradable y equilibrado', _climate == 'Templado', () => setState(() => _climate = 'Templado')),
-      const SizedBox(height: 12),
+      const SizedBox(height: 14),
       _optDesc('☀️  Cálido', 'Sol, playas y destinos tropicales', _climate == 'Cálido', () => setState(() => _climate = 'Cálido')),
       const SizedBox(height: 16),
-      Text('Podrás cambiarlo después.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.8))),
+      Text('Podrás cambiarlo después.', style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9))),
     ]),
   );
 
@@ -308,19 +366,17 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(children: [
       const SizedBox(height: 8),
-      const Text('¿Qué tan cómodo te sientes\ncon multitudes?', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kDark)),
-      const SizedBox(height: 4),
-      Text('Esto nos ayuda a sugerirte lugares más\ntranquilos o más movidos.', textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.8))),
+      Text('¿Qué tan cómodo te sientes\ncon multitudes?', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: _kDark)),
+      const SizedBox(height: 6),
+      Text('Esto nos ayuda a sugerirte lugares más\ntranquilos o más movidos.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: _kGray)),
       const SizedBox(height: 24),
       _optDesc('Bajo', 'Prefiere lugares tranquilos', _comfort == 'Bajo', () => setState(() => _comfort = 'Bajo')),
       const SizedBox(height: 14),
-      _optDesc('Medio', 'Me adapto', _comfort == 'Medio', () => setState(() => _comfort = 'Medio')),
+      _optDesc('Medio', 'Me adapto a cualquier entorno', _comfort == 'Medio', () => setState(() => _comfort = 'Medio')),
       const SizedBox(height: 14),
-      _optDesc('Alto', 'Me gustan lugares concurridos', _comfort == 'Alto', () => setState(() => _comfort = 'Alto')),
+      _optDesc('Alto', 'Me encantan las zonas concurridas', _comfort == 'Alto', () => setState(() => _comfort = 'Alto')),
       const SizedBox(height: 16),
-      Text('Podrás cambiarlo después.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.8))),
+      Text('Podrás cambiarlo después.', style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9))),
     ]),
   );
 
@@ -329,33 +385,36 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
     padding: const EdgeInsets.symmetric(horizontal: 24),
     child: Column(children: [
       const SizedBox(height: 8),
-      const Text('¿Qué tipo de experiencias prefieres?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: _kDark)),
-      const SizedBox(height: 4),
-      Text('Recomendado: elige al menos 3.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.9), fontWeight: FontWeight.w500)),
+      Text('¿Qué experiencias prefieres?', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: _kDark)),
+      const SizedBox(height: 6),
+      Text('Recomendado: elige al menos 3.', textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9), fontWeight: FontWeight.w500)),
       const SizedBox(height: 24),
-      Wrap(spacing: 10, runSpacing: 12, alignment: WrapAlignment.center, children: _interestData.map((item) {
+      Wrap(spacing: 12, runSpacing: 12, alignment: WrapAlignment.center, children: _interestData.map((item) {
         final sel = _interests.contains(item.$2);
         return GestureDetector(
           onTap: () => setState(() => sel ? _interests.remove(item.$2) : _interests.add(item.$2)),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: sel ? _kDark : Colors.white, borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: sel ? _kDark : _kBorder, width: 1.5),
-              boxShadow: sel ? [BoxShadow(color: _kDark.withValues(alpha: 0.15), blurRadius: 8, offset: const Offset(0, 3))] : [],
+              color: sel ? _kAmber : Colors.white, 
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                if (!sel) BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 16, offset: const Offset(0, 4)),
+                if (sel) BoxShadow(color: _kAmber.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))
+              ]
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               SvgPicture.asset('assets/icons/${item.$1}', width: 20, height: 20,
                 colorFilter: sel ? const ColorFilter.mode(Colors.white, BlendMode.srcIn) : null),
               const SizedBox(width: 8),
-              Text(item.$2, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: sel ? Colors.white : _kDark)),
+              Text(item.$2, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: sel ? Colors.white : _kDark)),
             ]),
           ),
         );
       }).toList()),
-      const SizedBox(height: 16),
-      Center(child: Text('Podrás cambiarlo después.', style: TextStyle(fontSize: 13, color: _kAmber.withValues(alpha: 0.8)))),
+      const SizedBox(height: 24),
+      Center(child: Text('Podrás cambiarlo después.', style: GoogleFonts.poppins(fontSize: 13, color: _kAmber.withValues(alpha: 0.9)))),
     ]),
   );
 
@@ -402,29 +461,47 @@ class _OnboardingState extends State<OnboardingProfileScreen> {
 
   // ── SHARED WIDGETS ──
   Widget _opt(String label, bool sel, VoidCallback onTap) => GestureDetector(onTap: onTap,
-    child: AnimatedContainer(duration: const Duration(milliseconds: 200), width: double.infinity, height: 56, alignment: Alignment.center,
-      decoration: BoxDecoration(color: sel ? _kDark : Colors.white, borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: sel ? _kDark : _kBorder, width: 1.5),
-        boxShadow: sel ? [BoxShadow(color: _kDark.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 4))] : []),
-      child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: sel ? Colors.white : _kDark))),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200), width: double.infinity, height: 56, alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: sel ? _kAmber : Colors.white, 
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          if (!sel) BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4)),
+          if (sel) BoxShadow(color: _kAmber.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))
+        ]
+      ),
+      child: Text(label, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: sel ? Colors.white : _kDark))
+    ),
   );
 
   Widget _optDesc(String label, String desc, bool sel, VoidCallback onTap) => GestureDetector(onTap: onTap,
-    child: AnimatedContainer(duration: const Duration(milliseconds: 200), width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 18), alignment: Alignment.center,
-      decoration: BoxDecoration(color: sel ? _kDark : Colors.white, borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: sel ? _kDark : _kBorder, width: 1.5),
-        boxShadow: sel ? [BoxShadow(color: _kDark.withValues(alpha: 0.12), blurRadius: 10, offset: const Offset(0, 4))] : []),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200), width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16), alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: sel ? _kAmber : Colors.white, 
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          if (!sel) BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 4)),
+          if (sel) BoxShadow(color: _kAmber.withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 6))
+        ]
+      ),
       child: Column(children: [
-        Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: sel ? Colors.white : _kDark)),
+        Text(label, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600, color: sel ? Colors.white : _kDark)),
         const SizedBox(height: 4),
-        Text(desc, style: TextStyle(fontSize: 13, color: sel ? Colors.white.withValues(alpha: 0.8) : _kGray)),
-      ])),
+        Text(desc, textAlign: TextAlign.center, style: GoogleFonts.poppins(fontSize: 13, color: sel ? Colors.white.withValues(alpha: 0.9) : _kGray)),
+      ])
+    ),
   );
 
   Widget _dayBtn(IconData icon, VoidCallback onTap) => GestureDetector(onTap: onTap,
     child: Container(width: 48, height: 48,
-      decoration: BoxDecoration(color: _kDark, borderRadius: BorderRadius.circular(14)),
-      alignment: Alignment.center, child: Icon(icon, color: Colors.white, size: 20)),
+      decoration: BoxDecoration(
+        color: Colors.white, 
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 3))]
+      ),
+      alignment: Alignment.center, child: Icon(icon, color: _kDark, size: 20)),
   );
 }

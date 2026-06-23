@@ -5,8 +5,16 @@ import '../../../core/theme/app_colors.dart';
 class ProfileHeader extends StatelessWidget {
   final String name;
   final String email;
+  final String? avatarUrl;
+  final VoidCallback? onTapAvatar;
 
-  const ProfileHeader({super.key, required this.name, required this.email});
+  const ProfileHeader({
+    super.key,
+    required this.name,
+    required this.email,
+    this.avatarUrl,
+    this.onTapAvatar,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,25 +37,55 @@ class ProfileHeader extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ── Avatar ──
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.15),
-                border: Border.all(
-                  color: AppColors.accent.withValues(alpha: 0.4),
-                  width: 3,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  initials,
-                  style: const TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.accent,
+            GestureDetector(
+              onTap: onTapAvatar,
+              child: Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accent.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: AppColors.accent.withValues(alpha: 0.4),
+                    width: 3,
                   ),
+                  image: avatarUrl != null && avatarUrl!.isNotEmpty
+                      ? DecorationImage(
+                          image: NetworkImage(avatarUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: Stack(
+                  children: [
+                    if (avatarUrl == null || avatarUrl!.isEmpty)
+                      Center(
+                        child: Text(
+                          initials,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.accent,
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

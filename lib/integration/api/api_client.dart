@@ -113,6 +113,34 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<dynamic> postMultipart(
+    String endpoint, {
+    required String filePath,
+    required String fileField,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
+    debugPrint('[API] POST MULTIPART $uri');
+    
+    final request = http.MultipartRequest('POST', uri);
+    
+    // Añadir headers de autenticación
+    final token = await _secureStorage.getAccessToken();
+    if (token != null && token.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $token';
+    }
+    
+    // Añadir el archivo
+    request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+    
+    // Enviar y esperar
+    final streamedResponse = await request
+        .send()
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds * 2)); // Doble tiempo para subidas
+        
+    final response = await http.Response.fromStream(streamedResponse);
+    return _decode(response);
+  }
+
   dynamic _decode(http.Response response) {
     if (response.statusCode == 401) {
       onUnauthorized?.call();

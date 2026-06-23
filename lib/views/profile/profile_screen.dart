@@ -12,6 +12,7 @@ import 'widgets/profile_header.dart';
 import 'widgets/profile_stats_row.dart';
 import 'widgets/preferences_summary_card.dart';
 import 'widgets/profile_menu_section.dart';
+import 'package:image_picker/image_picker.dart';
 import 'widgets/about_proxvel_sheet.dart';
 import 'widgets/logout_confirm_sheet.dart';
 
@@ -31,6 +32,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final auth = context.read<AuthController>();
       context.read<MyReviewsController>().loadUserReviews(auth.currentUser);
     });
+  }
+
+  Future<void> _pickAndUploadAvatar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70, // Reducir peso
+    );
+    
+    if (pickedFile == null || !mounted) return;
+    
+    // Mostramos un SnackBar de carga
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            SizedBox(
+              width: 20, 
+              height: 20, 
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+            ),
+            SizedBox(width: 16),
+            Text('Subiendo imagen de perfil...'),
+          ],
+        ),
+        duration: Duration(seconds: 10),
+      ),
+    );
+
+    try {
+      final authCtrl = context.read<AuthController>();
+      await authCtrl.uploadAvatar(pickedFile.path);
+      
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Avatar actualizado con éxito')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.error),
+      );
+    }
   }
 
   @override
@@ -66,7 +112,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 children: [
-                  ProfileHeader(name: userName, email: userEmail),
+                  ProfileHeader(
+                    name: userName, 
+                    email: userEmail,
+                    avatarUrl: user?.avatarUrl,
+                    onTapAvatar: _pickAndUploadAvatar,
+                  ),
 
                   if (profileCtrl.error != null)
                     _ErrorBanner(profileCtrl.error!),
