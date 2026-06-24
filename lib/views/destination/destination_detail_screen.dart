@@ -42,16 +42,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
   String? _selectedImageUrl;
   final ScrollController _galleryScrollController = ScrollController();
 
-  /// La IA es primaria solo cuando se llega desde una recomendación IA.
-  bool get _aiPrimary =>
-      widget.source == 'ai_recommendation' || widget.source == 'ai_search';
-
   /// Orden de pestañas según el origen.
   /// - IA primaria: [IA, Sobre el destino, Opiniones]
   /// - Catálogo/Búsqueda: [Sobre el destino, Opiniones, IA] (IA al final)
-  List<String> get _tabKeys => _aiPrimary
-      ? const ['ai', 'about', 'reviews']
-      : const ['about', 'reviews', 'ai'];
+  // Orden fijo: ¿Por qué para mí? primero, Sobre el destino al centro, Opiniones al final.
+  List<String> get _tabKeys => const ['ai', 'about', 'reviews'];
 
   String _tabLabel(String key) {
     switch (key) {
@@ -312,6 +307,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                           : Icons.favorite_border_rounded,
                                       () => context.read<FavoritesController>().toggleFavorite(
                                         dest.id,
+                                        dest,
                                       ),
                                       iconColor: isFav ? AppColors.error : Colors.black,
                                     ),

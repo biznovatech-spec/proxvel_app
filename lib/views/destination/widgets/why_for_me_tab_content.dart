@@ -6,7 +6,6 @@ import 'ranking_header_card.dart';
 import 'metric_circle_indicator.dart';
 import 'aspect_score_grid.dart';
 import 'influence_factor_item.dart';
-import 'traveler_profile_summary_card.dart';
 
 /// Full content for the "¿Por qué para mí?" tab in the destination detail.
 /// Assembles all sub-sections based on the prototype design.
@@ -55,9 +54,12 @@ class WhyForMeTabContent extends StatelessWidget {
     final crowdScore = aforoContextScore != null
         ? (aforoContextScore! * 100).round().clamp(0, 100)
         : _findAspectScore('Aforo');
-    final mesTxt = (contextMonthName ?? '').isNotEmpty ? ' · ${contextMonthName!}' : '';
-    final climaLbl = (climaContextLabel ?? '').isNotEmpty ? 'Clima ${climaContextLabel!}' : 'Clima favorable';
-    final aforoLbl = (aforoContextLabel ?? '').isNotEmpty ? 'Aforo ${aforoContextLabel!}' : 'Aforo moderado';
+    // Etiqueta corta para que no se distorsione en el círculo (mes abreviado a 3 letras).
+    final mesAbbr = (contextMonthName ?? '').isNotEmpty
+        ? ' · ${contextMonthName!.length >= 3 ? contextMonthName!.substring(0, 3) : contextMonthName!}'
+        : '';
+    final climaLbl = 'Clima$mesAbbr';
+    final aforoLbl = 'Aforo$mesAbbr';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,13 +108,13 @@ class WhyForMeTabContent extends StatelessWidget {
                   color: AppColors.accent,
                 ),
                 MetricCircleIndicator(
-                  label: '$climaLbl$mesTxt',
+                  label: climaLbl,
                   percentage: climateScore,
                   icon: Icons.wb_sunny_rounded,
                   color: AppColors.accent,
                 ),
                 MetricCircleIndicator(
-                  label: '$aforoLbl$mesTxt',
+                  label: aforoLbl,
                   percentage: crowdScore,
                   icon: Icons.groups_rounded,
                   color: AppColors.accent,
@@ -171,12 +173,7 @@ class WhyForMeTabContent extends StatelessWidget {
 
         const SizedBox(height: 28),
 
-        // ═══ 7. Tu perfil de viajero (resumen) ═══
-        TravelerProfileSummaryCard(profile: travelerProfile),
-
-        const SizedBox(height: 20),
-
-        // ═══ 8. Footer: model info ═══
+        // ═══ Footer: model info ═══
         Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,

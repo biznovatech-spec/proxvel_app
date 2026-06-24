@@ -14,6 +14,7 @@ import '../../../core/widgets/states/loading_view.dart';
 import '../../../models/destination_model.dart';
 import '../../../core/widgets/images/adaptive_destination_image.dart';
 import '../../../core/widgets/carousels/coverflow_carousel.dart';
+import '../../../controllers/archive_controller.dart' as import_archive_controller;
 
 /// Contenido de la pestaña "Explorar" — catálogo abierto.
 /// Solo muestra secciones que tienen datos reales. Nunca rellena la pantalla
@@ -65,13 +66,14 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<HomeController>();
+    final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
 
     if (controller.isLoading) {
       return const LoadingView();
     }
 
-    final featured = controller.featuredDestinations;
-    final all = controller.allDestinations;
+    final featured = controller.featuredDestinations.where((d) => !archiveCtrl.isArchived(d.id)).toList();
+    final all = controller.allDestinations.where((d) => !archiveCtrl.isArchived(d.id)).toList();
     final categories = controller.categories;
     final recent = controller.recentSearches;
 

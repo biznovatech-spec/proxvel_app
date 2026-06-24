@@ -90,7 +90,8 @@ class DestinationModel {
 
     return DestinationModel(
       id: json['destination_id'] ?? '',
-      name: json['destination'] ?? '',
+      // El motor V1 manda el nombre en 'name'; 'destination' es respaldo.
+      name: json['name'] ?? json['destination'] ?? '',
       city: json['city'] ?? '',
       region: json['region'] ?? '',
       category: json['category'] ?? '',
@@ -145,8 +146,8 @@ class DestinationModel {
       averageCost: 0.0,
       climate: '', 
       crowdLevel: '', 
-      rating: fav.rating ?? 0.0, 
-      reviewsCount: fav.reviewsCount ?? 0,
+      rating: fav.rating ?? 0.0,
+      reviewsCount: 0, // FavoriteModel no expone reviewsCount; evita NoSuchMethodError
       aspects: const [],
       type: fav.category,
     );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../models/traveler_profile_model.dart';
 
@@ -32,42 +31,14 @@ class TravelerProfileSummaryCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  'Tu perfil de viajero (resumen)',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: () => context.push('/profile/preferences'),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Editar',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.accent,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.edit_outlined,
-                      size: 15,
-                      color: AppColors.accent,
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          // Header (sin acción de editar — la edición vive en el perfil)
+          const Text(
+            'Tu perfil de viajero (resumen)',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
 
           const SizedBox(height: 14),

@@ -184,17 +184,17 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
                           onTap: () {
-                            context.push('/profile/edit');
+                            context.push('/profile/preferences');
                           },
                           child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
-                                Icon(Icons.edit, size: 16, color: AppColors.textPrimary),
+                                Icon(Icons.tune_rounded, size: 16, color: AppColors.textPrimary),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Editar perfil',
+                                  'Editar preferencias',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.textPrimary,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/search_controller.dart' show SearchController, SearchFilters;
 import '../../controllers/profile_controller.dart';
+import '../../controllers/archive_controller.dart' as import_archive_controller;
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/states/loading_view.dart';
 import '../../core/widgets/states/proxvel_empty_state.dart';
@@ -89,6 +90,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     ));
 
     final ctrl = context.watch<SearchController>();
+    final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
+
+    final filteredResults = ctrl.results
+        .where((r) => !archiveCtrl.isArchived(r.destination.id))
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -98,7 +104,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           Expanded(
             child: ctrl.isLoading
                 ? const LoadingView()
-                : ctrl.results.isEmpty
+                : filteredResults.isEmpty
                     ? ProxvelEmptyState(
                         icon: Icons.search_off_rounded,
                         title: 'Sin resultados',
@@ -111,7 +117,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                             ? () => ctrl.clearFilters()
                             : null,
                       )
-                    : _buildResultsList(ctrl),
+                    : _buildResultsList(ctrl, filteredResults),
           ),
         ],
       ),
@@ -382,7 +388,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 
-  Widget _buildResultsList(SearchController ctrl) {
+  Widget _buildResultsList(SearchController ctrl, List<dynamic> filteredResults) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -390,7 +396,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Text(
-            '${ctrl.results.length} destino${ctrl.results.length != 1 ? 's' : ''} encontrado${ctrl.results.length != 1 ? 's' : ''}',
+            '${filteredResults.length} destino${filteredResults.length != 1 ? 's' : ''} encontrado${filteredResults.length != 1 ? 's' : ''}',
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -402,9 +408,9 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           child: ListView.builder(
             padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
             physics: const BouncingScrollPhysics(),
-            itemCount: ctrl.results.length,
+            itemCount: filteredResults.length,
             itemBuilder: (_, i) {
-              final item = ctrl.results[i];
+              final item = filteredResults[i];
               final source = ctrl.aiSortEnabled ? 'ai_search' : 'search';
               return SearchResultCard(
                 item: item,

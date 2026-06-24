@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/announcement_controller.dart';
 import '../../controllers/home_controller.dart';
+import '../../controllers/favorites_controller.dart';
+import '../../controllers/archive_controller.dart';
 import '../../controllers/recommendation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/announcements/announcement_modal.dart';
@@ -34,6 +36,8 @@ class _HomeScreenState extends State<HomeScreen>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<HomeController>().loadDestinations();
       context.read<RecommendationController>().loadRecommendations();
+      context.read<FavoritesController>().loadFavorites();
+      context.read<ArchiveController>().loadArchives();
       _maybeShowStartAnnouncement();
     });
   }

@@ -8,6 +8,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/cards/destination_card.dart';
 import '../../core/widgets/states/loading_view.dart';
 import '../../core/widgets/states/proxvel_empty_state.dart';
+import '../../controllers/archive_controller.dart' as import_archive_controller;
+import '../../models/destination_model.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});
@@ -35,16 +37,21 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
 
     final controller = context.watch<FavoritesController>();
+    final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
+
+    final filteredFavorites = controller.favorites
+        .where((d) => !archiveCtrl.isArchived(d.id))
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          _buildHeader(controller.favorites.length),
+          _buildHeader(filteredFavorites.length),
           Expanded(
             child: controller.isLoading
                 ? const LoadingView()
-                : controller.favorites.isEmpty
+                : filteredFavorites.isEmpty
                 ? ProxvelEmptyState(
                     icon: Icons.favorite_border_rounded,
                     title: 'Aún no tienes favoritos',
@@ -60,7 +67,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                       }
                     },
                   )
-                : _buildFavoritesList(controller),
+                : _buildFavoritesList(controller, filteredFavorites),
           ),
         ],
       ),
@@ -130,7 +137,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     );
   }
 
-  Widget _buildFavoritesList(FavoritesController controller) {
+  Widget _buildFavoritesList(FavoritesController controller, List<DestinationModel> filteredFavorites) {
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       physics: const BouncingScrollPhysics(),
@@ -140,9 +147,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         crossAxisSpacing: 14,
         childAspectRatio: 155 / 200,
       ),
-      itemCount: controller.favorites.length,
+      itemCount: filteredFavorites.length,
       itemBuilder: (context, i) {
-        final dest = controller.favorites[i];
+        final dest = filteredFavorites[i];
         return Stack(
           children: [
             Positioned.fill(

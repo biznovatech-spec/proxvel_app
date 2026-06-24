@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/cards/destination_recommendation_card.dart';
 import '../../../core/widgets/states/loading_view.dart';
 import '../../../core/widgets/states/empty_profile_for_ai_state.dart';
+import '../../../controllers/archive_controller.dart' as import_archive_controller;
 import 'profile_summary_card.dart';
 
 /// Scrollable content for the "Para Ti" tab, showing personalized recommendations.
@@ -16,13 +17,18 @@ class HomeForYouContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<RecommendationController>();
+    final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
     final userName = context.watch<AuthController>().currentUser?.fullName ?? 'Viajero';
 
     if (controller.isLoading) {
       return const LoadingView();
     }
 
-    if (controller.recommendations.isEmpty) {
+    final filteredRecs = controller.recommendations
+        .where((r) => !archiveCtrl.isArchived(r.destination.id))
+        .toList();
+
+    if (filteredRecs.isEmpty) {
       final err = controller.error;
       // Caso perfil incompleto (o sin error): empty state honesto con acción.
       final isProfileIssue = err == null || err.toLowerCase().contains('perfil');
@@ -71,7 +77,7 @@ class HomeForYouContent extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      '${controller.recommendations.length} lugares seleccionados',
+                      '${filteredRecs.length} lugares seleccionados',
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -93,7 +99,7 @@ class HomeForYouContent extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
-              children: controller.recommendations.asMap().entries.map(
+              children: filteredRecs.asMap().entries.map(
                 (entry) {
                   final index = entry.key;
                   final rec = entry.value;

@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../models/destination_model.dart';
+import '../../../controllers/favorites_controller.dart';
 import '../cards/coverflow_destination_card.dart';
 import '../images/adaptive_destination_image.dart';
 
@@ -88,6 +90,11 @@ class _CoverflowCarouselState extends State<CoverflowCarousel> {
                   );
                 },
               ),
+
+              // 3. Hitbox del corazón para la tarjeta CENTRADA, ENCIMA de la capa
+              //    de gestos (si no, el PageView se come el tap). El ícono visual
+              //    lo dibuja la propia tarjeta y refleja el estado.
+              _buildActiveFavoriteHitbox(),
             ],
           ),
         ),
@@ -110,6 +117,30 @@ class _CoverflowCarouselState extends State<CoverflowCarousel> {
           }),
         ),
       ],
+    );
+  }
+
+  /// Tap target invisible sobre el corazón de la tarjeta centrada (300x460),
+  /// colocado encima del PageView para que el toque llegue al favorito.
+  Widget _buildActiveFavoriteHitbox() {
+    if (widget.destinations.isEmpty) return const SizedBox.shrink();
+    final dest = widget.destinations[_currentIndex % widget.destinations.length];
+    return Center(
+      child: SizedBox(
+        width: 300,
+        height: 460,
+        child: Align(
+          alignment: Alignment.topRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.read<FavoritesController>().toggleFavorite(dest.id, dest),
+              child: const SizedBox(width: 46, height: 46),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

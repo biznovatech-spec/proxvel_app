@@ -18,6 +18,7 @@ import '../../views/feedback/feedback_screen.dart';
 import '../../views/splash/splash_screen.dart';
 import '../../views/map/map_screen.dart';
 import '../../views/map/destination_map_screen.dart';
+import '../../views/archived/archived_screen.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -57,5 +58,6 @@ final GoRouter appRouter = GoRouter(
       final id = state.pathParameters['id']!;
       return DestinationMapScreen(destinationId: id);
     }),
+    GoRoute(path: '/archived', builder: (context, state) => const ArchivedScreen()),
   ],
 );

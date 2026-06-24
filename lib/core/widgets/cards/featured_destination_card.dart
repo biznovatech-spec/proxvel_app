@@ -101,7 +101,7 @@ class FeaturedDestinationCard extends StatelessWidget {
                       builder: (context, favCtrl, child) {
                         final isFav = favCtrl.isFavorite(destination.id);
                         return GestureDetector(
-                          onTap: () => favCtrl.toggleFavorite(destination.id),
+                          onTap: () => favCtrl.toggleFavorite(destination.id, destination),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: BackdropFilter(

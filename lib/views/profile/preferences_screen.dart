@@ -247,56 +247,45 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             _buildAiSwitch(),
             const SizedBox(height: 24),
 
-            _buildSectionTitle(
-              'Presupuesto de viaje',
-              Icons.account_balance_wallet_rounded,
+            _prefCard(
+              title: 'Presupuesto de viaje',
+              icon: Icons.account_balance_wallet_rounded,
+              child: _buildSelectionGrid(
+                _budgetOptions, _budget, (val) => setState(() => _budget = val),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildSelectionGrid(
-              _budgetOptions,
-              _budget,
-              (val) => setState(() => _budget = val),
+            _prefCard(
+              title: 'Días de viaje',
+              icon: Icons.calendar_month_rounded,
+              child: _buildSelectionGrid(
+                _daysOptions, _days, (val) => setState(() => _days = val),
+              ),
+            ),
+            _prefCard(
+              title: 'Clima preferido',
+              icon: Icons.thermostat_rounded,
+              child: _buildSelectionGrid(
+                _climateOptions, _climate, (val) => setState(() => _climate = val),
+              ),
+            ),
+            _prefCard(
+              title: 'Tolerancia a multitudes',
+              icon: Icons.groups_rounded,
+              child: _buildSelectionGrid(
+                _crowdOptions, _crowdTolerance, (val) => setState(() => _crowdTolerance = val),
+              ),
+            ),
+            _prefCard(
+              title: 'Tus Intereses (Máx 5)',
+              icon: Icons.favorite_rounded,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 12,
+                children: _allInterests.map((i) => _buildInterestChip(i)).toList(),
+              ),
             ),
 
             const SizedBox(height: 24),
-            _buildSectionTitle('Días de viaje', Icons.calendar_month_rounded),
-            const SizedBox(height: 12),
-            _buildSelectionGrid(
-              _daysOptions,
-              _days,
-              (val) => setState(() => _days = val),
-            ),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle('Clima preferido', Icons.thermostat_rounded),
-            const SizedBox(height: 12),
-            _buildSelectionGrid(
-              _climateOptions,
-              _climate,
-              (val) => setState(() => _climate = val),
-            ),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle('Tolerancia a multitudes', Icons.groups_rounded),
-            const SizedBox(height: 12),
-            _buildSelectionGrid(
-              _crowdOptions,
-              _crowdTolerance,
-              (val) => setState(() => _crowdTolerance = val),
-            ),
-
-            const SizedBox(height: 24),
-            _buildSectionTitle('Tus Intereses (Máx 5)', Icons.favorite_rounded),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 12,
-              children: _allInterests
-                  .map((i) => _buildInterestChip(i))
-                  .toList(),
-            ),
-
-            const SizedBox(height: 48),
             if (_isEditing) ...[
               ProxvelButton(
                 text: _isSaving ? 'Guardando...' : 'Guardar Preferencias',
@@ -318,6 +307,39 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  /// Tarjeta contenedora de cada sección de preferencias (diseño más cuidado).
+  Widget _prefCard({
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(title, icon),
+          const SizedBox(height: 14),
+          child,
+        ],
       ),
     );
   }

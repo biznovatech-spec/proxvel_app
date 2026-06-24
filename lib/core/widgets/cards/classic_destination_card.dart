@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../../models/destination_model.dart';
 import '../../../controllers/favorites_controller.dart';
+import '../../../controllers/archive_controller.dart';
 import '../../theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
 import 'ai_compatibility_badge.dart';
@@ -156,30 +157,60 @@ class ClassicDestinationCard extends StatelessWidget {
                 ),
               ),
 
-              // ── Favorito ──
+              // ── Acciones (Favorito y Archivar) ──
               Padding(
                 padding: const EdgeInsets.all(12),
-                child: Consumer<FavoritesController>(
-                  builder: (context, favCtrl, _) {
-                    final isFav = favCtrl.isFavorite(destination.id);
-                    return GestureDetector(
-                      onTap: () => favCtrl.toggleFavorite(destination.id),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: isFav ? AppColors.error.withValues(alpha: 0.1) : AppColors.background,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isFav
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color: isFav ? AppColors.error : AppColors.textMuted,
-                          size: 20,
-                        ),
-                      ),
-                    );
-                  },
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Favorito
+                    Consumer<FavoritesController>(
+                      builder: (context, favCtrl, _) {
+                        final isFav = favCtrl.isFavorite(destination.id);
+                        return GestureDetector(
+                          onTap: () => favCtrl.toggleFavorite(destination.id, destination),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isFav ? AppColors.error.withValues(alpha: 0.1) : AppColors.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isFav
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color: isFav ? AppColors.error : AppColors.textMuted,
+                              size: 20,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    // Archivar
+                    Consumer<ArchiveController>(
+                      builder: (context, arcCtrl, _) {
+                        final isArc = arcCtrl.isArchived(destination.id);
+                        return GestureDetector(
+                          onTap: () => arcCtrl.toggleArchive(destination.id, destination),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isArc ? AppColors.textMuted.withValues(alpha: 0.1) : AppColors.background,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isArc
+                                  ? Icons.archive_rounded
+                                  : Icons.archive_outlined,
+                              color: isArc ? AppColors.textPrimary : AppColors.textMuted,
+                              size: 20,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],

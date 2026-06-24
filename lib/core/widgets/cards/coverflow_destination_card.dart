@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../../models/destination_model.dart';
+import '../../../controllers/favorites_controller.dart';
 import '../images/adaptive_destination_image.dart';
 
 class CoverflowDestinationCard extends StatelessWidget {
@@ -61,24 +63,37 @@ class CoverflowDestinationCard extends StatelessWidget {
                 ),
               ),
 
-              // Heart Icon at top right
+              // Heart (favorito) — funcional y clickeable
               Positioned(
                 top: 16,
                 right: 16,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                child: Consumer<FavoritesController>(
+                  builder: (context, favCtrl, _) {
+                    final isFav = favCtrl.isFavorite(destination.id);
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => favCtrl.toggleFavorite(destination.id, destination),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav ? const Color(0xFFFF4B4B) : Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       ),
-                      child: const Icon(Icons.favorite_border, color: Colors.white, size: 20),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
 

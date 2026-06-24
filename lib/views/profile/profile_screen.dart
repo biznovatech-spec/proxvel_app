@@ -146,6 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       profileController.loadProfileData();
                     },
                     onMyReviews: () => context.push('/profile/my-reviews'),
+                    onArchived: () => context.push('/archived'),
                     onAbout: () => showAboutProxvelSheet(context),
                     onLogout: () => showLogoutConfirmSheet(
                       context,

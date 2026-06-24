@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../models/recommendation_result_model.dart';
 import '../../../controllers/favorites_controller.dart';
+import '../../../controllers/archive_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
 
@@ -104,12 +105,13 @@ class DestinationRecommendationCard extends StatelessWidget {
                       ),
                     ),
                     
-                    // Favorite Heart (Solid White)
-                    Consumer<FavoritesController>(
-                      builder: (context, favCtrl, child) {
-                        final isFav = favCtrl.isFavorite(dest.id);
-                        return GestureDetector(
-                          onTap: () => favCtrl.toggleFavorite(dest.id),
+                    // Archivar + Favorito (botones sólidos blancos)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Archivar: lo saca de "Para Ti" y Explorar (se gestiona en Perfil → Archivados)
+                        GestureDetector(
+                          onTap: () => context.read<ArchiveController>().toggleArchive(dest.id, dest),
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -123,14 +125,40 @@ class DestinationRecommendationCard extends StatelessWidget {
                                 )
                               ],
                             ),
-                            child: Icon(
-                              isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                              color: isFav ? const Color(0xFFFF4B4B) : Colors.black,
-                              size: 20,
-                            ),
+                            child: const Icon(Icons.archive_outlined,
+                                color: Colors.black, size: 20),
                           ),
-                        );
-                      },
+                        ),
+                        const SizedBox(width: 10),
+                        // Favorito
+                        Consumer<FavoritesController>(
+                          builder: (context, favCtrl, child) {
+                            final isFav = favCtrl.isFavorite(dest.id);
+                            return GestureDetector(
+                              onTap: () => favCtrl.toggleFavorite(dest.id, dest),
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Icon(
+                                  isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                                  color: isFav ? const Color(0xFFFF4B4B) : Colors.black,
+                                  size: 20,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -148,7 +176,7 @@ class DestinationRecommendationCard extends StatelessWidget {
                     if (dest.category.isNotEmpty) ...[
                       Text(
                         dest.category.toUpperCase(),
-                        style: GoogleFonts.inter(
+                        style: GoogleFonts.poppins(
                           color: Colors.white.withValues(alpha: 0.8),
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -160,9 +188,9 @@ class DestinationRecommendationCard extends StatelessWidget {
 
                     Text(
                       dest.name,
-                      style: GoogleFonts.playfairDisplay( // Tipografía serif para lujo
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
-                        fontSize: 34,
+                        fontSize: 30,
                         fontWeight: FontWeight.w800,
                         height: 1.1,
                       ),

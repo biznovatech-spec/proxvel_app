@@ -152,7 +152,11 @@ class ApiClient {
       throw ApiException(403, message);
     }
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      return jsonDecode(utf8.decode(response.bodyBytes));
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is Map<String, dynamic> && json.containsKey('success') && json['success'] == false) {
+        throw ApiException(response.statusCode, json['message'] ?? 'Error desconocido de la API');
+      }
+      return json;
     }
     throw ApiException(response.statusCode, response.body);
   }

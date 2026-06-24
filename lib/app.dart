@@ -17,6 +17,8 @@ import 'integration/services/auth_service.dart';
 import 'integration/services/favorites_service.dart';
 import 'integration/services/tourism_map_service.dart';
 import 'integration/services/announcement_service.dart';
+import 'integration/services/archive_service.dart';
+import 'controllers/archive_controller.dart';
 import 'controllers/auth_controller.dart';
 import 'controllers/announcement_controller.dart';
 import 'controllers/home_controller.dart';
@@ -74,6 +76,9 @@ class ProxvelApp extends StatelessWidget {
         ProxyProvider<ApiClient, FavoritesService>(
           update: (_, api, previous) => FavoritesService(apiClient: api),
         ),
+        ProxyProvider<ApiClient, ArchiveService>(
+          update: (_, api, previous) => ArchiveService(apiClient: api),
+        ),
         ProxyProvider<ApiClient, TourismMapService>(
           update: (_, api, previous) => TourismMapService(apiClient: api),
         ),
@@ -121,6 +126,10 @@ class ProxvelApp extends StatelessWidget {
         ChangeNotifierProxyProvider<FavoritesService, FavoritesController>(
           create: (context) => FavoritesController(context.read<FavoritesService>()),
           update: (context, favSvc, ctl) => ctl ?? FavoritesController(favSvc),
+        ),
+        ChangeNotifierProxyProvider<ArchiveService, ArchiveController>(
+          create: (context) => ArchiveController(context.read<ArchiveService>()),
+          update: (context, arcSvc, ctl) => ctl ?? ArchiveController(arcSvc),
         ),
         ChangeNotifierProxyProvider2<RouteService, LocalStorageService, RoutesController>(
           create: (context) => RoutesController(

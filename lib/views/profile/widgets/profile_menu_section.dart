@@ -9,6 +9,7 @@ class ProfileMenuSection extends StatelessWidget {
   final VoidCallback onEditProfile;
   final VoidCallback onPreferences;
   final VoidCallback onMyReviews;
+  final VoidCallback onArchived;
   final VoidCallback onAbout;
   final VoidCallback onLogout;
 
@@ -17,6 +18,7 @@ class ProfileMenuSection extends StatelessWidget {
     required this.onEditProfile,
     required this.onPreferences,
     required this.onMyReviews,
+    required this.onArchived,
     required this.onAbout,
     required this.onLogout,
   });
@@ -50,6 +52,12 @@ class ProfileMenuSection extends StatelessWidget {
               icon: Icons.rate_review_rounded,
               label: 'Mis reseñas',
               onTap: onMyReviews,
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            ProfileMenuItem(
+              icon: Icons.archive_outlined,
+              label: 'Archivados',
+              onTap: onArchived,
             ),
             const Divider(height: 1, color: AppColors.divider),
             ProfileMenuItem(

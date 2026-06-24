@@ -75,15 +75,6 @@ class MapLocationPreview extends StatelessWidget {
             color: const Color(0xFFF0F4F8), // Light map background color
             borderRadius: BorderRadius.circular(16),
             // We would normally use a map plugin here or a static map image.
-            // Using a simple pattern to simulate a map background.
-            image: const DecorationImage(
-              image: AssetImage('assets/images/rio-amazonas.png'), // Placeholder
-              fit: BoxFit.cover,
-              colorFilter: ColorFilter.mode(
-                Colors.white70,
-                BlendMode.lighten,
-              ),
-            ),
           ),
           child: Stack(
             alignment: Alignment.center,
