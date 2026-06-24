@@ -8,7 +8,26 @@ class RecommendationController extends ChangeNotifier {
   List<RecommendationResultModel> recommendations = [];
   String? error;
 
+  /// Mes objetivo (1-12). null = mes actual (lo decide el backend).
+  int? selectedMonth;
+  /// Departamento/región para filtrar. null = todos.
+  String? selectedRegion;
+
   RecommendationController(this._recommendationService);
+
+  /// Cambia el mes objetivo y recarga las recomendaciones.
+  Future<void> setMonth(int? month) async {
+    if (selectedMonth == month) return;
+    selectedMonth = month;
+    await loadRecommendations();
+  }
+
+  /// Cambia el filtro de departamento y recarga.
+  Future<void> setRegion(String? region) async {
+    if (selectedRegion == region) return;
+    selectedRegion = region;
+    await loadRecommendations();
+  }
 
   Future<void> loadRecommendations() async {
     isLoading = true;
@@ -16,7 +35,10 @@ class RecommendationController extends ChangeNotifier {
     notifyListeners();
     try {
       // Usamos el motor real para el usuario autenticado
-      recommendations = await _recommendationService.getMyRecommendations();
+      recommendations = await _recommendationService.getMyRecommendations(
+        month: selectedMonth,
+        region: selectedRegion,
+      );
     } catch (e) {
       if (e.toString().contains('400')) {
         error = 'Completa tu perfil viajero para recibir recomendaciones personalizadas.';

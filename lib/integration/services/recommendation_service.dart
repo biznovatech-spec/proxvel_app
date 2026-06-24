@@ -47,14 +47,18 @@ class RecommendationService {
   /// Consume el motor real (engine_v0) sin user_id (requiere token JWT activo)
   Future<List<RecommendationResultModel>> getMyRecommendations({
     int limit = 10,
+    int? month,
+    String? region,
   }) async {
     if (_api == null) throw Exception('API Client no inicializado');
-    
+
     // Dejamos que ApiClient maneje el 401/403/400 y arroje ApiException
     final json = await _api.get(
       '/recommendations/me',
       queryParams: {
         'limit': '$limit',
+        if (month != null) 'month': '$month',
+        if (region != null && region.isNotEmpty) 'region': region,
       },
     );
     

@@ -10,8 +10,8 @@ class AspectScoreBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pct = (aspect.score * 100).round();
     final barColor = _colorForScore(aspect.score);
+    final tier = _tierForScore(aspect.score);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -33,12 +33,19 @@ class AspectScoreBar extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '$pct%',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: barColor,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: barColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  tier,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: barColor,
+                  ),
                 ),
               ),
             ],
@@ -59,9 +66,16 @@ class AspectScoreBar extends StatelessWidget {
   }
 
   Color _colorForScore(double score) {
-    if (score >= 0.75) return AppColors.success;
+    if (score >= 0.70) return AppColors.success;
     if (score >= 0.50) return AppColors.accent;
     return AppColors.error;
+  }
+
+  /// Etiqueta de rango (en vez del % crudo) — coherente con la leyenda.
+  String _tierForScore(double score) {
+    if (score >= 0.70) return 'Excelente';
+    if (score >= 0.50) return 'Bueno';
+    return 'Bajo';
   }
 
   IconData _iconForAspect(String aspect) {

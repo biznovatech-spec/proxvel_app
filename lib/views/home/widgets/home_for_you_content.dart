@@ -85,6 +85,10 @@ class HomeForYouContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
+          // ── Selector de mes (clima/aforo del mes objetivo) ──
+          _MonthSelectorBar(selected: controller.selectedMonth),
+          const SizedBox(height: 16),
+
           // ── Recommendation cards ──
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -96,8 +100,15 @@ class HomeForYouContent extends StatelessWidget {
                   return DestinationRecommendationCard(
                     recommendation: rec,
                     index: index,
-                    onTap: () => context.push(
-                        '/destination/${rec.destination.id}?source=ai_recommendation'),
+                    onTap: () {
+                      // Lleva el mes elegido al detalle, para que clima/aforo allí
+                      // muestren la misma temporada que el ranking.
+                      final m = controller.selectedMonth;
+                      final q = m != null ? '&month=$m' : '';
+                      context.push(
+                        '/destination/${rec.destination.id}?source=ai_recommendation$q',
+                      );
+                    },
                   );
                 },
               ).toList(),
@@ -152,6 +163,77 @@ class HomeForYouContent extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Barra horizontal para elegir el mes objetivo del viaje.
+/// Al tocar un mes, recarga las recomendaciones con el clima/aforo de ese mes.
+class _MonthSelectorBar extends StatelessWidget {
+  final int? selected;
+  const _MonthSelectorBar({required this.selected});
+
+  static const _names = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = context.read<RecommendationController>();
+    final activeMonth = selected ?? DateTime.now().month;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: Text(
+            '¿Para qué mes viajas?',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        SizedBox(
+          height: 38,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: 12,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, i) {
+              final month = i + 1;
+              final isSel = activeMonth == month;
+              return GestureDetector(
+                onTap: () => ctrl.setMonth(month),
+                child: Container(
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  decoration: BoxDecoration(
+                    color: isSel ? AppColors.accent : Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSel
+                          ? AppColors.accent
+                          : AppColors.textSecondary.withValues(alpha: 0.25),
+                    ),
+                  ),
+                  child: Text(
+                    _names[i],
+                    style: TextStyle(
+                      color: isSel ? Colors.white : AppColors.primaryDark,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

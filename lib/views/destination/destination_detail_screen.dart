@@ -21,10 +21,15 @@ class DestinationDetailScreen extends StatefulWidget {
   /// Define la jerarquía de pestañas (info primero vs IA primero).
   final String source;
 
+  /// Mes objetivo (1-12) para clima/aforo. null = mes actual.
+  /// Se sincroniza con el mes elegido en "Para Ti".
+  final int? month;
+
   const DestinationDetailScreen({
     super.key,
     required this.destinationId,
     this.source = 'explore',
+    this.month,
   });
 
   @override
@@ -65,6 +70,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DestinationController>().loadDestination(
         widget.destinationId,
+        month: widget.month,
       );
     });
   }
@@ -503,6 +509,11 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
       travelerProfile: travelerProfile,
       destinationClimate: dest.climate,
       destinationCrowdLevel: dest.crowdLevel,
+      climaContextScore: controller.climaContextScore,
+      climaContextLabel: controller.climaContextLabel,
+      aforoContextScore: controller.aforoContextScore,
+      aforoContextLabel: controller.aforoContextLabel,
+      contextMonthName: controller.contextMonthName,
     );
   }
 

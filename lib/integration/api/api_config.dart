@@ -16,14 +16,16 @@ class ApiConfig {
   }
 
   static String get baseUrl {
-    if (bool.hasEnvironment('API_BASE_URL')) {
-      return const String.fromEnvironment('API_BASE_URL');
-    }
+    // `bool.hasEnvironment` NO está soportado en Flutter Web (lanza
+    // "Unsupported operation"). Se lee directamente con String.fromEnvironment
+    // (const, web-safe) y se usa el fallback si no fue definido en el build.
+    const fromEnv = String.fromEnvironment('API_BASE_URL');
+    if (fromEnv.isNotEmpty) return fromEnv;
     return _fallbackUrl;
   }
 
   static const String webBaseUrl = 'http://127.0.0.1:8000/api/v1';
-  static const int timeoutSeconds = 8;
+  static const int timeoutSeconds = 30;
 
   static const bool useMockFallback = bool.fromEnvironment(
     'USE_MOCK_FALLBACK',

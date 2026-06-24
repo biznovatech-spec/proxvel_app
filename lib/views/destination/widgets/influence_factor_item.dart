@@ -8,15 +8,21 @@ class InfluenceFactorItem extends StatelessWidget {
   final String title;
   final String description;
 
+  /// Color del factor (verde = fortaleza, ámbar = oportunidad, rojo = a tener
+  /// en cuenta). Por defecto, el acento de la marca.
+  final Color? color;
+
   const InfluenceFactorItem({
     super.key,
     required this.icon,
     required this.title,
     required this.description,
+    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    final c = color ?? AppColors.accent;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,10 +30,10 @@ class InfluenceFactorItem extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.12),
+            color: c.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: AppColors.accent, size: 18),
+          child: Icon(icon, color: c, size: 18),
         ),
         const SizedBox(width: 12),
         Expanded(

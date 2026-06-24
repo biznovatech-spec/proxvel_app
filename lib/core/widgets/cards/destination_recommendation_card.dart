@@ -189,6 +189,67 @@ class DestinationRecommendationCard extends StatelessWidget {
                         ),
                       ],
                     ),
+
+                    // ── Etiqueta cualitativa + mejor mes (en vez del % crudo) ──
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.auto_awesome_rounded,
+                                  color: Colors.white, size: 14),
+                              const SizedBox(width: 5),
+                              Text(
+                                recommendation.label,
+                                style: GoogleFonts.inter(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if ((recommendation.bestMonthName ?? '').isNotEmpty) ...[
+                          const SizedBox(width: 10),
+                          const Icon(Icons.event_available_rounded,
+                              color: Colors.white, size: 15),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              'Mejor mes: ${_cap(recommendation.bestMonthName!)}',
+                              style: GoogleFonts.inter(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if ((recommendation.contextStatus ?? '').isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        recommendation.contextStatus!,
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -198,4 +259,7 @@ class DestinationRecommendationCard extends StatelessWidget {
       ),
     );
   }
+
+  static String _cap(String s) =>
+      s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
 }

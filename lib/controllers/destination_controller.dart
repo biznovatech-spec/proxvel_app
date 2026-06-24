@@ -24,28 +24,43 @@ class DestinationController extends ChangeNotifier {
   int compatibility = 0;
   String? error;
 
+  // Contexto REAL del mes (clima + aforo), NO de reseñas. score 0-1, alto = mejor.
+  double? climaContextScore;
+  String? climaContextLabel;
+  double? aforoContextScore;
+  String? aforoContextLabel;
+  String? contextMonthName;
+
   DestinationController(this._destinationService, this._tourismService, this._reviewService);
 
-  Future<void> loadDestination(String id) async {
+  Future<void> loadDestination(String id, {int? month}) async {
     isLoading = true;
     error = null;
     hasReviewsError = false;
     notifyListeners();
     try {
-      destination = await _destinationService.getDestinationById(id);
+      destination = await _destinationService.getDestinationById(id, month: month);
       if (destination == null) {
         throw Exception('Destino no encontrado: $id');
       }
 
-      // Load supplementary detail data in parallel
+      // Load supplementary detail data in parallel (mismo mes para todo)
       final results = await Future.wait([
-        _destinationService.getAspectScores(id),
-        _destinationService.getExplanation(id),
-        _destinationService.getCompatibility(id),
+        _destinationService.getAspectScores(id, month: month),
+        _destinationService.getExplanation(id, month: month),
+        _destinationService.getCompatibility(id, month: month),
+        _destinationService.getDestinationContext(id, month: month),
       ]);
       aspectScores = results[0] as List<AspectScoreModel>;
       explanation = results[1] as String;
       compatibility = results[2] as int;
+
+      final ctx = results[3] as Map<String, dynamic>;
+      climaContextScore = ctx['clima_score'] as double?;
+      climaContextLabel = ctx['clima_label'] as String?;
+      aforoContextScore = ctx['aforo_score'] as double?;
+      aforoContextLabel = ctx['aforo_label'] as String?;
+      contextMonthName = ctx['month_name'] as String?;
 
       // Load tourism catalog and reviews (they shouldn't block the basic rendering if they fail, but we wait for them)
       try {

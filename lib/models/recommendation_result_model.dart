@@ -9,6 +9,9 @@ class RecommendationResultModel {
   final double compatibilityPercentage;
   final double finalScore;
   final String label;
+  final String? monthName;        // mes objetivo de la recomendación
+  final String? bestMonthName;    // mejor mes para ir, según el perfil
+  final String? contextStatus;    // "Clima X · Aforo Y · mes"
   final List<String> reasons;
   final List<AspectScoreModel> aspectScores;
   final List<ContextSignalModel> contextSignals;
@@ -20,6 +23,9 @@ class RecommendationResultModel {
     required this.compatibilityPercentage,
     required this.finalScore,
     required this.label,
+    this.monthName,
+    this.bestMonthName,
+    this.contextStatus,
     required this.reasons,
     required this.aspectScores,
     required this.contextSignals,
@@ -120,6 +126,9 @@ class RecommendationResultModel {
       compatibilityPercentage: compat,
       finalScore: score,
       label: label,
+      monthName: json['month_name'] as String?,
+      bestMonthName: json['best_month_name'] as String?,
+      contextStatus: json['context_status'] as String?,
       reasons: reasons,
       aspectScores: aspects,
       contextSignals: signals,
