@@ -118,229 +118,237 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
           // ── Content ──
           SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Top Action Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 22),
-                      onPressed: () => context.pop(),
-                    ),
-                  ),
-                ),
-
-                const Spacer(),
-
-                // Title
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    '¡Bienvenido de\nnuevo!',
-                    style: GoogleFonts.poppins(
-                      fontSize: 34,
-                      height: 1.18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      letterSpacing: -0.2,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-                
-                // Subtitle
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    'Continua tu aventura',
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white.withValues(alpha: 0.85),
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 48),
-
-                // Form Fields
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverFillRemaining(
+                  hasScrollBody: false,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      GlassTextField(
-                        label: 'Email',
-                        controller: _emailController,
-                        errorText: _emailError,
-                        keyboardType: TextInputType.emailAddress,
-                        onChanged: (val) {
-                          if (_emailError != null) setState(() => _emailError = null);
-                          if (_loginError != null) setState(() => _loginError = null);
-                        },
+                      // Top Action Bar
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 22),
+                            onPressed: () => context.pop(),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      GlassTextField(
-                        label: 'Contraseña',
-                        controller: _passwordController,
-                        isPassword: true,
-                        errorText: _passwordError,
-                        onChanged: (val) {
-                          if (_passwordError != null) setState(() => _passwordError = null);
-                          if (_loginError != null) setState(() => _loginError = null);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
 
-                // Error Message
-                if (_loginError != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0).copyWith(top: 16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                      const Spacer(),
+
+                      // Title
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                        child: Text(
+                          '¡Bienvenido de\nnuevo!',
+                          style: GoogleFonts.poppins(
+                            fontSize: 34,
+                            height: 1.18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      child: Row(
+                      
+                      const SizedBox(height: 12),
+                      
+                      // Subtitle
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                        child: Text(
+                          'Continua tu aventura',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 48),
+
+                      // Form Fields
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                        child: Column(
+                          children: [
+                            GlassTextField(
+                              label: 'Email',
+                              controller: _emailController,
+                              errorText: _emailError,
+                              keyboardType: TextInputType.emailAddress,
+                              onChanged: (val) {
+                                if (_emailError != null) setState(() => _emailError = null);
+                                if (_loginError != null) setState(() => _loginError = null);
+                              },
+                            ),
+                            const SizedBox(height: 20),
+                            GlassTextField(
+                              label: 'Contraseña',
+                              controller: _passwordController,
+                              isPassword: true,
+                              errorText: _passwordError,
+                              onChanged: (val) {
+                                if (_passwordError != null) setState(() => _passwordError = null);
+                                if (_loginError != null) setState(() => _loginError = null);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Error Message
+                      if (_loginError != null) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 28.0).copyWith(top: 16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.error_outline_rounded, color: Color(0xFFFF6B6B), size: 18),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    _loginError!,
+                                    style: GoogleFonts.poppins(
+                                      color: const Color(0xFFFF6B6B),
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 20),
+
+                      // Options (Remember me & Forgot password)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: Checkbox(
+                                    value: _rememberMe,
+                                    onChanged: (val) {
+                                      setState(() => _rememberMe = val ?? false);
+                                    },
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                    side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
+                                    activeColor: _amber,
+                                    checkColor: Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Recordar sesión',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            TextButton(
+                              onPressed: () {},
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                '¿Olvidaste tu contraseña?',
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 36),
+
+                      // Login Button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                        child: _isLoading 
+                          ? const Center(child: CircularProgressIndicator(color: _amber))
+                          : ShimmerButton(
+                              shimmer: _shimmerCtrl,
+                              baseColor: _amber,
+                              hoverColor: _amberDark,
+                              text: 'Iniciar Sesión',
+                              onPressed: _handleLogin,
+                            ),
+                      ),
+
+                      const SizedBox(height: 36),
+
+                      // Register Link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.error_outline_rounded, color: Color(0xFFFF6B6B), size: 18),
-                          const SizedBox(width: 12),
-                          Expanded(
+                          Text(
+                            '¿No tienes una cuenta? ',
+                            style: GoogleFonts.poppins(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.push('/register'),
                             child: Text(
-                              _loginError!,
+                              'Regístrate',
                               style: GoogleFonts.poppins(
-                                color: const Color(0xFFFF6B6B),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w500,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                fontSize: 14,
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                ],
 
-                const SizedBox(height: 20),
-
-                // Options (Remember me & Forgot password)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(
-                              value: _rememberMe,
-                              onChanged: (val) {
-                                setState(() => _rememberMe = val ?? false);
-                              },
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                              side: BorderSide(color: Colors.white.withValues(alpha: 0.5)),
-                              activeColor: _amber,
-                              checkColor: Colors.black,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Recordar sesión',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          '¿Olvidaste tu contraseña?',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 36),
-
-                // Login Button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                  child: _isLoading 
-                    ? const Center(child: CircularProgressIndicator(color: _amber))
-                    : ShimmerButton(
-                        shimmer: _shimmerCtrl,
-                        baseColor: _amber,
-                        hoverColor: _amberDark,
-                        text: 'Iniciar Sesión',
-                        onPressed: _handleLogin,
-                      ),
-                ),
-
-                const SizedBox(height: 36),
-
-                // Register Link
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '¿No tienes una cuenta? ',
-                      style: GoogleFonts.poppins(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.push('/register'),
-                      child: Text(
-                        'Regístrate',
-                        style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
               ],
             ),
           ),

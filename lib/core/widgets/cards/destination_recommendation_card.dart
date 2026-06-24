@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../models/recommendation_result_model.dart';
 import '../../../controllers/favorites_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../images/adaptive_destination_image.dart';
-import '../../../views/home/widgets/recommendation_explanation_section.dart';
 
-/// Card showing a personalized recommendation with compatibility score.
+/// Card showing a personalized recommendation with a ranking badge.
 class DestinationRecommendationCard extends StatelessWidget {
   final RecommendationResultModel recommendation;
   final VoidCallback onTap;
@@ -22,239 +22,178 @@ class DestinationRecommendationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dest = recommendation.destination;
-    final pct = recommendation.compatibilityPercentage.round();
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 24),
+        margin: const EdgeInsets.only(bottom: 32),
+        width: double.infinity,
+        height: 480, 
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(32),
+          // Borde sutil para darle volumen sin usar blur (glass edge)
+          border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 1),
           boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow,
-              blurRadius: 14,
-              offset: const Offset(0, 6),
+              color: AppColors.cardShadow.withValues(alpha: 0.15),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
             ),
           ],
         ),
-        child: Column(
-          children: [
-            // ── Image Section ──
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(31), // Ligeramente menor por el borde
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // ── 1. Background Image ──
+              AdaptiveDestinationImage(imagePath: dest.imageUrl),
+
+              // ── 2. Deep Cinematic Gradient ──
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.3), // Top shadow for badges
+                      Colors.transparent,
+                      Colors.transparent,
+                      Colors.black.withValues(alpha: 0.95), // Deep bottom shadow
+                    ],
+                    stops: const [0.0, 0.3, 0.5, 1.0],
+                  ),
+                ),
               ),
-              child: SizedBox(
-                height: 220,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
+
+              // ── 3. Top Floating Badges (Solid & Crisp) ──
+              Positioned(
+                top: 24,
+                left: 20,
+                right: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AdaptiveDestinationImage(imagePath: dest.imageUrl),
-                    // Dark gradient from bottom
+                    // Ranking Badge (Solid White)
                     Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withValues(alpha: 0.1),
-                            Colors.black.withValues(alpha: 0.8),
-                          ],
-                        ),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
-                    ),
-                    // Top-left # badge
-                    Positioned(
-                      top: 16,
-                      left: 16,
-                      child: Text(
-                        '#${index + 1}',
-                        style: const TextStyle(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                    // Top-right Recomendado badge
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Row(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppColors.accent,
-                              borderRadius: BorderRadius.circular(8),
+                          const Icon(Icons.star_rounded, color: Colors.black, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '#${index + 1}',
+                            style: GoogleFonts.poppins(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
                             ),
-                            child: const Text(
-                              'Recomendado',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          // Favorite Heart
-                          Consumer<FavoritesController>(
-                            builder: (context, favCtrl, child) {
-                              final isFav = favCtrl.isFavorite(dest.id);
-                              return GestureDetector(
-                                onTap: () => favCtrl.toggleFavorite(dest.id),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.4),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                    color: isFav ? AppColors.error : Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              );
-                            },
                           ),
                         ],
                       ),
                     ),
-                    // Bottom content overlay
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      right: 16,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  dest.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.location_on_outlined, color: AppColors.accent, size: 14),
-                                    const SizedBox(width: 4),
-                                    Flexible(
-                                      child: Text(
-                                        dest.city,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    if (dest.category.isNotEmpty)
-                                      Flexible(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.4),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            dest.category,
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                    
+                    // Favorite Heart (Solid White)
+                    Consumer<FavoritesController>(
+                      builder: (context, favCtrl, child) {
+                        final isFav = favCtrl.isFavorite(dest.id);
+                        return GestureDetector(
+                          onTap: () => favCtrl.toggleFavorite(dest.id),
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                )
                               ],
                             ),
+                            child: Icon(
+                              isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                              color: isFav ? const Color(0xFFFF4B4B) : Colors.black,
+                              size: 20,
+                            ),
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
-            ),
-            
-            // ── Explanation Section ──
-            RecommendationExplanationSection(
-              explanation: recommendation.explanation,
-              contextSignals: recommendation.contextSignals,
-            ),
-            
-            // ── Footer Section ──
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Row(
-                children: [
-                  // Progress bar
-                  Container(
-                    width: 50,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.border,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: pct / 100,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          borderRadius: BorderRadius.circular(2),
+
+              // ── 4. Bottom Information Overlay ──
+              Positioned(
+                bottom: 28,
+                left: 24,
+                right: 24,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Category (Editorial Typography, No Background)
+                    if (dest.category.isNotEmpty) ...[
+                      Text(
+                        dest.category.toUpperCase(),
+                        style: GoogleFonts.inter(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 3.0, // Amplio tracking para look premium
                         ),
                       ),
+                      const SizedBox(height: 8),
+                    ],
+
+                    Text(
+                      dest.name,
+                      style: GoogleFonts.playfairDisplay( // Tipografía serif para lujo
+                        color: Colors.white,
+                        fontSize: 34,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    '$pct% compatible',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            dest.city,
+                            style: GoogleFonts.inter(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const Spacer(),
-                  const Text(
-                    'Ver más',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.primaryDark,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward, size: 16, color: AppColors.primaryDark),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

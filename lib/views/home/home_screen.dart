@@ -78,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen>
 
     final authController = context.watch<AuthController>();
     final userName = authController.currentUser?.fullName ?? 'Viajero';
+    final avatarUrl = authController.currentUser?.avatarUrl;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -96,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen>
                       delegate: _CustomHomeHeaderDelegate(
                         safeAreaTop: MediaQuery.of(context).padding.top,
                         userName: userName,
+                        avatarUrl: avatarUrl,
                       ),
                     ),
                     SliverPersistentHeader(
@@ -207,10 +209,12 @@ class _StickyTabBarDelegate extends SliverPersistentHeaderDelegate {
 class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
   final double safeAreaTop;
   final String userName;
+  final String? avatarUrl;
 
   _CustomHomeHeaderDelegate({
     required this.safeAreaTop,
     required this.userName,
+    this.avatarUrl,
   });
 
   @override
@@ -264,18 +268,25 @@ class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
           child: Image.asset('assets/images/hero-montanas.webp', fit: BoxFit.cover, alignment: Alignment.bottomCenter),
         ),
 
-        // Gradient overlay for text readability
+        // Solid background that fades in when collapsing (acts as standard AppBar background)
+        Opacity(
+          opacity: progress,
+          child: Container(color: const Color(0xFF0F172A)),
+        ),
+
+        // Gradient overlay for text readability when expanded
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                const Color(0xFF0F172A).withValues(alpha: progress), // Darkens as it collapses
+                const Color(0xFF0F172A).withValues(alpha: 0.5 * (1 - progress)), // Top shadow for icons
                 Colors.transparent,
-                const Color(0xFF0B142E).withValues(alpha: 0.95 * (1 - progress)), // Fades out bottom dark as it collapses
+                const Color(0xFF0B142E).withValues(alpha: 0.8 * (1 - progress)), // Starts getting dark midway
+                const Color(0xFF0B142E).withValues(alpha: 1.0 * (1 - progress)), // Solid darkness at bottom
               ],
-              stops: const [0.0, 0.4, 1.0],
+              stops: const [0.0, 0.3, 0.7, 1.0],
             ),
           ),
         ),
@@ -301,12 +312,15 @@ class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 2),
             ),
             child: CircleAvatar(
               radius: avatarRadius,
-              backgroundColor: Colors.black.withOpacity(0.3),
-              child: Icon(Icons.person, color: Colors.white, size: avatarRadius * 1.2),
+              backgroundColor: Colors.black.withValues(alpha: 0.3),
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
+              child: avatarUrl == null 
+                  ? Icon(Icons.person, color: Colors.white, size: avatarRadius * 1.2)
+                  : null,
             ),
           ),
         ),
@@ -365,6 +379,6 @@ class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
 
   @override
   bool shouldRebuild(covariant _CustomHomeHeaderDelegate oldDelegate) {
-    return safeAreaTop != oldDelegate.safeAreaTop || userName != oldDelegate.userName;
+    return safeAreaTop != oldDelegate.safeAreaTop || userName != oldDelegate.userName || avatarUrl != oldDelegate.avatarUrl;
   }
 }

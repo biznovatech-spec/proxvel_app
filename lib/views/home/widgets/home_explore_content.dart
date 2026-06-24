@@ -192,22 +192,9 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
               const SizedBox(height: 32),
             ],
 
-            // ═══ TODOS LOS DESTINOS ═══
+            // ═══ DESTINOS CATEGORIZADOS (Diseño Netflix) ═══
             if (all.isNotEmpty) ...[
-              _sectionHeader('Todos los destinos'),
-              const SizedBox(height: 14),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  children: all
-                      .map((d) => ClassicDestinationCard(
-                            destination: d,
-                            onTap: () => context
-                                .push('/destination/${d.id}?source=explore'),
-                          ))
-                      .toList(),
-                ),
-              ),
+              _buildCategorizedSections(context, all),
             ] else if (controller.error == null) ...[
               _buildEmpty(),
             ],
@@ -491,9 +478,21 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
   // ── Colecciones Exclusivas ──
   Widget _buildCuratedCollections(BuildContext context) {
     final collections = [
-      {'title': 'Joyas\nOcultas', 'color': const Color(0xFF1E293B)},
-      {'title': 'Escapadas\nde Lujo', 'color': const Color(0xFF0F172A)},
-      {'title': 'Paraíso\nNatural', 'color': const Color(0xFF334155)},
+      {
+        'title': 'Joyas\nOcultas', 
+        'color': const Color(0xFF1E293B),
+        'image': 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=600&auto=format&fit=crop'
+      },
+      {
+        'title': 'Escapadas\nde Lujo', 
+        'color': const Color(0xFF0F172A),
+        'image': 'https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=600&auto=format&fit=crop'
+      },
+      {
+        'title': 'Paraíso\nNatural', 
+        'color': const Color(0xFF334155),
+        'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop'
+      },
     ];
 
     return Column(
@@ -525,22 +524,52 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        col['title'] as String,
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.italic,
-                          height: 1.1,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // Imagen de Fondo
+                        Image.network(
+                          col['image'] as String,
+                          fit: BoxFit.cover,
                         ),
-                      ),
-                    ],
+                        // Gradiente Oscurecedor
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.8),
+                              ],
+                              stops: const [0.3, 1.0],
+                            ),
+                          ),
+                        ),
+                        // Texto
+                        Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Text(
+                                col['title'] as String,
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                  fontStyle: FontStyle.italic,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -700,5 +729,59 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
         ),
       ),
     );
+  }
+
+  // ── Secciones Categorizadas (Diseño Netflix) ──
+  Widget _buildCategorizedSections(BuildContext context, List<DestinationModel> all) {
+    // 1. Agrupar por categoría
+    final Map<String, List<DestinationModel>> grouped = {};
+    for (var dest in all) {
+      if (dest.category.trim().isEmpty) continue;
+      if (!grouped.containsKey(dest.category)) {
+        grouped[dest.category] = [];
+      }
+      grouped[dest.category]!.add(dest);
+    }
+
+    // 2. Construir los carruseles
+    final List<Widget> sections = [];
+    for (var entry in grouped.entries) {
+      final category = entry.key;
+      final dests = entry.value;
+      if (dests.isEmpty) continue;
+
+      sections.add(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _sectionHeader(category, onSeeMore: () {
+              context.push('/search?q=${Uri.encodeComponent(category)}');
+            }),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 155, // Espacio suficiente para la tarjeta y su sombra
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                scrollDirection: Axis.horizontal,
+                itemCount: dests.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 16),
+                itemBuilder: (_, i) {
+                  return SizedBox(
+                    width: 320, // Ancho fijo para que no reviente el scroll
+                    child: ClassicDestinationCard(
+                      destination: dests[i],
+                      onTap: () => context.push('/destination/${dests[i].id}?source=explore'),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        )
+      );
+    }
+
+    return Column(children: sections);
   }
 }

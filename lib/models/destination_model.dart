@@ -253,13 +253,7 @@ class DestinationModel {
     if (lowerUrl.contains('/wiki/')) return false;
     if (lowerUrl.contains('wikimedia.org/wiki/file:')) return false;
     
-    return lowerUrl.endsWith('.jpg') || 
-           lowerUrl.endsWith('.jpeg') || 
-           lowerUrl.endsWith('.png') || 
-           lowerUrl.endsWith('.webp') || 
-           lowerUrl.contains('.jpg?') ||
-           lowerUrl.contains('.png?') ||
-           lowerUrl.contains('.webp?') ||
-           lowerUrl.contains('.jpeg?');
+    // Aceptar cualquier URL HTTP válida (Supabase/Railway pueden no tener extensión explícita)
+    return true;
   }
 }
