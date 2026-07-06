@@ -11,7 +11,11 @@ class TravelerProfileSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final prefs = _extractPreferences(profile);
+    if (profile == null) {
+      return _buildEmptyState(context);
+    }
+
+    final prefs = _extractPreferences(profile!);
 
     return Container(
       width: double.infinity,
@@ -58,6 +62,91 @@ class TravelerProfileSummaryCard extends StatelessWidget {
     );
   }
 
+  /// Estado honesto cuando el usuario no ha completado su perfil viajero.
+  Widget _buildEmptyState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  'Perfil de viajero',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Completa tu perfil viajero para recibir explicaciones personalizadas.',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textMuted,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () => context.push('/profile/preferences'),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Completar perfil',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _preferenceChip(IconData icon, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -97,14 +186,7 @@ class TravelerProfileSummaryCard extends StatelessWidget {
     );
   }
 
-  List<Map<String, dynamic>> _extractPreferences(TravelerProfileModel? profile) {
-    if (profile == null) {
-      return [
-        {'icon': Icons.wb_sunny_outlined, 'label': 'Prefiere clima', 'value': 'Templado'},
-        {'icon': Icons.groups_outlined, 'label': 'Tolerancia a multitudes', 'value': 'Baja'},
-        {'icon': Icons.explore_outlined, 'label': 'Estilo de viaje', 'value': 'Cultural y aventura'},
-      ];
-    }
+  List<Map<String, dynamic>> _extractPreferences(TravelerProfileModel profile) {
     return [
       {'icon': Icons.wb_sunny_outlined, 'label': 'Prefiere clima', 'value': profile.climaPreferido},
       {'icon': Icons.groups_outlined, 'label': 'Tolerancia a multitudes', 'value': profile.toleranciaMultitudes},
