@@ -5,6 +5,7 @@ import '../../controllers/auth_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/inputs/proxvel_text_field.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
+import '../../core/utils/avatar_picker_helper.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -95,40 +96,51 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: AppColors.accentSoft,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.accent, width: 2),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 50,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
+              child: GestureDetector(
+                onTap: () => pickAndUploadAvatar(context),
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft,
                         shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.accent, width: 2),
+                        image: context.watch<AuthController>().currentUser?.avatarUrl != null
+                            ? DecorationImage(
+                                image: NetworkImage(context.watch<AuthController>().currentUser!.avatarUrl!),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
                       ),
-                      child: const Icon(
-                        Icons.camera_alt_rounded,
-                        color: Colors.white,
-                        size: 16,
+                      alignment: Alignment.center,
+                      child: context.watch<AuthController>().currentUser?.avatarUrl == null
+                          ? const Icon(
+                              Icons.person_rounded,
+                              size: 50,
+                              color: AppColors.accent,
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -140,9 +152,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             ProxvelTextField(
-              label: 'Email (Solo lectura)',
+              label: 'Email',
               controller: _emailController,
               readOnly: true,
+              fillColor: const Color(0xFFF3F4F6), // gris muteado
+              prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF9CA3AF), size: 20),
+              helperText: 'El correo no se puede modificar',
             ),
             const SizedBox(height: 48),
             ProxvelButton(

@@ -6,6 +6,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/onboarding_controller.dart';
+import '../../controllers/recommendation_controller.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
 import '../../core/widgets/buttons/shimmer_button.dart';
@@ -121,6 +122,12 @@ class _OnboardingState extends State<OnboardingProfileScreen> with TickerProvide
     if (mounted) Navigator.pop(context);
 
     if (success) {
+      // Invalidar y recargar recomendaciones con el perfil recién creado.
+      if (mounted) {
+        final recCtrl = context.read<RecommendationController>();
+        recCtrl.invalidate();
+        recCtrl.loadRecommendations(forceRefresh: true);
+      }
       _complete();
     } else {
       if (mounted) {

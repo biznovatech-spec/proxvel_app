@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/profile_controller.dart';
+import '../../controllers/recommendation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
@@ -150,13 +151,18 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
       await context.read<ProfileController>().updatePreferences(updated);
 
       if (mounted) {
+        // Invalidar y recargar recomendaciones con el perfil actualizado.
+        final recCtrl = context.read<RecommendationController>();
+        recCtrl.invalidate();
+        recCtrl.loadRecommendations(forceRefresh: true);
+
         setState(() {
           _isEditing = false;
           _isSaving = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Preferencias actualizadas correctamente'),
+            content: Text('Preferencias actualizadas · Recalculando recomendaciones…'),
             backgroundColor: AppColors.success,
           ),
         );

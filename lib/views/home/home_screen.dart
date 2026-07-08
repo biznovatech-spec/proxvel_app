@@ -12,7 +12,6 @@ import '../../controllers/recommendation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/announcements/announcement_modal.dart';
 import '../../models/announcement_model.dart';
-import 'widgets/home_header.dart';
 import 'widgets/home_explore_content.dart';
 import 'widgets/home_for_you_content.dart';
 
@@ -338,8 +337,8 @@ class _CustomHomeHeaderDelegate extends SliverPersistentHeaderDelegate {
             height: avatarRadius * 2,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.black.withOpacity(0.3),
-              border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+              color: Colors.black.withValues(alpha: 0.3),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
             ),
             child: Icon(Icons.notifications_none, color: Colors.white, size: avatarRadius),
           ),

@@ -10,6 +10,9 @@ class ProxvelTextField extends StatefulWidget {
   final TextCapitalization textCapitalization;
   final List<TextInputFormatter>? inputFormatters;
   final bool readOnly;
+  final String? helperText;
+  final Widget? prefixIcon;
+  final Color? fillColor;
 
   const ProxvelTextField({
     super.key,
@@ -21,6 +24,9 @@ class ProxvelTextField extends StatefulWidget {
     this.textCapitalization = TextCapitalization.none,
     this.inputFormatters,
     this.readOnly = false,
+    this.helperText,
+    this.prefixIcon,
+    this.fillColor,
   });
 
   @override
@@ -52,8 +58,10 @@ class _ProxvelTextFieldState extends State<ProxvelTextField> {
           labelStyle: TextStyle(color: widget.errorText != null ? Colors.red : const Color(0xFF9CA3AF)), // Gray-400 or Red
           errorText: widget.errorText,
           errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+          helperText: widget.helperText,
+          prefixIcon: widget.prefixIcon,
           filled: true,
-          fillColor: Colors.white,
+          fillColor: widget.fillColor ?? Colors.white,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: widget.errorText != null ? Colors.red : const Color(0xFFE5E7EB)),

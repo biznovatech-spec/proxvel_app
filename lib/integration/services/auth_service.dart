@@ -35,7 +35,7 @@ class AuthService {
     } catch (e) {
       if (e is ApiException) {
         if (e.statusCode == 401) {
-          throw Exception('Credenciales inválidas.');
+          throw Exception(e.message);
         } else if (e.statusCode == 422) {
           throw Exception('Correo inválido o formato incorrecto.');
         }

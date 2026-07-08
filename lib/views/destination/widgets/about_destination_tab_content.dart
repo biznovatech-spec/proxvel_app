@@ -3,7 +3,6 @@ import '../../../models/destination_model.dart';
 import '../../../models/tourism_catalog_model.dart';
 import '../../../core/theme/app_colors.dart';
 import 'expandable_description_text.dart';
-import 'destination_gallery_preview.dart';
 import 'activities_list.dart';
 import 'key_info_grid.dart';
 import 'map_location_preview.dart';

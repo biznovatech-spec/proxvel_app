@@ -143,8 +143,31 @@ class ApiClient {
 
   dynamic _decode(http.Response response) {
     if (response.statusCode == 401) {
-      onUnauthorized?.call();
-      throw ApiException(401, 'Tu sesión expiró. Inicia sesión nuevamente.');
+      final url = response.request?.url.toString().toLowerCase() ?? '';
+      final isAuthEndpoint = url.contains('/auth/login') || url.contains('login');
+      
+      if (!isAuthEndpoint) {
+        onUnauthorized?.call();
+        throw ApiException(401, 'Tu sesión expiró. Inicia sesión nuevamente.');
+      } else {
+        String errorMsg = 'Correo o contraseña incorrectos. Verifica tus datos.';
+        try {
+          final json = jsonDecode(utf8.decode(response.bodyBytes));
+          if (json is Map) {
+            if (json['detail'] != null) errorMsg = json['detail'].toString();
+            else if (json['message'] != null) errorMsg = json['message'].toString();
+            
+            final lower = errorMsg.toLowerCase();
+            if (lower.contains('incorrect username') || lower.contains('incorrect email') || lower.contains('incorrect password')) {
+              errorMsg = 'Correo o contraseña incorrectos. Verifica tus datos.';
+            } else if (lower.contains('inactive user')) {
+              errorMsg = 'Esta cuenta está inactiva. Contacta al administrador.';
+            }
+          }
+        } catch (_) {}
+        
+        throw ApiException(401, errorMsg);
+      }
     }
     if (response.statusCode == 403) {
       final message = 'No tienes permiso para realizar esta acción.';

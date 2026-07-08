@@ -7,7 +7,6 @@ import '../../../controllers/home_controller.dart';
 import '../../../controllers/announcement_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/announcements/announcement_banner.dart';
-import '../../../core/widgets/cards/featured_destination_card.dart';
 import '../../../core/widgets/cards/classic_destination_card.dart';
 import '../../../core/widgets/cards/recent_search_chip.dart';
 import '../../../core/widgets/states/loading_view.dart';
@@ -172,9 +171,6 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
               const SizedBox(height: 32),
             ],
 
-            // ═══ COLECCIONES EXCLUSIVAS ═══
-            _buildCuratedCollections(context),
-            const SizedBox(height: 32),
 
             // ═══ CTA A "PARA TI" (IA) ═══
             if (all.isNotEmpty) ...[
@@ -397,25 +393,6 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Carousel dots ──
-  Widget _buildDots(int count) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final isActive = i == _carouselPage;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 24 : 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.primary : AppColors.border,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        );
-      }),
-    );
-  }
 
   // ── Error state ──
   Widget _buildError(String message) {
@@ -477,110 +454,6 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     );
   }
 
-  // ── Colecciones Exclusivas ──
-  Widget _buildCuratedCollections(BuildContext context) {
-    final collections = [
-      {
-        'title': 'Joyas\nOcultas', 
-        'color': const Color(0xFF1E293B),
-        'image': 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?q=80&w=600&auto=format&fit=crop'
-      },
-      {
-        'title': 'Escapadas\nde Lujo', 
-        'color': const Color(0xFF0F172A),
-        'image': 'https://images.unsplash.com/photo-1540541338287-41700207dee6?q=80&w=600&auto=format&fit=crop'
-      },
-      {
-        'title': 'Paraíso\nNatural', 
-        'color': const Color(0xFF334155),
-        'image': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=600&auto=format&fit=crop'
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionHeader('Colecciones Exclusivas'),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 140,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            scrollDirection: Axis.horizontal,
-            itemCount: collections.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 14),
-            itemBuilder: (_, i) {
-              final col = collections[i];
-              return GestureDetector(
-                onTap: () => context.push('/search'),
-                child: Container(
-                  width: 220,
-                  decoration: BoxDecoration(
-                    color: col['color'] as Color,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (col['color'] as Color).withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        // Imagen de Fondo
-                        Image.network(
-                          col['image'] as String,
-                          fit: BoxFit.cover,
-                        ),
-                        // Gradiente Oscurecedor
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.8),
-                              ],
-                              stops: const [0.3, 1.0],
-                            ),
-                          ),
-                        ),
-                        // Texto
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                col['title'] as String,
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w600,
-                                  fontStyle: FontStyle.italic,
-                                  height: 1.1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
 
   // ── Top Tendencias ──
   Widget _buildTrendingList(BuildContext context, List<DestinationModel> all) {

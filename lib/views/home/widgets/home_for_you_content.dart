@@ -5,7 +5,8 @@ import '../../../controllers/recommendation_controller.dart';
 import '../../../controllers/auth_controller.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/cards/destination_recommendation_card.dart';
-import '../../../core/widgets/states/loading_view.dart';
+import '../../../core/widgets/states/ai_ranking_loader.dart';
+import '../../../core/widgets/states/ai_ranking_skeleton.dart';
 import '../../../core/widgets/states/empty_profile_for_ai_state.dart';
 import '../../../controllers/archive_controller.dart' as import_archive_controller;
 import 'profile_summary_card.dart';
@@ -20,8 +21,8 @@ class HomeForYouContent extends StatelessWidget {
     final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
     final userName = context.watch<AuthController>().currentUser?.fullName ?? 'Viajero';
 
-    if (controller.isLoading) {
-      return const LoadingView();
+    if (controller.isLoading && controller.recommendations.isEmpty) {
+      return const AiRankingLoader();
     }
 
     final filteredRecs = controller.recommendations
@@ -38,91 +39,141 @@ class HomeForYouContent extends StatelessWidget {
       return _errorState(err);
     }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 24),
+    return RefreshIndicator(
+      onRefresh: () => controller.loadRecommendations(forceRefresh: true),
+      color: AppColors.accent,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 24),
 
-          // ── Profile Summary Card ──
-          ProfileSummaryCard(userName: userName),
+            // ── Profile Summary Card ──
+            ProfileSummaryCard(userName: userName),
 
-          const SizedBox(height: 32),
-
-          // ── Section Title ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Recomendaciones IA',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryDark,
+            // ── Background Refresh Error Banner ──
+            if (controller.error != null && controller.recommendations.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline_rounded, size: 18, color: Colors.red),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'No pudimos actualizar tus recomendaciones. Inténtalo otra vez.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accent,
-                        shape: BoxShape.circle,
-                      ),
+              ),
+            ],
+
+            const SizedBox(height: 32),
+
+            // ── Section Title ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Recomendaciones IA',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryDark,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${filteredRecs.length} lugares seleccionados',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                      const SizedBox(width: 6),
+                      Text(
+                        '${filteredRecs.length} lugares seleccionados',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // ── Selector de mes (clima/aforo del mes objetivo) ──
-          _MonthSelectorBar(selected: controller.selectedMonth),
-          const SizedBox(height: 16),
+            // ── Selector de mes (clima/aforo del mes objetivo) ──
+            _MonthSelectorBar(selected: controller.selectedMonth),
+            const SizedBox(height: 16),
 
-          // ── Recommendation cards ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              children: filteredRecs.asMap().entries.map(
-                (entry) {
-                  final index = entry.key;
-                  final rec = entry.value;
-                  return DestinationRecommendationCard(
-                    recommendation: rec,
-                    index: index,
-                    onTap: () {
-                      // Lleva el mes elegido al detalle, para que clima/aforo allí
-                      // muestren la misma temporada que el ranking.
-                      final m = controller.selectedMonth;
-                      final q = m != null ? '&month=$m' : '';
-                      context.push(
-                        '/destination/${rec.destination.id}?source=ai_recommendation$q',
-                      );
-                    },
-                  );
-                },
-              ).toList(),
+            // ── Recommendation cards ──
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 600),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: controller.isLoading
+                    ? Column(
+                        key: const ValueKey('skeletons'),
+                        children: List.generate(
+                          3,
+                          (index) => const AiRankingSkeletonCard(),
+                        ),
+                      )
+                    : Column(
+                        key: const ValueKey('cards'),
+                        children: filteredRecs.asMap().entries.map(
+                          (entry) {
+                            final index = entry.key;
+                            final rec = entry.value;
+                            return DestinationRecommendationCard(
+                              recommendation: rec,
+                              index: index,
+                              onTap: () {
+                                // Lleva el mes elegido al detalle, para que clima/aforo allí
+                                // muestren la misma temporada que el ranking.
+                                final m = controller.selectedMonth;
+                                final q = m != null ? '&month=$m' : '';
+                                context.push(
+                                  '/destination/${rec.destination.id}?source=ai_recommendation$q',
+                                );
+                              },
+                            );
+                          },
+                        ).toList(),
+                      ),
+              ),
             ),
-          ),
 
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

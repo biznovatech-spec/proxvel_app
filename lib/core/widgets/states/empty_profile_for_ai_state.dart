@@ -13,7 +13,7 @@ class EmptyProfileForAiState extends StatelessWidget {
   const EmptyProfileForAiState({
     super.key,
     this.message =
-        'Completa tu perfil viajero para recibir recomendaciones con IA.',
+        'Completa tu perfil viajero para recibir recomendaciones más precisas según tus intereses, clima preferido y estilo de viaje.',
     this.showAction = true,
   });
 

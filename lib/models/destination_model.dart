@@ -169,6 +169,17 @@ class DestinationModel {
     final rawImageUrl = json['cover_image_url'] as String? ?? '';
     final coverImageUrl = isValidImageUrl(rawImageUrl) ? rawImageUrl : '';
 
+    // 1. La portada siempre manda.
+    // Solo si no hay portada real, usamos la primera de la galería.
+    final finalImageUrl = coverImageUrl.isNotEmpty 
+        ? coverImageUrl 
+        : (gallery.isNotEmpty ? gallery.first : '');
+
+    // 2. Evitar que la portada aparezca duplicada en la galería.
+    if (coverImageUrl.isNotEmpty) {
+      gallery.removeWhere((url) => url.trim() == coverImageUrl.trim());
+    }
+
     return DestinationModel(
       id: json['destination_id'] ?? '',
       name: json['destination'] ?? '',
@@ -176,7 +187,7 @@ class DestinationModel {
       region: json['region'] ?? '',
       category: json['category'] ?? '',
       description: tourism['description'] ?? '',
-      imageUrl: gallery.isNotEmpty ? gallery.first : coverImageUrl,
+      imageUrl: finalImageUrl,
       averageCost: 0.0,
       climate: context['weather_category'] ?? '',
       crowdLevel: context['crowd_level'] ?? '',
