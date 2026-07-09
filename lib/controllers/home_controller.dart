@@ -15,7 +15,19 @@ class HomeController extends ChangeNotifier {
   List<DestinationModel> destinations = [];
   List<DestinationModel> recentSearches = [];
 
+  /// Permite solicitar a HomeScreen que cambie de pestaña (0: Explorar, 1: Para ti)
+  int requestedTabIndex = -1;
+
   HomeController(this._service, this._storageService);
+
+  void requestTabChange(int index) {
+    requestedTabIndex = index;
+    notifyListeners();
+  }
+
+  void resetTabRequest() {
+    requestedTabIndex = -1;
+  }
 
   /// Todos los destinos reales del catálogo.
   List<DestinationModel> get allDestinations => destinations;

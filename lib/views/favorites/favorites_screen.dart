@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../main/main_layout.dart';
 import '../../controllers/favorites_controller.dart';
+import '../../controllers/home_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/cards/destination_card.dart';
 import '../../core/widgets/states/loading_view.dart';
@@ -60,6 +61,9 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                     actionLabel: 'Explorar destinos',
                     onAction: () {
                       final mainLayout = MainLayout.of(context);
+                      // Solicitar al HomeController que vuelva a la pestaña 0 (Explorar)
+                      context.read<HomeController>().requestTabChange(0);
+                      
                       if (mainLayout != null) {
                         mainLayout.changeTab(0);
                       } else {

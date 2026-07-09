@@ -25,6 +25,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  late HomeController _homeController;
   bool _startModalShown = false;
   AnnouncementModel? _startAnnouncement;
 
@@ -32,13 +33,24 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _homeController = context.read<HomeController>();
+    _homeController.addListener(_onHomeControllerUpdated);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HomeController>().loadDestinations();
+      _homeController.loadDestinations();
       context.read<RecommendationController>().loadRecommendations();
       context.read<FavoritesController>().loadFavorites();
       context.read<ArchiveController>().loadArchives();
       _maybeShowStartAnnouncement();
     });
+  }
+
+  void _onHomeControllerUpdated() {
+    if (_homeController.requestedTabIndex != -1 &&
+        _homeController.requestedTabIndex != _tabController.index) {
+      _tabController.animateTo(_homeController.requestedTabIndex);
+      _homeController.resetTabRequest();
+    }
   }
 
   /// Carga el anuncio de inicio (placement 'app_start') y lo muestra como
@@ -65,6 +77,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void dispose() {
+    _homeController.removeListener(_onHomeControllerUpdated);
     _tabController.dispose();
     super.dispose();
   }
