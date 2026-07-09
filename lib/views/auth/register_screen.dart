@@ -18,7 +18,7 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStateMixin {
-  final PageController _pageController = PageController();
+  // Animación manual para evitar PageView rígido
   int _currentStep = 0;
 
   // Step 1 Controllers
@@ -107,20 +107,12 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
 
   void _nextStep() {
     if (_currentStep == 0) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
-      );
       setState(() => _currentStep = 1);
     }
   }
 
   void _prevStep() {
     if (_currentStep == 1) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeOutCubic,
-      );
       setState(() => _currentStep = 0);
     } else {
       context.pop();
@@ -155,7 +147,6 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
 
   @override
   void dispose() {
-    _pageController.dispose();
     _nameController.dispose();
     _lastnameController.dispose();
     _emailController.dispose();
@@ -280,16 +271,16 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
 
                           const SizedBox(height: 24),
 
-                          // Forms PageView
-                          SizedBox(
-                            height: 420, // Increased height to safely prevent any internal overflow
-                            child: PageView(
-                              controller: _pageController,
-                              physics: const NeverScrollableScrollPhysics(),
-                              children: [
-                                _buildStep1(),
-                                _buildStep2(),
-                              ],
+                          // Forms AnimatedSwitcher
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            alignment: Alignment.topCenter,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 400),
+                              child: _currentStep == 0 
+                                  ? KeyedSubtree(key: const ValueKey(0), child: _buildStep1())
+                                  : KeyedSubtree(key: const ValueKey(1), child: _buildStep2()),
                             ),
                           ),
 
@@ -332,7 +323,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
             keyboardType: TextInputType.emailAddress,
           ),
           
-          const Spacer(), // Safely pushed inside 420px constraints
+          const SizedBox(height: 32),
           
           // Next Button
           ShimmerButton(
@@ -499,7 +490,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
             ],
           ),
 
-          const Spacer(),
+          const SizedBox(height: 32),
 
           // Submit Button
           _isLoading 
