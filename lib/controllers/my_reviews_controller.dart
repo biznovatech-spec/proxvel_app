@@ -37,4 +37,12 @@ class MyReviewsController extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  /// Limpia todo el estado en memoria. Llamar al logout/cambio de usuario.
+  void clearState() {
+    reviews = [];
+    error = null;
+    isLoading = false;
+    notifyListeners();
+  }
 }

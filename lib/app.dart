@@ -164,12 +164,83 @@ class ProxvelApp extends StatelessWidget {
           update: (context, annSvc, ctl) => ctl ?? AnnouncementController(annSvc),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'PROXVEL',
-        theme: AppTheme.lightTheme,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
+      child: const _SessionManager(
+        child: _ProxvelMaterialApp(),
       ),
     );
+  }
+}
+
+class _ProxvelMaterialApp extends StatelessWidget {
+  const _ProxvelMaterialApp();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'PROXVEL',
+      theme: AppTheme.lightTheme,
+      routerConfig: appRouter,
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+/// Escucha los cambios de sesión. Cuando detecta que el usuario cerró sesión
+/// (o cambió), limpia el estado en memoria de los demás controladores
+/// para evitar filtración de datos entre sesiones.
+class _SessionManager extends StatefulWidget {
+  final Widget child;
+  const _SessionManager({required this.child});
+
+  @override
+  State<_SessionManager> createState() => _SessionManagerState();
+}
+
+class _SessionManagerState extends State<_SessionManager> {
+  bool _wasAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Leer estado inicial sin escuchar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _wasAuthenticated = context.read<AuthController>().isAuthenticated;
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final auth = context.watch<AuthController>();
+    final isAuth = auth.isAuthenticated;
+
+    // Detectamos la transición de autenticado -> no autenticado (logout)
+    if (_wasAuthenticated && !isAuth) {
+      _clearAllControllers();
+    }
+    
+    // También detectamos si un nuevo usuario hace login (transición a auth)
+    // Para asegurarnos de que parta de un estado limpio
+    if (!_wasAuthenticated && isAuth) {
+      _clearAllControllers();
+    }
+
+    _wasAuthenticated = isAuth;
+  }
+
+  void _clearAllControllers() {
+    // Usamos read() porque estamos en un callback reaccionando a un cambio
+    context.read<FavoritesController>().clearState();
+    context.read<RecommendationController>().clearState();
+    context.read<ProfileController>().clearState();
+    context.read<ArchiveController>().clearState();
+    context.read<MyReviewsController>().clearState();
+    // Si hay otros controladores con estado en memoria, se agregarían aquí
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }

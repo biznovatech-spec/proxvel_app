@@ -81,4 +81,15 @@ class RecommendationController extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  /// Limpia todo el estado en memoria. Llamar al logout/cambio de usuario.
+  void clearState() {
+    recommendations = [];
+    error = null;
+    _isStale = false;
+    isLoading = false;
+    selectedMonth = null;
+    selectedRegion = null;
+    notifyListeners();
+  }
 }

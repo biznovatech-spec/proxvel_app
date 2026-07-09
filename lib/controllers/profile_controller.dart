@@ -31,44 +31,37 @@ class ProfileController extends ChangeNotifier {
         // 2. Consultar backend
         if (_userService != null) {
           try {
-            user = await _userService.getUserById(userId);
-            profile = await _profileService.getTravelerProfile(userId);
+            user = await _userService!.getUserById(userId);
+            try {
+              profile = await _profileService.getTravelerProfile(userId);
+            } catch (profileError) {
+              final isProfileNotFound = profileError is ApiException && profileError.statusCode == 404;
+              if (isProfileNotFound) {
+                profile = null; // Normal para un usuario nuevo sin perfil
+              } else {
+                rethrow;
+              }
+            }
             
             // Actualizar caché local si hubo éxito
             if (user != null) await _storageService.saveUser(user!);
-            if (profile != null) await _storageService.saveProfile(profile!);
-          } catch (e) {
-            final localProfile = _storageService.getProfile();
-            
-            // ── Auto-sanación (Self-Healing) ──
-            // Si el backend dice que no existe el perfil (404), pero tenemos uno localmente, 
-            // intentamos subirlo silenciosamente para reparar la desincronización.
-            final isProfileNotFound = e is ApiException && e.statusCode == 404;
-            
-            if (isProfileNotFound && localProfile != null && localUser?.id == userId) {
-              try {
-                profile = await _profileService.putTravelerProfile(
-                  userId: userId,
-                  profile: localProfile,
-                );
-                user = localUser;
-                error = null; // El problema se resolvió solo, no mostramos alerta
-              } catch (syncError) {
-                error = 'Mostrando datos locales (falló auto-sincronización).';
-                user = localUser;
-                profile = localProfile;
-              }
+            if (profile != null) {
+              await _storageService.saveProfile(profile!);
             } else {
-              // Fallback normal por falta de internet u otro error
-              error = 'Mostrando datos locales (offline o error API).';
-              user = localUser;
-              profile = localProfile;
+              // Si no hay perfil, asegurarse de no mantener uno viejo en cache
+              // (Se manejará en LocalStorageService, pero evitamos cargarlo)
             }
+          } catch (e) {
+            // Fallback normal por falta de internet u otro error
+            error = 'No pudimos cargar tu información. Intenta nuevamente.';
+            user = localUser;
+            // IMPORTANTE: NO hacemos fallback al perfil local aquí, 
+            // porque podría pertenecer a un usuario anterior si no se limpió bien.
+            profile = null;
           }
         } else {
           // Si no hay UserService inyectado
           user = localUser;
-          profile = _storageService.getProfile();
         }
       } else {
         // No hay usuario activo
@@ -79,6 +72,15 @@ class ProfileController extends ChangeNotifier {
     } catch (e) {
       error = e.toString();
     }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  /// Limpia todo el estado en memoria. Llamar al logout/cambio de usuario.
+  void clearState() {
+    user = null;
+    profile = null;
+    error = null;
     isLoading = false;
     notifyListeners();
   }

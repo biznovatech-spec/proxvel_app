@@ -1,16 +1,13 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/archive_model.dart';
 import '../models/destination_model.dart';
 import '../integration/services/archive_service.dart';
 
-/// Archivados LOCAL-first (persistido en el dispositivo). Un destino archivado
-/// deja de aparecer en Explorar y en "Para Ti"; solo se puede desarchivar desde
-/// la pantalla de Archivados (Perfil → Archivados). Backend best-effort.
+/// Archivados BACKEND-ONLY: la fuente de verdad es PostgreSQL.
+/// No se almacenan archivados en SharedPreferences.
+/// Un destino archivado deja de aparecer en Explorar y en "Para Ti".
 class ArchiveController extends ChangeNotifier {
   final ArchiveService _archiveService;
-  static const _prefsKey = 'local_archives_v1';
 
   bool isLoading = false;
   List<ArchiveModel> archives = [];
@@ -23,12 +20,22 @@ class ArchiveController extends ChangeNotifier {
     isLoading = true;
     error = null;
     notifyListeners();
-    await _loadLocal();
+
+    try {
+      final arcModels = await _archiveService.getArchives();
+      archives = arcModels;
+      archivedDestinationIds = archives.map((a) => a.destinationId).toSet();
+    } catch (e) {
+      error = 'No pudimos cargar tus destinos archivados. Intenta nuevamente.';
+      archives = [];
+      archivedDestinationIds = {};
+    }
+
     isLoading = false;
     notifyListeners();
   }
 
-  /// Archiva/desarchiva. Pasa el `model` al ARCHIVAR para guardar sus datos.
+  /// Archiva/desarchiva. Optimista en UI, persiste en backend.
   Future<void> toggleArchive(String id, [DestinationModel? model]) async {
     final isArc = isArchived(id);
     if (isArc) {
@@ -49,7 +56,6 @@ class ArchiveController extends ChangeNotifier {
       }
     }
     notifyListeners();
-    await _saveLocal();
 
     try {
       if (isArc) {
@@ -57,32 +63,37 @@ class ArchiveController extends ChangeNotifier {
       } else {
         await _archiveService.addArchive(id);
       }
-    } catch (_) {}
+    } catch (_) {
+      // Revertir cambio optimista
+      if (isArc) {
+        archivedDestinationIds.add(id);
+        if (model != null) {
+          archives.add(ArchiveModel(
+            destinationId: model.id,
+            name: model.name,
+            city: model.city,
+            region: model.region,
+            category: model.category,
+            coverImageUrl: model.imageUrl,
+            createdAt: DateTime.now(),
+          ));
+        }
+      } else {
+        archivedDestinationIds.remove(id);
+        archives.removeWhere((a) => a.destinationId == id);
+      }
+      notifyListeners();
+    }
   }
 
   bool isArchived(String id) => archivedDestinationIds.contains(id);
 
-  Future<void> _loadLocal() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(_prefsKey);
-      if (raw != null && raw.isNotEmpty) {
-        final list = (jsonDecode(raw) as List)
-            .map((e) => ArchiveModel.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
-        archives = list;
-        archivedDestinationIds = list.map((a) => a.destinationId).toSet();
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _saveLocal() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _prefsKey,
-        jsonEncode(archives.map((a) => a.toJson()).toList()),
-      );
-    } catch (_) {}
+  /// Limpia todo el estado en memoria. Llamar al logout/cambio de usuario.
+  void clearState() {
+    archives = [];
+    archivedDestinationIds = {};
+    error = null;
+    isLoading = false;
+    notifyListeners();
   }
 }
