@@ -175,9 +175,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
           // ── Contenido con entrada escalonada ──
           SafeArea(
-            child: Column(
-              children: [
-                const Spacer(),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          const Spacer(),
 
                 // Título
                 FadeTransition(
@@ -279,7 +288,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 ),
 
                 const SizedBox(height: 12),
-              ],
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
