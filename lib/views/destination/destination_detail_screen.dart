@@ -171,9 +171,9 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.3), // Un poco oscuro arriba para los botones
+                                Colors.black.withValues(alpha: 0.3), // Un poco oscuro arriba para los botones
                                 Colors.transparent,
-                                Colors.black.withOpacity(0.55), // Mucho más claro que antes (0.8)
+                                Colors.black.withValues(alpha: 0.55), // Mucho más claro que antes (0.8)
                               ],
                               stops: const [0.0, 0.4, 1.0],
                             ),
@@ -412,7 +412,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         border: Border.all(color: AppColors.border, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -580,9 +580,9 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.5)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(
@@ -592,7 +592,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
         child: RawScrollbar(
           controller: _galleryScrollController,
           thumbVisibility: true,
-          thumbColor: Colors.white.withOpacity(0.5),
+          thumbColor: Colors.white.withValues(alpha: 0.5),
           radius: const Radius.circular(8),
           thickness: 3,
           child: ListView.separated(
