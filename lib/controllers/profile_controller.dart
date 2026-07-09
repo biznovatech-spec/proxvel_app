@@ -31,7 +31,7 @@ class ProfileController extends ChangeNotifier {
         // 2. Consultar backend
         if (_userService != null) {
           try {
-            user = await _userService!.getUserById(userId);
+            user = await _userService.getUserById(userId);
             try {
               profile = await _profileService.getTravelerProfile(userId);
             } catch (profileError) {
