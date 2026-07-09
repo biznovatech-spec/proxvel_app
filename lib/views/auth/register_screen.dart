@@ -119,6 +119,45 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     }
   }
 
+  String _sanitizeAuthError(Object error) {
+    String rawError = error.toString();
+    rawError = rawError.replaceAll('Exception: ', '').replaceAll('ApiException: ', '').trim();
+    
+    if (rawError.isEmpty) {
+      return 'No pudimos completar la acción. Intenta nuevamente.';
+    }
+
+    final lower = rawError.toLowerCase();
+
+    if (lower.contains('socket') ||
+        lower.contains('network') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('connection refused') ||
+        lower.contains('clientexception') ||
+        lower.contains('timeout') ||
+        lower.contains('handshake')) {
+      return 'No hay conexión con el servidor. Verifica tu internet e intenta nuevamente.';
+    }
+
+    if (lower.contains('typeerror') ||
+        lower.contains('formatexception') ||
+        lower.contains('xmlhttprequest') ||
+        lower.contains('null is not a subtype') ||
+        lower.contains('stack trace') ||
+        lower.contains('traceback') ||
+        lower.contains('sql') ||
+        lower.contains('database') ||
+        lower.contains('internal server error')) {
+      return 'Ocurrió un problema inesperado. Intenta nuevamente.';
+    }
+
+    if (rawError.length > 150) {
+      return 'No pudimos completar la acción. Intenta nuevamente.';
+    }
+
+    return rawError;
+  }
+
   Future<void> _handleRegister() async {
     setState(() => _isLoading = true);
     try {
@@ -135,9 +174,10 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        final message = _sanitizeAuthError(e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
+            content: Text(message),
             backgroundColor: Colors.red.shade600,
           ),
         );
