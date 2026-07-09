@@ -46,7 +46,31 @@ class _MapScreenState extends State<MapScreen> {
 
           if (controller.errorMessage != null && controller.filteredMarkers.isEmpty) {
             return Center(
-              child: Text('Error al cargar mapa: ${controller.errorMessage}'),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.cloud_off_rounded, size: 64, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No pudimos cargar los destinos en el mapa. Verifica tu conexión e intenta nuevamente.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () => controller.loadMarkers(),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Reintentar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
 

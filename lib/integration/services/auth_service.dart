@@ -34,17 +34,15 @@ class AuthService {
       throw Exception(response['message'] ?? 'Error desconocido en login');
     } catch (e) {
       if (e is ApiException) {
-        if (e.statusCode == 401) {
-          throw Exception(e.message);
-        } else if (e.statusCode == 422) {
-          throw Exception('Correo inválido o formato incorrecto.');
+        if (e.statusCode == 422) {
+          throw ApiException(422, 'Correo inválido o formato incorrecto.');
         }
-        throw Exception('Error del servidor: ${e.statusCode}');
+        rethrow;
       }
       if (e.toString().contains('Error al procesar respuesta')) {
         rethrow;
       }
-      throw Exception('No se pudo conectar con el servidor.');
+      throw ApiException(0, 'No pudimos conectar con el servidor. Verifica tu conexión e intenta nuevamente.');
     }
   }
 
@@ -56,8 +54,8 @@ class AuthService {
       }
       throw Exception(response['message'] ?? 'Error desconocido al validar sesión');
     } catch (e) {
-      if (e is ApiException && e.statusCode == 401) {
-        throw Exception('Sesión expirada o no autorizada.');
+      if (e is ApiException) {
+        rethrow;
       }
       rethrow;
     }

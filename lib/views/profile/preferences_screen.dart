@@ -6,6 +6,7 @@ import '../../controllers/recommendation_controller.dart';
 import '../../core/theme/app_colors.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
+import '../../integration/api/api_client.dart';
 
 class PreferencesScreen extends StatefulWidget {
   const PreferencesScreen({super.key});
@@ -170,11 +171,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
+        String msg = 'Hubo un problema al guardar tus preferencias. Inténtalo nuevamente.';
+        if (e is ApiException && e.statusCode == 0) {
+          msg = 'No pudimos guardar tus preferencias por un problema de conexión.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Error al guardar: ${e.toString().replaceAll("Exception: ", "")}',
-            ),
+            content: Text(msg),
             backgroundColor: AppColors.error,
           ),
         );
@@ -407,11 +410,13 @@ class _PreferencesScreenState extends State<PreferencesScreen> {
               } catch (e) {
                 if (mounted) {
                   setState(() => _applyAi = !val); // revertir
+                  String msg = 'Hubo un problema al guardar tus preferencias. Inténtalo nuevamente.';
+                  if (e is ApiException && e.statusCode == 0) {
+                    msg = 'No pudimos guardar tus preferencias por un problema de conexión.';
+                  }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        'No se pudo guardar la preferencia: ${e.toString().replaceAll("Exception: ", "")}',
-                      ),
+                      content: Text(msg),
                       backgroundColor: AppColors.error,
                     ),
                   );

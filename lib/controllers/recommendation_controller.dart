@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/recommendation_result_model.dart';
 import '../integration/services/recommendation_service.dart';
+import '../integration/api/api_client.dart';
 
 class RecommendationController extends ChangeNotifier {
   final RecommendationService _recommendationService;
@@ -64,10 +65,9 @@ class RecommendationController extends ChangeNotifier {
       recommendations = newRecs;
       _isStale = false;
     } catch (e) {
-      if (e.toString().contains('400')) {
-        error = 'Completa tu perfil viajero para recibir recomendaciones personalizadas.';
+      if (e is ApiException) {
+        error = e.message;
       } else {
-        // Limpiamos mensajes como "Exception: "
         error = e.toString().replaceAll('Exception: ', '');
       }
     }

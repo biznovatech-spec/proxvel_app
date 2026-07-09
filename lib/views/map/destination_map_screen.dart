@@ -90,7 +90,37 @@ class _DestinationMapScreenState extends State<DestinationMapScreen> {
 
           if (controller.errorMessage != null && controller.selectedMarker == null) {
             return Center(
-              child: Text('Error al cargar mapa: ${controller.errorMessage}'),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.map_rounded, size: 64, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'No pudimos cargar la ubicación del destino en el mapa. Verifica tu conexión e intenta nuevamente.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        await controller.loadMarkers();
+                        try {
+                          final marker = controller.markers.firstWhere((m) => m.destinationId == widget.destinationId);
+                          controller.selectDestination(marker);
+                        } catch (_) {}
+                      },
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Reintentar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           }
           

@@ -12,7 +12,7 @@ class ApiException implements Exception {
   ApiException(this.statusCode, this.message);
 
   @override
-  String toString() => 'ApiException($statusCode): $message';
+  String toString() => message;
 }
 
 /// Cliente HTTP del backend PROXVEL.
@@ -45,6 +45,16 @@ class ApiClient {
     return headers;
   }
 
+  Future<dynamic> _withErrorHandling(Future<http.Response> Function() action) async {
+    try {
+      final response = await action();
+      return _decode(response);
+    } catch (e) {
+      if (e is ApiException) rethrow;
+      throw ApiException(0, 'No pudimos conectar con el servidor. Verifica tu conexión e intenta nuevamente.');
+    }
+  }
+
   Future<dynamic> get(String endpoint, {Map<String, String>? queryParams}) async {
     var uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     if (queryParams != null && queryParams.isNotEmpty) {
@@ -52,65 +62,60 @@ class ApiClient {
     }
     debugPrint('[API] GET $uri');
     final headers = await _getHeaders(isGet: true);
-    final response = await _http
+    return _withErrorHandling(() => _http
         .get(uri, headers: headers)
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
-    return _decode(response);
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds)));
   }
 
   Future<dynamic> post(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] POST $uri');
     final headers = await _getHeaders();
-    final response = await _http
+    return _withErrorHandling(() => _http
         .post(
           uri,
           headers: headers,
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
-    return _decode(response);
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds)));
   }
 
   Future<dynamic> put(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PUT $uri');
     final headers = await _getHeaders();
-    final response = await _http
+    return _withErrorHandling(() => _http
         .put(
           uri,
           headers: headers,
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
-    return _decode(response);
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds)));
   }
 
   Future<dynamic> patch(String endpoint, [Map<String, dynamic>? body]) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] PATCH $uri');
     final headers = await _getHeaders();
-    final response = await _http
+    return _withErrorHandling(() => _http
         .patch(
           uri,
           headers: headers,
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
-    return _decode(response);
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds)));
   }
 
   Future<dynamic> delete(String endpoint) async {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] DELETE $uri');
     final headers = await _getHeaders();
-    final response = await _http
+    return _withErrorHandling(() => _http
         .delete(
           uri,
           headers: headers,
         )
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds));
-    return _decode(response);
+        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds)));
   }
 
   Future<dynamic> postMultipart(
@@ -121,59 +126,25 @@ class ApiClient {
     final uri = Uri.parse('${ApiConfig.apiBaseUrl}$endpoint');
     debugPrint('[API] POST MULTIPART $uri');
     
-    final request = http.MultipartRequest('POST', uri);
-    
-    // Añadir headers de autenticación
-    final token = await _secureStorage.getAccessToken();
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    
-    // Añadir el archivo
-    request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
-    
-    // Enviar y esperar
-    final streamedResponse = await request
-        .send()
-        .timeout(const Duration(seconds: ApiConfig.timeoutSeconds * 2)); // Doble tiempo para subidas
-        
-    final response = await http.Response.fromStream(streamedResponse);
-    return _decode(response);
+    return _withErrorHandling(() async {
+      final request = http.MultipartRequest('POST', uri);
+      
+      final token = await _secureStorage.getAccessToken();
+      if (token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      
+      request.files.add(await http.MultipartFile.fromPath(fileField, filePath));
+      
+      final streamedResponse = await request
+          .send()
+          .timeout(const Duration(seconds: ApiConfig.timeoutSeconds * 2));
+          
+      return await http.Response.fromStream(streamedResponse);
+    });
   }
 
   dynamic _decode(http.Response response) {
-    if (response.statusCode == 401) {
-      final url = response.request?.url.toString().toLowerCase() ?? '';
-      final isAuthEndpoint = url.contains('/auth/login') || url.contains('login');
-      
-      if (!isAuthEndpoint) {
-        onUnauthorized?.call();
-        throw ApiException(401, 'Tu sesión expiró. Inicia sesión nuevamente.');
-      } else {
-        String errorMsg = 'Correo o contraseña incorrectos. Verifica tus datos.';
-        try {
-          final json = jsonDecode(utf8.decode(response.bodyBytes));
-          if (json is Map) {
-            if (json['detail'] != null) errorMsg = json['detail'].toString();
-            else if (json['message'] != null) errorMsg = json['message'].toString();
-            
-            final lower = errorMsg.toLowerCase();
-            if (lower.contains('incorrect username') || lower.contains('incorrect email') || lower.contains('incorrect password')) {
-              errorMsg = 'Correo o contraseña incorrectos. Verifica tus datos.';
-            } else if (lower.contains('inactive user')) {
-              errorMsg = 'Esta cuenta está inactiva. Contacta al administrador.';
-            }
-          }
-        } catch (_) {}
-        
-        throw ApiException(401, errorMsg);
-      }
-    }
-    if (response.statusCode == 403) {
-      final message = 'No tienes permiso para realizar esta acción.';
-      onForbidden?.call(message);
-      throw ApiException(403, message);
-    }
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final json = jsonDecode(utf8.decode(response.bodyBytes));
       if (json is Map<String, dynamic> && json.containsKey('success') && json['success'] == false) {
@@ -181,6 +152,50 @@ class ApiClient {
       }
       return json;
     }
-    throw ApiException(response.statusCode, response.body);
+
+    String errorMsg = 'Error inesperado del servidor.';
+    try {
+      final json = jsonDecode(utf8.decode(response.bodyBytes));
+      if (json is Map) {
+        if (json['detail'] != null) errorMsg = json['detail'].toString();
+        else if (json['message'] != null) errorMsg = json['message'].toString();
+        else if (json['error'] != null) errorMsg = json['error'].toString();
+      }
+    } catch (_) {
+      errorMsg = response.statusCode >= 500 ? 'Ocurrió un problema inesperado. Intenta nuevamente.' : 'Error del servidor.';
+    }
+
+    final lower = errorMsg.toLowerCase();
+
+    if (response.statusCode == 400 || response.statusCode == 409) {
+      if (lower.contains('profile incomplete') || lower.contains('perfil incompleto')) {
+        errorMsg = 'Completa tu perfil viajero para desbloquear recomendaciones personalizadas.';
+      }
+    } else if (response.statusCode == 401) {
+      final url = response.request?.url.toString().toLowerCase() ?? '';
+      final isAuthEndpoint = url.contains('/auth/login') || url.contains('login');
+      if (!isAuthEndpoint) {
+        onUnauthorized?.call();
+        errorMsg = 'Tu sesión expiró. Inicia sesión nuevamente.';
+      } else {
+        errorMsg = 'Correo o contraseña incorrectos. Verifica tus datos.';
+      }
+    } else if (response.statusCode == 403) {
+      if (lower.contains('desactivada') || lower.contains('eliminación') || lower.contains('deleted') || lower.contains('inactive')) {
+        errorMsg = 'Tu cuenta ha sido desactivada o se encuentra en proceso de eliminación.';
+      } else if (lower.contains('permiso')) {
+        // Usa el mensaje del backend o fallback
+        errorMsg = errorMsg != 'Error inesperado del servidor.' ? errorMsg : 'No tienes permiso para realizar esta acción.';
+      } else {
+        errorMsg = 'No tienes permiso para realizar esta acción.';
+      }
+      onForbidden?.call(errorMsg);
+    } else if (response.statusCode == 404) {
+      errorMsg = 'El recurso solicitado ya no está disponible.';
+    } else if (response.statusCode >= 500) {
+      errorMsg = 'Ocurrió un problema inesperado. Intenta nuevamente.';
+    }
+
+    throw ApiException(response.statusCode, errorMsg);
   }
 }

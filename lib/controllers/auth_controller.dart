@@ -4,6 +4,7 @@ import '../integration/local/secure_token_storage.dart';
 import '../integration/local/local_storage_service.dart';
 import '../integration/services/user_service.dart';
 import '../integration/services/auth_service.dart';
+import '../integration/api/api_client.dart';
 
 class AuthController extends ChangeNotifier {
   final LocalStorageService _storage;
@@ -75,6 +76,9 @@ class AuthController extends ChangeNotifier {
       
       return null; // Null means success (no error)
     } catch (e) {
+      if (e is ApiException) {
+        return e.message;
+      }
       return e.toString().replaceAll('Exception: ', '');
     }
   }
