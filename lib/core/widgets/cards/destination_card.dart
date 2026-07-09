@@ -23,10 +23,10 @@ class DestinationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 155,
-        height: 200,
-        decoration: BoxDecoration(
+      child: AspectRatio(
+        aspectRatio: 155 / 200,
+        child: Container(
+          decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -132,6 +132,7 @@ class DestinationCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
