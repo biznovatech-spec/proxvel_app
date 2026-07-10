@@ -157,9 +157,13 @@ class ApiClient {
     try {
       final json = jsonDecode(utf8.decode(response.bodyBytes));
       if (json is Map) {
-        if (json['detail'] != null) errorMsg = json['detail'].toString();
-        else if (json['message'] != null) errorMsg = json['message'].toString();
-        else if (json['error'] != null) errorMsg = json['error'].toString();
+        if (json['detail'] != null) {
+          errorMsg = json['detail'].toString();
+        } else if (json['message'] != null) {
+          errorMsg = json['message'].toString();
+        } else if (json['error'] != null) {
+          errorMsg = json['error'].toString();
+        }
       }
     } catch (_) {
       errorMsg = response.statusCode >= 500 ? 'Ocurrió un problema inesperado. Intenta nuevamente.' : 'Error del servidor.';
