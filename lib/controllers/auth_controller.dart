@@ -92,24 +92,29 @@ class AuthController extends ChangeNotifier {
 
   /// Restaura la sesión validando el token contra el backend
   Future<bool> restoreSession() async {
-    final token = await _secureStorage.getAccessToken();
-    if (token == null || token.isEmpty) {
-      await _storage.setSessionActive(false);
-      notifyListeners();
-      return false;
-    }
-
-    if (_authService == null) return false;
-
     try {
+      final token = await _secureStorage.getAccessToken();
+      if (token == null || token.isEmpty) {
+        await _storage.setSessionActive(false);
+        notifyListeners();
+        return false;
+      }
+
+      if (_authService == null) return false;
+
       final user = await _authService.me();
       await _storage.saveUser(user);
       await _storage.setSessionActive(true);
       notifyListeners();
       return true;
     } catch (e) {
-      // Si falla (por ejemplo 401), limpiamos sesión
-      await logout();
+      // Si falla (por ejemplo 401, o error de storage), limpiamos sesión
+      try {
+        await logout();
+      } catch (_) {
+        await _storage.setSessionActive(false);
+        notifyListeners();
+      }
       return false;
     }
   }

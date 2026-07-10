@@ -18,24 +18,30 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
-    // Breve pausa para no pestañear la pantalla si carga muy rápido
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    if (!mounted) return;
-    
-    final authController = context.read<AuthController>();
-    
-    // Si es la primera vez que se abre la app, mostramos el intro (si la app lo tiene)
-    // Pero en PROXVEL, el intro es '/intro'.
-    // De momento, la orden es verificar sesión:
-    final restored = await authController.restoreSession();
-    
-    if (!mounted) return;
-    
-    if (restored) {
-      context.go('/main');
-    } else {
-      context.go('/welcome');
+    try {
+      // Breve pausa para no pestañear la pantalla si carga muy rápido
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (!mounted) return;
+      
+      final authController = context.read<AuthController>();
+      
+      // Si es la primera vez que se abre la app, mostramos el intro (si la app lo tiene)
+      // Pero en PROXVEL, el intro es '/intro'.
+      // De momento, la orden es verificar sesión:
+      final restored = await authController.restoreSession();
+      
+      if (!mounted) return;
+      
+      if (restored) {
+        context.go('/main');
+      } else {
+        context.go('/welcome');
+      }
+    } catch (e) {
+      if (mounted) {
+        context.go('/welcome');
+      }
     }
   }
 
