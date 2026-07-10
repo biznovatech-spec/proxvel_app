@@ -189,7 +189,7 @@ class _CoverflowCarouselState extends State<CoverflowCarousel> {
           alignment: Alignment.center,
           transform: Matrix4.identity()
             ..translate(translateX, 0.0, 0.0)
-            ..scale(scale, scale),
+            ..scaleByDouble(scale, scale, 1.0, 1.0),
           child: Opacity(
             opacity: opacity,
             child: SizedBox(
