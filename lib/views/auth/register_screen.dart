@@ -545,8 +545,11 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
                     _handleRegister();
                   } else {
                     String msg = 'Completa los datos de contraseña';
-                    if (!_acceptTerms) msg = 'Debes aceptar los términos y condiciones';
-                    else if (!_passwordsMatch) msg = 'Las contraseñas no coinciden';
+                    if (!_acceptTerms) {
+                      msg = 'Debes aceptar los términos y condiciones';
+                    } else if (!_passwordsMatch) {
+                      msg = 'Las contraseñas no coinciden';
+                    }
                     
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

@@ -29,7 +29,7 @@ class HomeExploreContent extends StatefulWidget {
 
 class _HomeExploreContentState extends State<HomeExploreContent> {
   final PageController _carouselCtrl = PageController(viewportFraction: 1.0);
-  int _carouselPage = 0;
+  final int _carouselPage = 0;
   Timer? _autoTimer;
 
   @override

@@ -144,7 +144,7 @@ class _DestinationDetailScreenState extends State<DestinationDetailScreen> {
                                   alignment: Alignment.center,
                                   children: <Widget>[
                                     ...previousChildren,
-                                    if (currentChild != null) currentChild,
+                                    ?currentChild,
                                   ],
                                 );
                               },
