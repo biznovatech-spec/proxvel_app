@@ -34,7 +34,12 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       
       if (restored) {
-        context.go('/main');
+        final user = authController.currentUser;
+        if (user != null && user.hasCompleteResidence) {
+          context.go('/main');
+        } else {
+          context.go('/residence-gate');
+        }
       } else {
         context.go('/welcome');
       }

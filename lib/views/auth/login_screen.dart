@@ -101,7 +101,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       if (error != null) {
         setState(() => _loginError = _sanitizeAuthError(error));
       } else {
-        context.go('/main');
+        final user = context.read<AuthController>().currentUser;
+        if (user != null && user.hasCompleteResidence) {
+          context.go('/main');
+        } else {
+          context.go('/residence-gate');
+        }
       }
     }
   }

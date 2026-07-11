@@ -143,7 +143,17 @@ class _OnboardingState extends State<OnboardingProfileScreen> with TickerProvide
   void _complete() {
     setState(() => _done = true);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_cd <= 1) { t.cancel(); if (mounted) context.go('/main'); }
+      if (_cd <= 1) { 
+        t.cancel(); 
+        if (mounted) {
+          final user = context.read<AuthController>().currentUser;
+          if (user != null && user.hasCompleteResidence) {
+            context.go('/main');
+          } else {
+            context.go('/residence-gate');
+          }
+        } 
+      }
       else { setState(() => _cd--); }
     });
   }
