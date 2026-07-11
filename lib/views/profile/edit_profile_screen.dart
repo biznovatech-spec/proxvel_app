@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/widgets/inputs/proxvel_text_field.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
 import '../../core/utils/avatar_picker_helper.dart';
+import '../../integration/services/peru_location_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -18,9 +19,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _departmentController = TextEditingController();
-  final _provinceController = TextEditingController();
-  final _cityController = TextEditingController();
+  
+  String? _selectedDepartment;
+  String? _selectedProvince;
+  String? _selectedCity;
+
+  List<String> _departments = [];
+  List<String> _provinces = [];
+  List<String> _cities = [];
+  bool _isLocationsLoaded = false;
   bool _isLoading = false;
 
   @override
@@ -39,16 +46,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _nameController.text = parts[0];
           _lastNameController.text = parts[1];
         } else if (parts.length > 2) {
-          // Rule: First word is Name, the rest is Last Name
           _nameController.text = parts[0];
           _lastNameController.text = parts.skip(1).join(' ');
         }
 
         _emailController.text = user.email;
-        _departmentController.text = user.residenceDepartment ?? '';
-        _provinceController.text = user.residenceProvince ?? '';
-        _cityController.text = user.residenceCity ?? '';
       }
+      _loadLocations(user?.residenceDepartment, user?.residenceProvince, user?.residenceCity);
+    });
+  }
+
+  Future<void> _loadLocations(String? dept, String? prov, String? city) async {
+    final service = PeruLocationService();
+    await service.init();
+    
+    if (mounted) {
+      setState(() {
+        _departments = service.getDepartments();
+        _isLocationsLoaded = true;
+        
+        if (dept != null && _departments.contains(dept)) {
+          _selectedDepartment = dept;
+          _provinces = service.getProvinces(dept);
+          
+          if (prov != null && _provinces.contains(prov)) {
+            _selectedProvince = prov;
+            _cities = service.getDistricts(dept, prov);
+            
+            if (city != null && _cities.contains(city)) {
+              _selectedCity = city;
+            }
+          }
+        }
+      });
+    }
+  }
+
+  void _onDepartmentChanged(String? value) {
+    setState(() {
+      _selectedDepartment = value;
+      _selectedProvince = null;
+      _selectedCity = null;
+      _provinces = value != null ? PeruLocationService().getProvinces(value) : [];
+      _cities = [];
+    });
+  }
+
+  void _onProvinceChanged(String? value) {
+    setState(() {
+      _selectedProvince = value;
+      _selectedCity = null;
+      _cities = value != null && _selectedDepartment != null 
+          ? PeruLocationService().getDistricts(_selectedDepartment!, value) 
+          : [];
+    });
+  }
+
+  void _onCityChanged(String? value) {
+    setState(() {
+      _selectedCity = value;
     });
   }
 
@@ -58,9 +114,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       name: _nameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
-      residenceDepartment: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
-      residenceProvince: _provinceController.text.trim().isEmpty ? null : _provinceController.text.trim(),
-      residenceCity: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
+      residenceDepartment: _selectedDepartment,
+      residenceProvince: _selectedProvince,
+      residenceCity: _selectedCity,
     );
     if (mounted) {
       setState(() => _isLoading = false);
@@ -72,6 +128,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
       context.pop();
     }
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String? value,
+    required List<String> items,
+    required void Function(String?) onChanged,
+    required bool enabled,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        InputDecorator(
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: enabled ? Colors.white : AppColors.surface,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              isDense: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+              items: items.map((e) => DropdownMenuItem(
+                value: e,
+                child: Text(e, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
+              )).toList(),
+              onChanged: enabled ? onChanged : null,
+              hint: Text('Seleccionar $label', style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -164,7 +276,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               label: 'Email',
               controller: _emailController,
               readOnly: true,
-              fillColor: const Color(0xFFF3F4F6), // gris muteado
+              fillColor: const Color(0xFFF3F4F6),
               prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF9CA3AF), size: 20),
               helperText: 'El correo no se puede modificar',
             ),
@@ -178,21 +290,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // TODO(App/Profile 1C): Reemplazar estos campos temporales con dropdowns controlados de catálogo peruano.
-            ProxvelTextField(
-              label: 'Departamento',
-              controller: _departmentController,
-            ),
-            const SizedBox(height: 16),
-            ProxvelTextField(
-              label: 'Provincia',
-              controller: _provinceController,
-            ),
-            const SizedBox(height: 16),
-            ProxvelTextField(
-              label: 'Ciudad / Distrito',
-              controller: _cityController,
-            ),
+            if (!_isLocationsLoaded)
+              const Center(child: CircularProgressIndicator(color: AppColors.primary))
+            else ...[
+              _buildDropdown(
+                label: 'Departamento',
+                value: _selectedDepartment,
+                items: _departments,
+                onChanged: _onDepartmentChanged,
+                enabled: true,
+              ),
+              const SizedBox(height: 16),
+              _buildDropdown(
+                label: 'Provincia',
+                value: _selectedProvince,
+                items: _provinces,
+                onChanged: _onProvinceChanged,
+                enabled: _selectedDepartment != null,
+              ),
+              const SizedBox(height: 16),
+              _buildDropdown(
+                label: 'Ciudad / Distrito',
+                value: _selectedCity,
+                items: _cities,
+                onChanged: _onCityChanged,
+                enabled: _selectedProvince != null,
+              ),
+            ],
             const SizedBox(height: 48),
             ProxvelButton(
               text: 'Guardar cambios',
@@ -210,9 +334,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _departmentController.dispose();
-    _provinceController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 }
