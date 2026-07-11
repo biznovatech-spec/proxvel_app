@@ -61,11 +61,17 @@ class UserService {
     required String userId,
     String? name,
     String? password,
+    String? residenceDepartment,
+    String? residenceProvince,
+    String? residenceCity,
   }) async {
     try {
       final body = <String, dynamic>{};
       if (name != null) body['name'] = name;
       if (password != null) body['password'] = password;
+      if (residenceDepartment != null) body['residence_department'] = residenceDepartment;
+      if (residenceProvince != null) body['residence_province'] = residenceProvince;
+      if (residenceCity != null) body['residence_city'] = residenceCity;
 
       final response = await _api.patch('/users/$userId', body);
       final data = response['data'] as Map<String, dynamic>;

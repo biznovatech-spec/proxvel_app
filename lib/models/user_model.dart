@@ -7,6 +7,9 @@ class UserModel {
   final String role;
   final bool isActive;
   final String? avatarUrl;
+  final String? residenceDepartment;
+  final String? residenceProvince;
+  final String? residenceCity;
 
   UserModel({
     required this.id,
@@ -17,6 +20,9 @@ class UserModel {
     this.role = 'user',
     this.isActive = true,
     this.avatarUrl,
+    this.residenceDepartment,
+    this.residenceProvince,
+    this.residenceCity,
   });
 
   /// Full display name.
@@ -31,6 +37,9 @@ class UserModel {
         role: json['role'] ?? 'user',
         isActive: json['is_active'] ?? true,
         avatarUrl: json['avatar_url'],
+        residenceDepartment: json['residence_department'],
+        residenceProvince: json['residence_province'],
+        residenceCity: json['residence_city'],
       );
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -42,6 +51,9 @@ class UserModel {
         role: json['role'] ?? 'user',
         isActive: json['is_active'] ?? true,
         avatarUrl: json['avatar_url'],
+        residenceDepartment: json['residence_department'],
+        residenceProvince: json['residence_province'],
+        residenceCity: json['residence_city'],
       );
 
   Map<String, dynamic> toJson() => {
@@ -53,6 +65,9 @@ class UserModel {
         'role': role,
         'is_active': isActive,
         if (avatarUrl != null) 'avatar_url': avatarUrl,
+        if (residenceDepartment != null) 'residence_department': residenceDepartment,
+        if (residenceProvince != null) 'residence_province': residenceProvince,
+        if (residenceCity != null) 'residence_city': residenceCity,
       };
 
   /// Serializa el usuario para enviarlo al backend (POST /users).
@@ -61,5 +76,8 @@ class UserModel {
         'email': email,
         'password': password,
         if (avatarUrl != null) 'avatar_url': avatarUrl,
+        if (residenceDepartment != null) 'residence_department': residenceDepartment,
+        if (residenceProvince != null) 'residence_province': residenceProvince,
+        if (residenceCity != null) 'residence_city': residenceCity,
       };
 }

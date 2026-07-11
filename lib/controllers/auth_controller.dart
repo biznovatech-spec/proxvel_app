@@ -124,6 +124,9 @@ class AuthController extends ChangeNotifier {
     required String name,
     required String lastName,
     required String email,
+    String? residenceDepartment,
+    String? residenceProvince,
+    String? residenceCity,
   }) async {
     final currentUser = _storage.getUser();
     if (currentUser != null) {
@@ -133,6 +136,9 @@ class AuthController extends ChangeNotifier {
         final realUser = await _userService.updateUser(
           userId: currentUser.id,
           name: unifiedName,
+          residenceDepartment: residenceDepartment,
+          residenceProvince: residenceProvince,
+          residenceCity: residenceCity,
         );
         await _storage.saveUser(realUser);
       } else {
@@ -143,6 +149,9 @@ class AuthController extends ChangeNotifier {
           email: email, // Nota: el correo solo se actualiza localmente por ahora
           password: currentUser.password,
           role: currentUser.role,
+          residenceDepartment: residenceDepartment,
+          residenceProvince: residenceProvince,
+          residenceCity: residenceCity,
         );
         await _storage.saveUser(updatedUser);
       }

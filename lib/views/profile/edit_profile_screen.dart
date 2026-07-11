@@ -18,6 +18,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _departmentController = TextEditingController();
+  final _provinceController = TextEditingController();
+  final _cityController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -42,6 +45,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
 
         _emailController.text = user.email;
+        _departmentController.text = user.residenceDepartment ?? '';
+        _provinceController.text = user.residenceProvince ?? '';
+        _cityController.text = user.residenceCity ?? '';
       }
     });
   }
@@ -52,6 +58,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       name: _nameController.text.trim(),
       lastName: _lastNameController.text.trim(),
       email: _emailController.text.trim(),
+      residenceDepartment: _departmentController.text.trim().isEmpty ? null : _departmentController.text.trim(),
+      residenceProvince: _provinceController.text.trim().isEmpty ? null : _provinceController.text.trim(),
+      residenceCity: _cityController.text.trim().isEmpty ? null : _cityController.text.trim(),
     );
     if (mounted) {
       setState(() => _isLoading = false);
@@ -159,6 +168,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF9CA3AF), size: 20),
               helperText: 'El correo no se puede modificar',
             ),
+            const SizedBox(height: 32),
+            const Text(
+              'Residencia',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // TODO(App/Profile 1C): Reemplazar estos campos temporales con dropdowns controlados de catálogo peruano.
+            ProxvelTextField(
+              label: 'Departamento',
+              controller: _departmentController,
+            ),
+            const SizedBox(height: 16),
+            ProxvelTextField(
+              label: 'Provincia',
+              controller: _provinceController,
+            ),
+            const SizedBox(height: 16),
+            ProxvelTextField(
+              label: 'Ciudad / Distrito',
+              controller: _cityController,
+            ),
             const SizedBox(height: 48),
             ProxvelButton(
               text: 'Guardar cambios',
@@ -176,6 +210,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
+    _departmentController.dispose();
+    _provinceController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 }
