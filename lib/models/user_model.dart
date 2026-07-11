@@ -29,6 +29,12 @@ class UserModel {
   String get fullName =>
       lastName.isNotEmpty ? '$name $lastName' : name;
 
+  /// Verifica si la residencia está completa.
+  bool get hasCompleteResidence =>
+      (residenceDepartment?.trim().isNotEmpty ?? false) &&
+      (residenceProvince?.trim().isNotEmpty ?? false) &&
+      (residenceCity?.trim().isNotEmpty ?? false);
+
   /// Construye un usuario desde el backend (GET /users/demo o /users/{id}).
   factory UserModel.fromApiJson(Map<String, dynamic> json) => UserModel(
         id: json['user_id'] ?? json['id'] ?? '',

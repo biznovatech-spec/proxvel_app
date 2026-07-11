@@ -4,6 +4,7 @@ import '../../views/intro/intro_screen.dart';
 import '../../views/auth/welcome_screen.dart';
 import '../../views/auth/login_screen.dart';
 import '../../views/auth/register_screen.dart';
+import '../../views/auth/residence_gate_screen.dart';
 import '../../views/onboarding/onboarding_profile_screen.dart';
 import '../../views/main/main_layout.dart';
 import '../../views/destination/destination_detail_screen.dart';
@@ -31,6 +32,7 @@ final GoRouter appRouter = GoRouter(
     GoRoute(path: '/welcome', pageBuilder: (context, state) => const NoTransitionPage(child: WelcomeScreen())),
     GoRoute(path: '/login', pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen())),
     GoRoute(path: '/register', pageBuilder: (context, state) => const NoTransitionPage(child: RegisterScreen())),
+    GoRoute(path: '/residence-gate', pageBuilder: (context, state) => const NoTransitionPage(child: ResidenceGateScreen())),
     GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingProfileScreen()),
     GoRoute(path: '/main', builder: (context, state) => const MainLayout()),
     GoRoute(path: '/destination/:id', builder: (context, state) {
