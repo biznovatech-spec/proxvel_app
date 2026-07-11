@@ -15,6 +15,8 @@ class DestinationModel {
   final double? distanceKm;
   final String? estimatedDays;
   final bool isTrending;
+  final double? latitude;
+  final double? longitude;
 
   // ── Extended fields for "Sobre el destino" ──
   final String? type;           // e.g. 'Sitios Arqueológicos', 'Parque Nacional'
@@ -41,6 +43,8 @@ class DestinationModel {
     this.distanceKm,
     this.estimatedDays,
     this.isTrending = false,
+    this.latitude,
+    this.longitude,
     this.type,
     this.hierarchy,
     this.altitudeM,
@@ -72,6 +76,8 @@ class DestinationModel {
         distanceKm: distanceKm,
         estimatedDays: estimatedDays,
         isTrending: isTrending,
+        latitude: latitude,
+        longitude: longitude,
         type: type,
         hierarchy: hierarchy,
         altitudeM: altitudeM,
@@ -104,6 +110,8 @@ class DestinationModel {
       reviewsCount: json['reviews_count'] ?? (tourism['reviews_count'] ?? 0),
       aspects: const [],
       type: tourism['experience_type'],
+      latitude: _parseDouble(json['latitude'] ?? tourism['latitude']),
+      longitude: _parseDouble(json['longitude'] ?? tourism['longitude']),
     );
   }
 
@@ -127,6 +135,8 @@ class DestinationModel {
       reviewsCount: json['reviews_count'] ?? 0,
       aspects: const [],
       type: json['category'],
+      latitude: _parseDouble(json['latitude']),
+      longitude: _parseDouble(json['longitude']),
     );
   }
 
@@ -150,6 +160,8 @@ class DestinationModel {
       reviewsCount: 0, // FavoriteModel no expone reviewsCount; evita NoSuchMethodError
       aspects: const [],
       type: fav.category,
+      latitude: null, // FavoriteModel no los expone aún
+      longitude: null,
     );
   }
 
@@ -195,6 +207,8 @@ class DestinationModel {
       reviewsCount: json['reviews_count'] ?? (tourism['reviews_count'] ?? 0),
       aspects: const [],
       type: tourism['experience_type'],
+      latitude: _parseDouble(json['latitude'] ?? tourism['latitude']),
+      longitude: _parseDouble(json['longitude'] ?? tourism['longitude']),
       galleryImages: gallery,
     );
   }
@@ -216,6 +230,8 @@ class DestinationModel {
         distanceKm: json['distanceKm']?.toDouble(),
         estimatedDays: json['estimatedDays'],
         isTrending: json['isTrending'] ?? false,
+        latitude: _parseDouble(json['latitude']),
+        longitude: _parseDouble(json['longitude']),
         type: json['type'],
         hierarchy: json['hierarchy'],
         altitudeM: json['altitudeM']?.toDouble(),
@@ -241,6 +257,8 @@ class DestinationModel {
         'distanceKm': distanceKm,
         'estimatedDays': estimatedDays,
         'isTrending': isTrending,
+        'latitude': latitude,
+        'longitude': longitude,
         'type': type,
         'hierarchy': hierarchy,
         'altitudeM': altitudeM,
@@ -248,6 +266,14 @@ class DestinationModel {
         'activities': activities,
         'galleryImages': galleryImages,
       };
+
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
 
   /// Verifica rígidamente si un string es una URL o asset de imagen válido.
   /// Rechaza páginas HTML (ej. Wikimedia/Wikipedia) y strings mal formados ("null").
