@@ -17,27 +17,30 @@ class MainLayout extends StatefulWidget {
 
 class MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  final Set<int> _visitedTabs = {0};
 
   void changeTab(int index) {
     setState(() {
       _currentIndex = index;
+      _visitedTabs.add(index);
     });
   }
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    MapScreen(),
-    FavoritesScreen(),
-    // RoutesScreen() — standby (Fase 0.1)
-    ProfileScreen(),
-  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          const HomeScreen(),
+          _visitedTabs.contains(1) ? const MapScreen() : const SizedBox.shrink(),
+          _visitedTabs.contains(2) ? const FavoritesScreen() : const SizedBox.shrink(),
+          _visitedTabs.contains(3) ? const ProfileScreen() : const SizedBox.shrink(),
+        ],
+      ),
       bottomNavigationBar: ProxvelBottomNavigation(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: changeTab,
       ),
     );
   }
