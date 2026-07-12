@@ -18,6 +18,28 @@ class MainLayout extends StatefulWidget {
 class MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
   final Set<int> _visitedTabs = {0};
+  bool _warmPrefetchStarted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startWarmPrefetch();
+    });
+  }
+
+  Future<void> _startWarmPrefetch() async {
+    if (_warmPrefetchStarted) return;
+    _warmPrefetchStarted = true;
+
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    setState(() => _visitedTabs.add(3)); // Perfil
+
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _visitedTabs.add(2)); // Favoritos
+  }
 
   void changeTab(int index) {
     setState(() {
