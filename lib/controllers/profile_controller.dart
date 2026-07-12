@@ -15,13 +15,17 @@ class ProfileController extends ChangeNotifier {
   TravelerProfileModel? profile;
   String? error;
 
+  int _mutationGeneration = 0;
+
   // ignore: prefer_initializing_formals
   ProfileController(this._profileService, this._storageService, {UserService? userService}) : _userService = userService;
 
   Future<void> loadProfileData() async {
+    final currentGeneration = ++_mutationGeneration;
     isLoading = true;
     error = null;
     notifyListeners();
+    
     try {
       // 1. Obtener usuario actual desde caché local (id real)
       final localUser = _storageService.getUser();
@@ -30,54 +34,67 @@ class ProfileController extends ChangeNotifier {
       if (userId != null) {
         // 2. Consultar backend
         if (_userService != null) {
+          
+          // Bloque protegido 1: Cargar User Base
           try {
             user = await _userService.getUserById(userId);
-            try {
-              profile = await _profileService.getTravelerProfile(userId);
-            } catch (profileError) {
+            if (user != null) await _storageService.saveUser(user!);
+          } catch (e) {
+            user = localUser;
+            // Si el user base falla, sí mostramos error global
+            if (currentGeneration == _mutationGeneration) {
+              error = 'No pudimos cargar tu información de usuario. Intenta nuevamente.';
+            }
+          }
+
+          // Bloque protegido 2: Cargar Traveler Profile
+          try {
+            final fetchedProfile = await _profileService.getTravelerProfile(userId);
+            if (currentGeneration == _mutationGeneration) {
+              profile = fetchedProfile;
+              await _storageService.saveProfile(profile!);
+            }
+          } catch (profileError) {
+            if (currentGeneration == _mutationGeneration) {
               final isProfileNotFound = profileError is ApiException && profileError.statusCode == 404;
               if (isProfileNotFound) {
                 profile = null; // Normal para un usuario nuevo sin perfil
               } else {
-                rethrow;
+                // Fallo por timeout/500/etc.
+                // Degradación elegante: leemos de local pero NO bloqueamos el UI
+                final localProfile = _storageService.getProfile();
+                profile = localProfile;
+                // No seteamos "error global" porque arruinaría la experiencia
               }
             }
-            
-            // Actualizar caché local si hubo éxito
-            if (user != null) await _storageService.saveUser(user!);
-            if (profile != null) {
-              await _storageService.saveProfile(profile!);
-            } else {
-              // Si no hay perfil, asegurarse de no mantener uno viejo en cache
-              // (Se manejará en LocalStorageService, pero evitamos cargarlo)
-            }
-          } catch (e) {
-            // Fallback normal por falta de internet u otro error
-            error = 'No pudimos cargar tu información. Intenta nuevamente.';
-            user = localUser;
-            // IMPORTANTE: NO hacemos fallback al perfil local aquí, 
-            // porque podría pertenecer a un usuario anterior si no se limpió bien.
-            profile = null;
           }
+          
         } else {
           // Si no hay UserService inyectado
           user = localUser;
         }
       } else {
         // No hay usuario activo
-        user = null;
-        profile = null;
-        error = 'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.';
+        if (currentGeneration == _mutationGeneration) {
+          user = null;
+          profile = null;
+          error = 'No se encontró un usuario activo. Regístrate o inicia sesión para continuar.';
+        }
       }
     } catch (e) {
-      error = e.toString();
+      if (currentGeneration == _mutationGeneration) {
+        error = e.toString();
+      }
     }
-    isLoading = false;
-    notifyListeners();
+    
+    if (currentGeneration == _mutationGeneration) {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
-  /// Limpia todo el estado en memoria. Llamar al logout/cambio de usuario.
   void clearState() {
+    _mutationGeneration++;
     user = null;
     profile = null;
     error = null;
@@ -87,6 +104,11 @@ class ProfileController extends ChangeNotifier {
 
   Future<void> updatePreferences(TravelerProfileModel updatedProfile) async {
     final userId = user?.id;
+    _mutationGeneration++; // Cancela silenciosamente las cargas viejas
+    
+    error = null;
+    isLoading = false;
+    
     if (userId != null) {
       // Llamada real al backend
       final realProfile = await _profileService.putTravelerProfile(
@@ -110,6 +132,7 @@ class ProfileController extends ChangeNotifier {
     final current = profile;
     if (current == null) return; // Sin perfil no hay preferencia que aplicar.
 
+    _mutationGeneration++;
     final previous = current;
     profile = current.copyWithAi(value);
     notifyListeners();
@@ -130,6 +153,7 @@ class ProfileController extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       // Revertir si falla la persistencia.
+      _mutationGeneration++;
       profile = previous;
       notifyListeners();
       rethrow;
@@ -137,8 +161,10 @@ class ProfileController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    _mutationGeneration++;
     user = null;
     profile = null;
+    error = null;
     await _storageService.clearAllUserData();
     await _storageService.setSessionActive(false);
     notifyListeners();
