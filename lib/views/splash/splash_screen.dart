@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../core/widgets/loading/proxvel_branded_loading.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -53,23 +54,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Color(0xFFF9FAFB),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(color: Color(0xFF2563EB)),
-            SizedBox(height: 24),
-            Text(
-              'Verificando sesión...',
-              style: TextStyle(
-                color: Color(0xFF4B5563),
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      backgroundColor: Color(0xFF0F172A),
+      body: ProxvelBrandedLoading(
+        message: 'Verificando sesión...',
       ),
     );
   }

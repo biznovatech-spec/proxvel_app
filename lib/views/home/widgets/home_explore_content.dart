@@ -9,7 +9,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/widgets/announcements/announcement_banner.dart';
 import '../../../core/widgets/cards/classic_destination_card.dart';
 import '../../../core/widgets/cards/recent_search_chip.dart';
-import '../../../core/widgets/states/loading_view.dart';
+import '../../../core/widgets/loading/proxvel_branded_loading.dart';
 import '../../../models/destination_model.dart';
 import '../../../core/widgets/images/adaptive_destination_image.dart';
 import '../../../core/widgets/carousels/coverflow_carousel.dart';
@@ -68,7 +68,10 @@ class _HomeExploreContentState extends State<HomeExploreContent> {
     final archiveCtrl = context.watch<import_archive_controller.ArchiveController>();
 
     if (controller.isLoading) {
-      return const LoadingView();
+      return const ProxvelBrandedLoading(
+        dark: false,
+        message: 'Buscando rincones del Perú para ti...',
+      );
     }
 
     final featured = controller.featuredDestinations.where((d) => !archiveCtrl.isArchived(d.id)).toList();
