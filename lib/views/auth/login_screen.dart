@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../controllers/auth_controller.dart';
+import '../../core/navigation/home_entry_coordinator.dart';
 import '../../core/widgets/images/proxvel_enhanced_image.dart';
 import '../../core/widgets/buttons/shimmer_button.dart';
 import '../../core/widgets/inputs/glass_text_field.dart';
@@ -101,12 +102,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       if (error != null) {
         setState(() => _loginError = _sanitizeAuthError(error));
       } else {
-        final user = context.read<AuthController>().currentUser;
-        if (user != null && user.hasCompleteResidence) {
-          context.go('/main');
-        } else {
-          context.go('/residence-gate');
-        }
+        await HomeEntryCoordinator.goToPreparedHome(context);
       }
     }
   }

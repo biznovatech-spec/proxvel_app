@@ -37,7 +37,9 @@ class _HomeScreenState extends State<HomeScreen>
     _homeController.addListener(_onHomeControllerUpdated);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _homeController.loadDestinations();
+      if (_homeController.destinations.isEmpty) {
+        _homeController.loadDestinations();
+      }
       context.read<RecommendationController>().loadRecommendations();
       context.read<FavoritesController>().loadFavorites();
       context.read<ArchiveController>().loadArchives();

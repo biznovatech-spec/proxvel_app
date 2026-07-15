@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/onboarding_controller.dart';
 import '../../controllers/recommendation_controller.dart';
+import '../../core/navigation/home_entry_coordinator.dart';
 import '../../models/traveler_profile_model.dart';
 import '../../core/widgets/buttons/proxvel_button.dart';
 import '../../core/widgets/buttons/shimmer_button.dart';
@@ -147,10 +147,8 @@ class _OnboardingState extends State<OnboardingProfileScreen> with TickerProvide
         t.cancel(); 
         if (mounted) {
           final user = context.read<AuthController>().currentUser;
-          if (user != null && user.hasCompleteResidence) {
-            context.go('/main');
-          } else {
-            context.go('/residence-gate');
+          if (user != null) {
+            HomeEntryCoordinator.goToPreparedHome(context);
           }
         } 
       }
@@ -250,7 +248,7 @@ class _OnboardingState extends State<OnboardingProfileScreen> with TickerProvide
     ),
     const SizedBox(height: 20),
     GestureDetector(
-      onTap: () => context.go('/main'),
+      onTap: () => HomeEntryCoordinator.goToPreparedHome(context),
       child: Text('Omitir por ahora', style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: _kGray)),
     )
   ]);
@@ -470,7 +468,7 @@ class _OnboardingState extends State<OnboardingProfileScreen> with TickerProvide
         const SizedBox(height: 12),
         Text('Redirigiendo...', style: TextStyle(fontSize: 13, color: _kGray.withValues(alpha: 0.7))),
         const SizedBox(height: 16),
-        GestureDetector(onTap: () => context.go('/main'),
+        GestureDetector(onTap: () => HomeEntryCoordinator.goToPreparedHome(context),
           child: const Text('Ir ahora', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _kDark))),
         const Spacer(flex: 3),
       ]),

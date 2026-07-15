@@ -169,7 +169,7 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
       );
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/onboarding');
+        context.go('/register-residence');
       }
     } catch (e) {
       if (mounted) {

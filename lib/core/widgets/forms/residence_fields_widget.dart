@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../../integration/services/peru_location_service.dart';
+import '../inputs/glass_select_field.dart';
+import '../pickers/proxvel_glass_picker_sheet.dart';
 
 class ResidenceFieldsWidget extends StatefulWidget {
   final String? initialDepartment;
   final String? initialProvince;
   final String? initialCity;
+  final bool isDarkTheme;
   final void Function(String? department, String? province, String? city) onChanged;
 
   const ResidenceFieldsWidget({
@@ -13,6 +16,7 @@ class ResidenceFieldsWidget extends StatefulWidget {
     this.initialDepartment,
     this.initialProvince,
     this.initialCity,
+    this.isDarkTheme = false,
     required this.onChanged,
   });
 
@@ -93,60 +97,88 @@ class _ResidenceFieldsWidgetState extends State<ResidenceFieldsWidget> {
     widget.onChanged(_selectedDepartment, _selectedProvince, _selectedCity);
   }
 
-  Widget _buildDropdown({
+  void _showPicker({
+    required String title,
+    required List<String> items,
+    required String? selectedItem,
+    required ValueChanged<String> onSelected,
+  }) {
+    ProxvelGlassPickerSheet.show(
+      context,
+      title: title,
+      items: items,
+      selectedItem: selectedItem,
+      onSelected: onSelected,
+    );
+  }
+
+  Widget _buildField({
     required String label,
     required String? value,
-    required List<String> items,
-    required void Function(String?) onChanged,
+    required String placeholder,
     required bool enabled,
+    required String? errorText,
+    required VoidCallback onTap,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        InputDecorator(
+    if (widget.isDarkTheme) {
+      return GlassSelectField(
+        label: label,
+        value: value,
+        placeholder: placeholder,
+        enabled: enabled,
+        errorText: errorText,
+        onTap: onTap,
+      );
+    } else {
+      return GestureDetector(
+        onTap: enabled ? onTap : () {
+          if (!enabled && errorText != null) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(errorText),
+              backgroundColor: Colors.black87,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ));
+          }
+        },
+        child: InputDecorator(
           decoration: InputDecoration(
+            labelText: label,
+            labelStyle: const TextStyle(color: Color(0xFF9CA3AF)),
             filled: true,
-            fillColor: enabled ? Colors.white : AppColors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            fillColor: enabled ? Colors.white : const Color(0xFFF3F4F6),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: const BorderSide(color: Color(0xFF374151)),
             ),
           ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              isDense: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
-              items: items.map((e) => DropdownMenuItem(
-                value: e,
-                child: Text(e, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary)),
-              )).toList(),
-              onChanged: enabled ? onChanged : null,
-              hint: Text('Seleccionar $label', style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  (value != null && value.isNotEmpty) ? value : placeholder,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: (value != null && value.isNotEmpty) ? AppColors.textPrimary : const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ),
+              const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF9CA3AF)),
+            ],
           ),
         ),
-      ],
-    );
+      );
+    }
   }
 
   @override
@@ -158,28 +190,52 @@ class _ResidenceFieldsWidgetState extends State<ResidenceFieldsWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildDropdown(
+        _buildField(
           label: 'Departamento',
           value: _selectedDepartment,
-          items: _departments,
-          onChanged: _onDepartmentChanged,
+          placeholder: 'Selecciona tu departamento',
           enabled: true,
+          errorText: null,
+          onTap: () {
+            _showPicker(
+              title: 'Selecciona tu departamento',
+              items: _departments,
+              selectedItem: _selectedDepartment,
+              onSelected: _onDepartmentChanged,
+            );
+          },
         ),
         const SizedBox(height: 16),
-        _buildDropdown(
+        _buildField(
           label: 'Provincia',
           value: _selectedProvince,
-          items: _provinces,
-          onChanged: _onProvinceChanged,
+          placeholder: 'Selecciona tu provincia',
           enabled: _selectedDepartment != null,
+          errorText: 'Primero selecciona un departamento',
+          onTap: () {
+            _showPicker(
+              title: 'Selecciona tu provincia',
+              items: _provinces,
+              selectedItem: _selectedProvince,
+              onSelected: _onProvinceChanged,
+            );
+          },
         ),
         const SizedBox(height: 16),
-        _buildDropdown(
+        _buildField(
           label: 'Ciudad / Distrito',
           value: _selectedCity,
-          items: _cities,
-          onChanged: _onCityChanged,
+          placeholder: 'Selecciona tu distrito',
           enabled: _selectedProvince != null,
+          errorText: 'Primero selecciona una provincia',
+          onTap: () {
+            _showPicker(
+              title: 'Selecciona tu distrito',
+              items: _cities,
+              selectedItem: _selectedCity,
+              onSelected: _onCityChanged,
+            );
+          },
         ),
       ],
     );

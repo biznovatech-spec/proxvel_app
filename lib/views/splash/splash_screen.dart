@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
+import '../../core/navigation/home_entry_coordinator.dart';
 import '../../core/widgets/loading/proxvel_branded_loading.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,6 +13,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _isReady = false;
+
   @override
   void initState() {
     super.initState();
@@ -19,30 +22,56 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+    final startTime = DateTime.now();
+    
     try {
-      // Breve pausa para no pestañear la pantalla si carga muy rápido
-      await Future.delayed(const Duration(milliseconds: 500));
-      
       if (!mounted) return;
       
       final authController = context.read<AuthController>();
-      
-      // Si es la primera vez que se abre la app, mostramos el intro (si la app lo tiene)
-      // Pero en PROXVEL, el intro es '/intro'.
-      // De momento, la orden es verificar sesión:
       final restored = await authController.restoreSession();
       
       if (!mounted) return;
       
       if (restored) {
         final user = authController.currentUser;
-        if (user != null && user.hasCompleteResidence) {
-          context.go('/main');
-        } else {
+        if (user != null && !user.hasCompleteResidence) {
           context.go('/residence-gate');
+          return;
+        }
+
+        // Si tiene sesión y residencia completa, preparamos Home
+        await HomeEntryCoordinator.prepareHomeForFirstPaint(context);
+        
+        if (!mounted) return;
+        
+        // Ensure at least 900ms minimum duration for the splash loop animation to look premium
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        if (elapsed < 900) {
+          await Future.delayed(Duration(milliseconds: 900 - elapsed));
+        }
+        
+        setState(() {
+          _isReady = true;
+        });
+
+        // Salida rápida y elegante de la animación final de ProxvelBrandedLoading
+        await Future.delayed(const Duration(milliseconds: 400));
+        
+        if (mounted) {
+          context.go('/main');
         }
       } else {
-        context.go('/welcome');
+        // Fallback rápido si no hay sesión
+        final elapsed = DateTime.now().difference(startTime).inMilliseconds;
+        if (elapsed < 900) {
+          await Future.delayed(Duration(milliseconds: 900 - elapsed));
+        }
+        
+        setState(() {
+          _isReady = true;
+        });
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (mounted) context.go('/welcome');
       }
     } catch (e) {
       if (mounted) {
@@ -53,10 +82,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0F172A),
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDBA00),
       body: ProxvelBrandedLoading(
-        message: 'Verificando sesión...',
+        variant: ProxvelLoadingVariant.splash,
+        isReady: _isReady,
       ),
     );
   }

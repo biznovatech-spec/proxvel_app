@@ -6,11 +6,19 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../controllers/auth_controller.dart';
 import '../../core/widgets/images/proxvel_enhanced_image.dart';
+import '../../core/navigation/home_entry_coordinator.dart';
 import '../../core/widgets/buttons/shimmer_button.dart';
 import '../../core/widgets/forms/residence_fields_widget.dart';
 
+enum ResidenceGateMode { registration, fallback }
+
 class ResidenceGateScreen extends StatefulWidget {
-  const ResidenceGateScreen({super.key});
+  final ResidenceGateMode mode;
+
+  const ResidenceGateScreen({
+    super.key,
+    this.mode = ResidenceGateMode.fallback,
+  });
 
   @override
   State<ResidenceGateScreen> createState() => _ResidenceGateScreenState();
@@ -63,7 +71,11 @@ class _ResidenceGateScreenState extends State<ResidenceGateScreen> with TickerPr
       );
       if (mounted) {
         setState(() => _isLoading = false);
-        context.go('/main');
+        if (widget.mode == ResidenceGateMode.registration) {
+          context.go('/onboarding');
+        } else {
+          await HomeEntryCoordinator.goToPreparedHome(context);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -140,21 +152,50 @@ class _ResidenceGateScreenState extends State<ResidenceGateScreen> with TickerPr
                         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                         child: Align(
                           alignment: Alignment.centerRight,
-                          child: IconButton(
-                            icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 24),
-                            onPressed: _handleLogout,
-                            tooltip: 'Cerrar sesión',
-                          ),
+                          child: widget.mode == ResidenceGateMode.fallback
+                            ? IconButton(
+                                icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 24),
+                                onPressed: _handleLogout,
+                                tooltip: 'Cerrar sesión',
+                              )
+                            : const SizedBox(height: 48), // Spacer to keep layout balanced
                         ),
                       ),
 
                       const Spacer(),
 
+                      // Eyebrow (Registration only)
+                      if (widget.mode == ResidenceGateMode.registration)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                          child: Text(
+                            'Paso 2 de 3',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFFDBA00),
+                              letterSpacing: 1.2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.8),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      
+                      if (widget.mode == ResidenceGateMode.registration)
+                        const SizedBox(height: 8),
+
                       // Title
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32.0),
                         child: Text(
-                          'Completa tu\nresidencia',
+                          widget.mode == ResidenceGateMode.registration 
+                              ? 'Tu residencia' 
+                              : 'Completa tu\nresidencia',
                           style: GoogleFonts.poppins(
                             fontSize: 34,
                             height: 1.18,
@@ -178,7 +219,9 @@ class _ResidenceGateScreenState extends State<ResidenceGateScreen> with TickerPr
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32.0),
                         child: Text(
-                          'Usaremos tu residencia para adaptar recomendaciones y evitar sugerirte siempre lugares de tu propia zona. No usaremos GPS en este paso.',
+                          widget.mode == ResidenceGateMode.registration
+                              ? 'La usaremos para personalizar tus recomendaciones. No usamos GPS en este paso.'
+                              : 'Necesitamos este dato para adaptar tus recomendaciones y evitar sugerirte siempre lugares de tu propia zona.',
                           style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
@@ -200,28 +243,15 @@ class _ResidenceGateScreenState extends State<ResidenceGateScreen> with TickerPr
                       // Form Fields
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.95),
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.2),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              )
-                            ],
-                          ),
-                          child: ResidenceFieldsWidget(
-                            onChanged: (dept, prov, city) {
-                              setState(() {
-                                _selectedDepartment = dept;
-                                _selectedProvince = prov;
-                                _selectedCity = city;
-                              });
-                            },
-                          ),
+                        child: ResidenceFieldsWidget(
+                          isDarkTheme: true,
+                          onChanged: (dept, prov, city) {
+                            setState(() {
+                              _selectedDepartment = dept;
+                              _selectedProvince = prov;
+                              _selectedCity = city;
+                            });
+                          },
                         ),
                       ),
 
